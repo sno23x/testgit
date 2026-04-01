@@ -1,0 +1,48 @@
+/* ===== Global ===== */
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+}
+
+/* ===== Hero banner ===== */
+.hero-banner {
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ===== Product card ===== */
+.product-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid #dee2e6;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* ===== QR wrapper ===== */
+.qr-wrapper {
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px;
+  display: inline-block;
+}
+
+/* ===== Navbar active link ===== */
+.navbar-nav .nav-link:hover {
+  opacity: 0.85;
+}
+
+/* ===== Badge tweak ===== */
+.badge {
+  font-size: 0.72rem;
+}
+
+/* ===== Sticky buy box ===== */
+@media (max-width: 991px) {
+  .sticky-top { position: relative !important; top: auto !important; }
+}
