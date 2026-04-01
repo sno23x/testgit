@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}กรอกข้อมูลผู้ซื้อ – DataShop{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-person-lines-fill me-2"></i>ข้อมูลผู้ซื้อ</h2>
+
+<div class="row g-4">
+  <!-- Form -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('checkout') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ชื่อ-นามสกุล <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" placeholder="ชื่อจริง นามสกุล" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">อีเมล <span class="text-danger">*</span></label>
+            <input type="email" name="email" class="form-control" placeholder="example@email.com" required />
+            <div class="form-text">ลิงก์ดาวน์โหลดจะส่งไปที่อีเมลนี้</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">เบอร์โทรศัพท์</label>
+            <input type="tel" name="phone" class="form-control" placeholder="08x-xxx-xxxx" />
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-qr-code me-1"></i>ดำเนินการต่อ → ชำระเงิน
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order summary -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">สรุปรายการสั่งซื้อ</div>
+      <ul class="list-group list-group-flush">
+        {% for pid, item in cart.items() %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span>{{ item.name }} <small class="text-muted">×{{ item.qty }}</small></span>
+          <span>฿{{ "{:,.0f}".format(item.price * item.qty) }}</span>
+        </li>
+        {% endfor %}
+        <li class="list-group-item d-flex justify-content-between fw-bold">
+          <span>รวมทั้งหมด</span>
+          <span class="text-primary">฿{{ "{:,.0f}".format(total) }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

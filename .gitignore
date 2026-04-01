@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+
+# Flask / instance
+instance/
+*.db
+*.sqlite3
+
+# Uploaded slips & actual data files for sale (sensitive)
+instance/slips/
+files/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

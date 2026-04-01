@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} – DataShop{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">หน้าแรก</a></li>
+    <li class="breadcrumb-item active">{{ product.name }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+  <!-- Product info -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <span class="badge bg-secondary mb-2">{{ product.category }}</span>
+        <h2 class="card-title mb-3">{{ product.name }}</h2>
+        <p class="text-muted">{{ product.description }}</p>
+
+        {% if product.preview %}
+        <hr />
+        <h5><i class="bi bi-table me-1"></i>ตัวอย่างข้อมูล</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm">
+            <thead class="table-light">
+              <tr>
+                {% for key in product.preview[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in product.preview %}
+              <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Buy box -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm sticky-top" style="top: 80px;">
+      <div class="card-body text-center">
+        <p class="display-6 fw-bold text-primary mb-1">฿{{ "{:,.0f}".format(product.price) }}</p>
+        <p class="text-muted small mb-4">ดาวน์โหลดได้ทันทีหลังชำระเงิน</p>
+
+        <form method="POST" action="{{ url_for('cart_add') }}" class="d-grid gap-2">
+          <input type="hidden" name="product_id" value="{{ product.id }}" />
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-cart-plus me-1"></i>ใส่ตะกร้า
+          </button>
+          <a href="{{ url_for('cart_view') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-cart3 me-1"></i>ดูตะกร้า
+          </a>
+        </form>
+
+        <hr />
+        <ul class="list-unstyled text-start small text-muted">
+          <li><i class="bi bi-check-circle-fill text-success me-1"></i>ข้อมูลเป็นไฟล์ Excel/CSV</li>
+          <li><i class="bi bi-check-circle-fill text-success me-1"></i>ดาวน์โหลดได้ทันที</li>
+          <li><i class="bi bi-check-circle-fill text-success me-1"></i>ชำระผ่าน PromptPay</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
