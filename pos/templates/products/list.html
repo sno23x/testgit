@@ -12,7 +12,6 @@
   </a>
 </div>
 
-<!-- Filter -->
 <form class="d-flex gap-2 mb-3 flex-wrap" method="GET">
   <input type="text" name="q" class="form-control w-auto" placeholder="ຊອກຫາ..." value="{{ q }}"/>
   <select name="cat" class="form-select w-auto">
@@ -30,7 +29,9 @@
       <thead class="table-light">
         <tr>
           <th>ລະຫັດ</th><th>ຊື່ສິນຄ້າ</th><th>ໝວດ</th><th>ຫົວໜ່ວຍ</th>
-          <th class="text-end">ລາຄາຂາຍ</th><th class="text-end">ສ ock</th><th></th>
+          <th class="text-end">ລາຄາ (฿)</th>
+          <th class="text-end">ລາຄາ (ກີບ)</th>
+          <th class="text-end">ສ ock</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -40,6 +41,9 @@
           <td>{{ p.name }}</td>
           <td><span class="badge bg-secondary">{{ p.category.name if p.category else '-' }}</span></td>
           <td>{{ p.unit }}</td>
+          <td class="text-end text-muted small">
+            {{ "฿{:,.2f}".format(p.price_thb) if p.price_thb else '-' }}
+          </td>
           <td class="text-end fw-semibold">{{ "{:,.0f}".format(p.sell_price) }}</td>
           <td class="text-end {{ 'text-danger fw-bold' if p.stock_qty <= 5 else '' }}">
             {{ "{:,.2f}".format(p.stock_qty) }}
@@ -59,7 +63,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center text-muted py-4">ບໍ່ພົບສິນຄ້າ</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">ບໍ່ພົບສິນຄ້າ</td></tr>
         {% endfor %}
       </tbody>
     </table>

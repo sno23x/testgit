@@ -7,7 +7,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm border-0">
       <div class="card-body">
-        <form method="POST">
+        <form method="POST" id="productForm">
           <div class="row g-3">
             <div class="col-6">
               <label class="form-label fw-semibold">ລະຫັດສິນຄ້າ</label>
@@ -41,16 +41,40 @@
                      value="{{ product.stock_qty if product else 0 }}"/>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ລາຄາຕ້ນທຶນ</label>
+              <label class="form-label fw-semibold">ລາຄາຕ້ນທຶນ (ກີບ)</label>
               <input type="number" name="cost_price" class="form-control" step="0.01" min="0"
                      value="{{ product.cost_price if product else 0 }}"/>
             </div>
+
+            <!-- ===== ລາຄາ THB ===== -->
+            <div class="col-12"><hr class="my-1"/><p class="small fw-semibold text-muted mb-0">ລາຄາຂາຍ</p></div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ລາຄາຂາຍ <span class="text-danger">*</span></label>
-              <input type="number" name="sell_price" class="form-control" step="0.01" min="0" required
-                     value="{{ product.sell_price if product else 0 }}"/>
+              <label class="form-label fw-semibold">
+                ລາຄາໃນເງິນບາດ (฿)
+                <span class="badge bg-info text-dark ms-1">ໃສ່ຖ້າລາຄາເປັນບາດ</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">฿</span>
+                <input type="number" name="price_thb" id="price_thb" class="form-control" step="0.01" min="0"
+                       value="{{ product.price_thb if product and product.price_thb else '' }}"
+                       placeholder="0.00" oninput="calcKip()"/>
+              </div>
+              <div class="form-text">Rate: 1 ບາດ = <strong id="rateDisplay">{{ rate }}</strong> ກີບ</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">
+                ລາຄາຂາຍ (ກີບ) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <input type="number" name="sell_price" id="sell_price" class="form-control" step="1" min="0"
+                       value="{{ product.sell_price if product else 0 }}"
+                       placeholder="0"/>
+                <span class="input-group-text">ກີບ</span>
+              </div>
+              <div class="form-text text-success" id="calcResult"></div>
             </div>
           </div>
+
           <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-save me-1"></i>ບັນທຶກ
@@ -62,4 +86,25 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const rate = parseFloat("{{ rate }}") || 830;
+document.getElementById('rateDisplay').textContent = rate.toLocaleString();
+
+function calcKip() {
+  const thb = parseFloat(document.getElementById('price_thb').value) || 0;
+  if (thb > 0) {
+    const kip = Math.round(thb * rate);
+    document.getElementById('sell_price').value = kip;
+    document.getElementById('calcResult').textContent =
+      `฿${thb.toLocaleString()} × ${rate.toLocaleString()} = ${kip.toLocaleString()} ກີບ`;
+  } else {
+    document.getElementById('calcResult').textContent = '';
+  }
+}
+// Calculate on load if editing
+window.addEventListener('load', calcKip);
+</script>
 {% endblock %}

@@ -11,6 +11,7 @@ from blueprints.debts import debts_bp
 from blueprints.expenses import expenses_bp
 from blueprints.employees import employees_bp
 from blueprints.reports import reports_bp
+from blueprints.settings import settings_bp
 
 login_manager = LoginManager()
 
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(expenses_bp, url_prefix="/expenses")
     app.register_blueprint(employees_bp, url_prefix="/employees")
     app.register_blueprint(reports_bp, url_prefix="/reports")
+    app.register_blueprint(settings_bp, url_prefix="/settings")
 
     @app.route("/")
     def index():
@@ -45,9 +47,24 @@ def create_app():
     return app
 
 
-if __name__ == "__main__":
-    app = create_app()
+def run_migrations(app):
+    """ເພີ່ມ column ໃໝ່ທີ່ອາດຈະຍັງບໍ່ມີໃນ DB ເກົ່າ"""
+    import sqlalchemy as sa
     with app.app_context():
         os.makedirs("instance", exist_ok=True)
         db.create_all()
+        with db.engine.connect() as conn:
+            for stmt in [
+                "ALTER TABLE products ADD COLUMN price_thb FLOAT",
+            ]:
+                try:
+                    conn.execute(sa.text(stmt))
+                    conn.commit()
+                except Exception:
+                    pass  # column already exists
+
+
+if __name__ == "__main__":
+    app = create_app()
+    run_migrations(app)
     app.run(debug=True, host="0.0.0.0", port=5000)

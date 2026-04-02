@@ -62,7 +62,7 @@
 }
 
 /* ===== General ===== */
-body { font-family: 'Segoe UI', 'Noto Sans Lao', sans-serif; }
+body { font-family: 'Noto Sans Lao', 'Segoe UI', sans-serif; }
 .table td, .table th { vertical-align: middle; }
 .badge { font-size: 0.75rem; }
 .card { border-radius: 10px; }

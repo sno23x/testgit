@@ -16,6 +16,27 @@ class Category(db.Model):
         return self.name
 
 
+class Setting(db.Model):
+    """ຕັ້ງຄ່າລະບົບ (key-value)"""
+    __tablename__ = "settings"
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.String(500), default="")
+
+    @staticmethod
+    def get(key, default=""):
+        s = Setting.query.filter_by(key=key).first()
+        return s.value if s else default
+
+    @staticmethod
+    def set(key, value):
+        s = Setting.query.filter_by(key=key).first()
+        if s:
+            s.value = str(value)
+        else:
+            db.session.add(Setting(key=key, value=str(value)))
+
+
 class Product(db.Model):
     __tablename__ = "products"
     id = db.Column(db.Integer, primary_key=True)
@@ -23,7 +44,8 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False)
     unit = db.Column(db.String(50), default="ອັນ")
     cost_price = db.Column(db.Float, default=0)
-    sell_price = db.Column(db.Float, nullable=False)
+    price_thb = db.Column(db.Float, nullable=True)   # ລາຄາໃນເງິນບາດ (ໄທ)
+    sell_price = db.Column(db.Float, nullable=False)  # ລາຄາໃນກີບ (ຄຳນວນອັດຕະໂນມັດ ຫຼື ກຳນົດເອງ)
     stock_qty = db.Column(db.Float, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
     active = db.Column(db.Boolean, default=True)
@@ -35,6 +57,7 @@ class Product(db.Model):
             "name": self.name,
             "unit": self.unit,
             "sell_price": self.sell_price,
+            "price_thb": self.price_thb or 0,
             "stock_qty": self.stock_qty,
         }
 
