@@ -30,11 +30,13 @@ def dashboard():
 
     # Monthly revenue last 6 months
     from sqlalchemy import extract, func
-    monthly = db.session.query(
+    monthly_rows = db.session.query(
         extract("year", Sale.created_at).label("y"),
         extract("month", Sale.created_at).label("m"),
         func.sum(Sale.total).label("total")
     ).group_by("y", "m").order_by("y", "m").limit(12).all()
+    # Convert SQLAlchemy Row objects → plain list so tojson works in template
+    monthly = [(int(r.y), int(r.m), float(r.total)) for r in monthly_rows]
 
     # Unpaid debts
     debt_sales = Sale.query.filter_by(payment_type="debt").all()
