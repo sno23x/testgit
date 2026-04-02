@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}ໜ້າຫຼັກ – POS{% endblock %}
+{% block page_title %}ໜ້າຫຼັກ{% endblock %}
+
+{% block content %}
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm stat-card bg-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="small mb-1 opacity-75">ລາຍຮັບວັນນີ້ (ເງິນສົດ)</p>
+            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(revenue_today) }} ກີບ</h4>
+          </div>
+          <i class="bi bi-cash-coin fs-2 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm stat-card bg-warning text-dark">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="small mb-1 opacity-75">ຕິດໜີ້ວັນນີ້</p>
+            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(debt_today) }} ກີບ</h4>
+          </div>
+          <i class="bi bi-credit-card fs-2 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm stat-card bg-primary text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="small mb-1 opacity-75">ຈໍານວນບິນວັນນີ້</p>
+            <h4 class="fw-bold mb-0">{{ tx_count }} ບິນ</h4>
+          </div>
+          <i class="bi bi-receipt fs-2 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm stat-card bg-danger text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="small mb-1 opacity-75">ໜີ້ຄ້າງທັງໝົດ</p>
+            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(total_debt_outstanding) }} ກີບ</h4>
+          </div>
+          <i class="bi bi-exclamation-triangle fs-2 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Quick actions -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header fw-semibold">ທາງລັດ</div>
+      <div class="card-body d-grid gap-2">
+        <a href="{{ url_for('pos.pos_page') }}" class="btn btn-primary btn-lg">
+          <i class="bi bi-cart-plus me-2"></i>ເປີດໜ້າຂາຍ
+        </a>
+        <a href="{{ url_for('products.add_product') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າ
+        </a>
+        <a href="{{ url_for('customers.add_customer') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-person-plus me-1"></i>ເພີ່ມລູກຄ້າ
+        </a>
+        <a href="{{ url_for('debts.list_debts') }}" class="btn btn-outline-warning">
+          <i class="bi bi-credit-card me-1"></i>ຈັດການໜີ້ສິນ
+        </a>
+      </div>
+    </div>
+
+    <!-- Low stock warning -->
+    {% if low_stock %}
+    <div class="card shadow-sm border-0 border-start border-warning border-3">
+      <div class="card-header fw-semibold text-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>ສ ock ຕໍ່າ
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for p in low_stock %}
+        <li class="list-group-item d-flex justify-content-between py-1">
+          <span class="small">{{ p.name }}</span>
+          <span class="badge bg-warning text-dark">{{ p.stock_qty }} {{ p.unit }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sales chart placeholder -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header fw-semibold d-flex justify-content-between">
+        <span>ຍອດຂາຍລາຍເດືອນ</span>
+        <a href="{{ url_for('reports.index', view='yearly') }}" class="btn btn-sm btn-outline-primary">ລາຍງານເຕັມ</a>
+      </div>
+      <div class="card-body">
+        <canvas id="monthlyChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const monthly = {{ monthly | tojson }};
+const labels = monthly.map(r => `เดือน ${r[1]}`);
+const data = monthly.map(r => r[2]);
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'ຍອດຂາຍ (ກີບ)',
+      data,
+      backgroundColor: 'rgba(13,110,253,0.7)',
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+</script>
+{% endblock %}

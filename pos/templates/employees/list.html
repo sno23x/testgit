@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}ພະນັກງານ{% endblock %}
+{% block page_title %}ຈັດການພະນັກງານ{% endblock %}
+
+{% block content %}
+{% if current_user.is_admin() %}
+<div class="d-flex gap-2 mb-3">
+  <a href="{{ url_for('employees.add_employee') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>ເພີ່ມພະນັກງານ
+  </a>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>#</th><th>ຊື່</th><th>Username</th><th>ສິດທິ</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for emp in employees %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ emp.name }}</td>
+          <td><code>{{ emp.username }}</code></td>
+          <td>
+            <span class="badge {{ 'bg-danger' if emp.role == 'admin' else 'bg-secondary' }}">
+              {{ emp.role }}
+            </span>
+          </td>
+          <td>
+            {% if current_user.is_admin() %}
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('employees.edit_employee', eid=emp.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% if emp.id != current_user.id %}
+              <form method="POST" action="{{ url_for('employees.delete_employee', eid=emp.id) }}"
+                    onsubmit="return confirm('ລຶບ {{ emp.name }}?')">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

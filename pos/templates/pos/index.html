@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}ໜ້າຂາຍ – POS{% endblock %}
+{% block page_title %}ໜ້າຂາຍ (POS){% endblock %}
+
+{% block content %}
+<div class="row g-3" style="min-height:78vh;">
+
+  <!-- Left: Product search + grid -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0 h-100 d-flex flex-column">
+      <div class="card-body pb-0">
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" id="productSearch" class="form-control form-control-lg"
+                 placeholder="ຊອກຫາສິນຄ້າ (ຊື່ ຫຼື ລະຫັດ)..." autocomplete="off"/>
+        </div>
+        <div id="searchResults" class="row g-2 overflow-auto" style="max-height:55vh;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Bill / Cart -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 h-100 d-flex flex-column">
+      <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between">
+        <span><i class="bi bi-receipt me-1"></i>ໃບບິນ</span>
+        <button class="btn btn-sm btn-outline-light" onclick="clearBill()">
+          <i class="bi bi-trash"></i> ລ້າງ
+        </button>
+      </div>
+      <div class="card-body flex-grow-1 overflow-auto p-2" id="billItems" style="max-height:40vh;">
+        <p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>
+      </div>
+      <div class="card-footer">
+        <!-- Discount -->
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <label class="small fw-semibold text-nowrap">ສ່ວນຫຼຸດ:</label>
+          <input type="number" id="discount" class="form-control form-control-sm" value="0" min="0" oninput="recalc()"/>
+          <span class="small text-muted">ກີບ</span>
+        </div>
+        <!-- Total -->
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+          <span>ລວມທັງໝົດ:</span>
+          <span class="text-primary" id="totalDisplay">0 ກີບ</span>
+        </div>
+        <!-- Customer (for debt) -->
+        <div id="customerRow" class="mb-2 d-none">
+          <label class="small fw-semibold">ລູກຄ້າ (ຕິດໜີ້):</label>
+          <select id="customerId" class="form-select form-select-sm">
+            <option value="">-- ເລືອກລູກຄ້າ --</option>
+            {% for c in customers %}
+            <option value="{{ c.id }}">{{ c.name }} {% if c.total_debt > 0 %}(ໜີ້: {{ "{:,.0f}".format(c.total_debt) }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <!-- Payment buttons -->
+        <div class="d-grid gap-2">
+          <div class="btn-group w-100">
+            <button class="btn btn-success btn-lg" onclick="submitSale('cash')">
+              <i class="bi bi-cash me-1"></i>ເງິນສົດ
+            </button>
+            <button class="btn btn-warning btn-lg text-dark" onclick="submitSale('debt')">
+              <i class="bi bi-credit-card me-1"></i>ຕິດໜີ້
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+        <h5 class="mt-2 fw-bold">ສໍາເລັດ!</h5>
+        <p class="small text-muted mb-3" id="saleNoDisplay"></p>
+        <div class="d-grid gap-2">
+          <a id="receiptLink" href="#" target="_blank" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-printer me-1"></i>ພິມໃບບິນ
+          </a>
+          <button class="btn btn-primary btn-sm" onclick="newBill()">
+            <i class="bi bi-plus me-1"></i>ບິນໃໝ່
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let cart = [];
+const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
+// Search
+let searchTimer;
+document.getElementById('productSearch').addEventListener('input', function(){
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (!q) { document.getElementById('searchResults').innerHTML = ''; return; }
+  searchTimer = setTimeout(() => {
+    fetch(`/pos/search?q=${encodeURIComponent(q)}`)
+      .then(r => r.json()).then(renderResults);
+  }, 250);
+});
+
+function renderResults(products){
+  const div = document.getElementById('searchResults');
+  if (!products.length){ div.innerHTML = '<p class="text-muted small">ບໍ່ພົບສິນຄ້າ</p>'; return; }
+  div.innerHTML = products.map(p => `
+    <div class="col-6 col-md-4">
+      <div class="card product-tile h-100 cursor-pointer" onclick='addToCart(${JSON.stringify(p)})'>
+        <div class="card-body p-2 text-center">
+          <i class="bi bi-box-seam text-primary fs-4"></i>
+          <p class="small fw-semibold mb-0 mt-1">${p.name}</p>
+          <p class="small text-muted mb-1">${p.code}</p>
+          <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
+          <small class="text-muted">ຄ/ຫ: ${p.stock_qty} ${p.unit}</small>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToCart(p){
+  const idx = cart.findIndex(i => i.product_id === p.id);
+  if (idx >= 0) { cart[idx].qty += 1; }
+  else { cart.push({ product_id: p.id, name: p.name, unit: p.unit, unit_price: p.sell_price, qty: 1 }); }
+  renderCart();
+}
+
+function renderCart(){
+  const div = document.getElementById('billItems');
+  document.getElementById('emptyMsg')?.remove();
+  if (!cart.length){ div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>'; recalc(); return; }
+  div.innerHTML = cart.map((it, idx) => `
+    <div class="d-flex align-items-center gap-1 mb-2 border-bottom pb-1">
+      <div class="flex-grow-1 small">
+        <span class="fw-semibold">${it.name}</span><br/>
+        <span class="text-muted">${Number(it.unit_price).toLocaleString()} × </span>
+        <input type="number" class="form-control form-control-sm d-inline-block qty-input"
+               style="width:64px;" value="${it.qty}" min="0.01" step="0.01"
+               onchange="updateQty(${idx}, this.value)"/>
+        <span class="text-muted small"> ${it.unit}</span>
+      </div>
+      <div class="text-end small">
+        <span class="fw-bold">${Number(it.unit_price * it.qty).toLocaleString()}</span><br/>
+        <button class="btn btn-sm btn-link text-danger p-0" onclick="removeItem(${idx})">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+  recalc();
+}
+
+function updateQty(idx, val){
+  cart[idx].qty = Math.max(0.01, parseFloat(val) || 0.01);
+  renderCart();
+}
+function removeItem(idx){ cart.splice(idx, 1); renderCart(); }
+function clearBill(){ cart = []; document.getElementById('discount').value = 0; renderCart(); }
+
+function recalc(){
+  const subtotal = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  const disc = parseFloat(document.getElementById('discount').value) || 0;
+  const total = Math.max(0, subtotal - disc);
+  document.getElementById('totalDisplay').textContent = Number(total).toLocaleString() + ' ກີບ';
+}
+
+document.getElementById('discount').addEventListener('input', recalc);
+
+function submitSale(type){
+  if (!cart.length){ alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
+  const customerId = document.getElementById('customerId').value;
+  if (type === 'debt'){
+    document.getElementById('customerRow').classList.remove('d-none');
+    if (!customerId){ alert('ກະລຸນາເລືອກລູກຄ້າ'); return; }
+  }
+  const payload = {
+    items: cart.map(i => ({ product_id: i.product_id, qty: i.qty, unit_price: i.unit_price })),
+    payment_type: type,
+    customer_id: customerId || null,
+    discount: parseFloat(document.getElementById('discount').value) || 0,
+  };
+  fetch('/pos/sale', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(r => r.json()).then(data => {
+    if (data.error){ alert(data.error); return; }
+    document.getElementById('saleNoDisplay').textContent = 'ເລກບິນ: ' + data.sale_no;
+    document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
+    successModal.show();
+  });
+}
+
+// Show customer dropdown when debt button hovered
+document.querySelector('[onclick="submitSale(\'debt\')"]')
+  .addEventListener('click', () => document.getElementById('customerRow').classList.remove('d-none'));
+
+function newBill(){
+  successModal.hide();
+  clearBill();
+  document.getElementById('productSearch').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('customerRow').classList.add('d-none');
+  document.getElementById('customerId').value = '';
+}
+</script>
+{% endblock %}
