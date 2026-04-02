@@ -1,0 +1,68 @@
+/* ===== Layout ===== */
+#wrapper { min-height: 100vh; }
+
+.sidebar {
+  width: 230px;
+  min-width: 230px;
+  background: linear-gradient(180deg, #1e3a5f 0%, #1a5276 100%);
+  min-height: 100vh;
+  transition: width 0.2s;
+}
+.sidebar-brand { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar .nav-link { border-radius: 6px; margin-bottom: 2px; font-size: 0.9rem; }
+.sidebar .nav-link:hover { background: rgba(255,255,255,0.15); }
+.sidebar .nav-link.active { background: rgba(255,255,255,0.25); font-weight: 600; }
+
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #dee2e6;
+  min-height: 52px;
+}
+
+#main-content { overflow-x: hidden; background: #f5f7fa; }
+
+/* ===== Stat cards ===== */
+.stat-card { border-radius: 12px; }
+.stat-card .card-body { padding: 1rem 1.25rem; }
+
+/* ===== POS product tiles ===== */
+.product-tile {
+  cursor: pointer;
+  border: 1px solid #dee2e6;
+  transition: transform 0.1s, box-shadow 0.1s;
+  border-radius: 8px;
+}
+.product-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-color: #0d6efd;
+}
+
+/* ===== Bill qty input ===== */
+.qty-input { text-align: center; display: inline-block !important; }
+
+/* ===== Receipt print ===== */
+@media print {
+  .no-print { display: none !important; }
+  body { padding: 0; }
+}
+
+/* ===== Mobile sidebar ===== */
+@media (max-width: 991px) {
+  .sidebar {
+    position: fixed;
+    left: -230px;
+    top: 0;
+    bottom: 0;
+    z-index: 1045;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.2);
+  }
+  .sidebar.show { left: 0; }
+  #main-content { width: 100%; }
+}
+
+/* ===== General ===== */
+body { font-family: 'Segoe UI', 'Noto Sans Lao', sans-serif; }
+.table td, .table th { vertical-align: middle; }
+.badge { font-size: 0.75rem; }
+.card { border-radius: 10px; }

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ໃບບິນ {{ sale.sale_no }}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Courier New', monospace; font-size: 12px; width: 300px; padding: 10px; }
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+    .line { border-top: 1px dashed #000; margin: 6px 0; }
+    table { width: 100%; }
+    td { vertical-align: top; padding: 2px 0; }
+    td:last-child { text-align: right; }
+    .total-row td { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 4px; }
+    @media print {
+      .no-print { display: none; }
+      body { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="center bold" style="font-size:16px;">ຮ້ານວັດສະດຸກໍ່ສ້າງ</div>
+  <div class="center">ໃບບິນ / Receipt</div>
+  <div class="line"></div>
+  <table>
+    <tr><td>ເລກບິນ:</td><td>{{ sale.sale_no }}</td></tr>
+    <tr><td>ວັນທີ:</td><td>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</td></tr>
+    {% if sale.customer %}
+    <tr><td>ລູກຄ້າ:</td><td>{{ sale.customer.name }}</td></tr>
+    {% endif %}
+    <tr><td>ປະເພດ:</td><td>{{ 'ເງິນສົດ' if sale.payment_type == 'cash' else 'ຕິດໜີ້' }}</td></tr>
+  </table>
+  <div class="line"></div>
+
+  <table>
+    <tr>
+      <td class="bold">ສິນຄ້າ</td>
+      <td class="bold" style="text-align:center;">ຈ/ນ</td>
+      <td class="bold">ລາຄາ</td>
+      <td class="bold">ລວມ</td>
+    </tr>
+    {% for item in sale.items %}
+    <tr>
+      <td style="max-width:100px; word-break:break-word;">{{ item.product.name }}</td>
+      <td style="text-align:center;">{{ item.qty }}</td>
+      <td>{{ "{:,.0f}".format(item.unit_price) }}</td>
+      <td>{{ "{:,.0f}".format(item.subtotal) }}</td>
+    </tr>
+    {% endfor %}
+    {% if sale.discount > 0 %}
+    <tr><td colspan="3">ສ່ວນຫຼຸດ:</td><td>-{{ "{:,.0f}".format(sale.discount) }}</td></tr>
+    {% endif %}
+    <tr class="total-row">
+      <td colspan="3">ລວມທັງໝົດ:</td>
+      <td>{{ "{:,.0f}".format(sale.total) }} ກີບ</td>
+    </tr>
+  </table>
+
+  <div class="line"></div>
+  <div class="center">ຂອບໃຈທີ່ໃຊ້ບໍລິການ</div>
+  <div class="center" style="font-size:10px; color:#666; margin-top:4px;">{{ sale.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</div>
+
+  <div class="no-print" style="margin-top:16px; text-align:center;">
+    <button onclick="window.print()" style="padding:8px 20px; cursor:pointer; background:#0d6efd; color:#fff; border:none; border-radius:4px;">
+      ພິມໃບບິນ
+    </button>
+    <button onclick="window.close()" style="padding:8px 20px; cursor:pointer; margin-left:8px; background:#6c757d; color:#fff; border:none; border-radius:4px;">
+      ປິດ
+    </button>
+  </div>
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>

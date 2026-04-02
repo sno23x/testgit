@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}ລາຍຮັບ/ລາຍຈ່າຍ{% endblock %}
+{% block page_title %}ລາຍຮັບ / ລາຍຈ່າຍ{% endblock %}
+
+{% block content %}
+<!-- Month picker -->
+<form class="d-flex gap-2 align-items-center mb-3">
+  <label class="fw-semibold small">ເດືອນ:</label>
+  <input type="month" name="month" class="form-control w-auto" value="{{ month }}" onchange="this.form.submit()"/>
+</form>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center py-3 bg-success text-white">
+      <div class="small opacity-75">ລາຍຮັບ (ເງິນສົດ)</div>
+      <div class="fw-bold fs-5">{{ "{:,.0f}".format(income) }} ກີບ</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center py-3 bg-danger text-white">
+      <div class="small opacity-75">ລາຍຈ່າຍ</div>
+      <div class="fw-bold fs-5">{{ "{:,.0f}".format(total_expense) }} ກີບ</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center py-3 {{ 'bg-primary' if profit >= 0 else 'bg-warning' }} text-white">
+      <div class="small opacity-75">ກໍາໄລ</div>
+      <div class="fw-bold fs-5">{{ "{:,.0f}".format(profit) }} ກີບ</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Add expense form -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold">ບັນທຶກລາຍຈ່າຍ</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('expenses.add_expense') }}">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ໝວດ</label>
+            <select name="category" class="form-select form-select-sm">
+              {% for cat in expense_cats %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ຈໍານວນ (ກີບ)</label>
+            <input type="number" name="amount" class="form-control form-control-sm" min="1" required/>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ວັນທີ</label>
+            <input type="date" name="date" class="form-control form-control-sm"
+                   value="{{ month }}-01"/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">ໝາຍເຫດ</label>
+            <input type="text" name="note" class="form-control form-control-sm"/>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-danger btn-sm">
+              <i class="bi bi-plus me-1"></i>ບັນທຶກລາຍຈ່າຍ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense list -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold">ລາຍຈ່າຍເດືອນ {{ month }}</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>ວັນທີ</th><th>ໝວດ</th><th>ໝາຍເຫດ</th><th class="text-end">ຈໍານວນ</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for e in expenses %}
+            <tr>
+              <td>{{ e.date.strftime('%d/%m/%Y') }}</td>
+              <td><span class="badge bg-secondary">{{ e.category }}</span></td>
+              <td class="text-muted small">{{ e.note or '-' }}</td>
+              <td class="text-end text-danger fw-semibold">{{ "{:,.0f}".format(e.amount) }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('expenses.delete_expense', eid=e.id) }}"
+                      onsubmit="return confirm('ລຶບ?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger py-0">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">ບໍ່ມີລາຍຈ່າຍ</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

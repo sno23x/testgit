@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}ໝວດໝູ່ສິນຄ້າ{% endblock %}
+{% block page_title %}ໝວດໝູ່ສິນຄ້າ{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold">ເພີ່ມໝວດໝູ່ໃໝ່</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('products.add_category') }}" class="d-flex gap-2">
+          <input type="text" name="name" class="form-control" placeholder="ຊື່ໝວດໝູ່" required/>
+          <button type="submit" class="btn btn-primary">ເພີ່ມ</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0">
+      <ul class="list-group list-group-flush">
+        {% for c in categories %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>{{ c.name }}</span>
+          <form method="POST" action="{{ url_for('products.delete_category', cid=c.id) }}"
+                onsubmit="return confirm('ລຶບໝວດ {{ c.name }}?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-3">ບໍ່ມີໝວດໝູ່</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="mt-2">
+      <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>ກັບໄປລາຍຊື່ສິນຄ້າ
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

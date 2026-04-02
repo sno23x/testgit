@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}ລູກຄ້າ{% endblock %}
+{% block page_title %}ລາຍຊື່ລູກຄ້າ{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-2 mb-3">
+  <a href="{{ url_for('customers.add_customer') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>ເພີ່ມລູກຄ້າ
+  </a>
+</div>
+<form class="d-flex gap-2 mb-3" method="GET">
+  <input type="text" name="q" class="form-control w-auto" placeholder="ຊອກຊື່ / ເບີໂທ..." value="{{ q }}"/>
+  <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+</form>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>#</th><th>ຊື່</th><th>ເບີໂທ</th><th>ທີ່ຢູ່</th><th class="text-end">ໜີ້ຄ້າງ</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><a href="{{ url_for('customers.customer_detail', cid=c.id) }}" class="fw-semibold text-decoration-none">{{ c.name }}</a></td>
+          <td>{{ c.phone or '-' }}</td>
+          <td class="text-muted small">{{ c.address or '-' }}</td>
+          <td class="text-end {{ 'text-danger fw-bold' if c.total_debt > 0 else '' }}">
+            {{ "{:,.0f}".format(c.total_debt) }} ກີບ
+          </td>
+          <td>
+            <a href="{{ url_for('customers.edit_customer', cid=c.id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">ບໍ່ພົບລູກຄ້າ</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

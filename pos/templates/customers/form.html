@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'ແກ້ໄຂ' if customer else 'ເພີ່ມ' }}ລູກຄ້າ{% endblock %}
+{% block page_title %}{{ 'ແກ້ໄຂ' if customer else 'ເພີ່ມ' }}ລູກຄ້າ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ຊື່ລູກຄ້າ <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" required
+                   value="{{ customer.name if customer else '' }}"/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ເບີໂທ</label>
+            <input type="text" name="phone" class="form-control"
+                   value="{{ customer.phone if customer else '' }}"/>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">ທີ່ຢູ່</label>
+            <textarea name="address" class="form-control" rows="2">{{ customer.address if customer else '' }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>ບັນທຶກ</button>
+            <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary">ຍົກເລີກ</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

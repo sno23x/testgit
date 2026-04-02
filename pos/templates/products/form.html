@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ 'ແກ້ໄຂ' if product else 'ເພີ່ມ' }}ສິນຄ້າ{% endblock %}
+{% block page_title %}{{ 'ແກ້ໄຂ' if product else 'ເພີ່ມ' }}ສິນຄ້າ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">ລະຫັດສິນຄ້າ</label>
+              <input type="text" name="code" class="form-control"
+                     value="{{ product.code if product else '' }}" placeholder="ອັດຕະໂນມັດ"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ໝວດໝູ່</label>
+              <select name="category_id" class="form-select">
+                <option value="">-- ບໍ່ມີ --</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {{ 'selected' if product and product.category_id == c.id }}>
+                  {{ c.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">ຊື່ສິນຄ້າ <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control" required
+                     value="{{ product.name if product else '' }}"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ຫົວໜ່ວຍ</label>
+              <input type="text" name="unit" class="form-control"
+                     value="{{ product.unit if product else 'ອັນ' }}"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ຈໍານວນ (ສ ock)</label>
+              <input type="number" name="stock_qty" class="form-control" step="0.01" min="0"
+                     value="{{ product.stock_qty if product else 0 }}"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ລາຄາຕ້ນທຶນ</label>
+              <input type="number" name="cost_price" class="form-control" step="0.01" min="0"
+                     value="{{ product.cost_price if product else 0 }}"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ລາຄາຂາຍ <span class="text-danger">*</span></label>
+              <input type="number" name="sell_price" class="form-control" step="0.01" min="0" required
+                     value="{{ product.sell_price if product else 0 }}"/>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>ບັນທຶກ
+            </button>
+            <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary">ຍົກເລີກ</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
