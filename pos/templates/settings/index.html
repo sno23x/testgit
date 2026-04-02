@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}ຕັ້ງຄ່າລະບົບ{% endblock %}
+{% block page_title %}ຕັ້ງຄ່າລະບົບ{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Shop info + Exchange rate -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold"><i class="bi bi-shop me-1"></i>ຂໍ້ມູນຮ້ານ &amp; ອັດຕາແລກປ່ຽນ</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ຊື່ຮ້ານ</label>
+            <input type="text" name="shop_name" class="form-control" value="{{ s.shop_name }}"/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ທີ່ຢູ່ຮ້ານ</label>
+            <textarea name="shop_address" class="form-control" rows="2">{{ s.shop_address }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ເບີໂທ</label>
+            <input type="text" name="shop_phone" class="form-control" value="{{ s.shop_phone }}"/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">URL ຮູບ QR ຮ້ານ (ໃສ່ຖ້າມີ)</label>
+            <input type="text" name="shop_qr" class="form-control"
+                   value="{{ s.shop_qr }}" placeholder="https://... ຫຼື ເສັ້ນທາງໄຟລ໌"/>
+            <div class="form-text">ຈະສະແດງໃນໃບບິນ (ຂວາ-ເທິງ)</div>
+          </div>
+
+          <hr/>
+          <!-- Exchange rate -->
+          <div class="mb-1">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-currency-exchange me-1 text-warning"></i>
+              ອັດຕາແລກປ່ຽນ: 1 ບາດ (฿) = ? ກີບ
+            </label>
+            <div class="input-group" style="max-width:280px;">
+              <span class="input-group-text">฿ 1 =</span>
+              <input type="number" name="thb_to_lak" class="form-control fw-bold"
+                     value="{{ s.thb_to_lak }}" step="0.01" min="1" id="rateInput"
+                     oninput="previewCalc()"/>
+              <span class="input-group-text">ກີບ</span>
+            </div>
+            <div class="form-text" id="ratePreview"></div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>ບັນທຶກການຕັ້ງຄ່າ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recalculate prices -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 border-start border-warning border-3">
+      <div class="card-header fw-semibold text-warning">
+        <i class="bi bi-calculator me-1"></i>ຄຳນວນລາຄາ LAK ໃໝ່ທັງໝົດ
+      </div>
+      <div class="card-body">
+        <p class="small text-muted">
+          ຖ້າທ່ານປ່ຽນ exchange rate ແລ້ວຢາກໃຫ້ລາຄາ LAK ຂອງສິນຄ້າ
+          ທີ່ມີ <strong>ລາຄາ THB</strong> ຄຳນວນໃໝ່ອັດຕະໂນມັດ ກົດປຸ່ມນີ້ໄດ້ເລີຍ.
+        </p>
+        <p class="small text-muted mb-3">
+          ⚠️ ສິນຄ້າທີ່ໃສ່ລາຄາ LAK ໂດຍກົງ (ບໍ່ມີ THB) ຈະບໍ່ຖືກກະທົບ.
+        </p>
+        <form method="POST" action="{{ url_for('settings.recalculate') }}"
+              onsubmit="return confirm('ຄຳນວນລາຄາ LAK ໃໝ່ທັງໝົດ?\nRate: 1 ບາດ = {{ s.thb_to_lak }} ກີບ')">
+          <div class="d-grid">
+            <button type="submit" class="btn btn-warning fw-semibold">
+              <i class="bi bi-arrow-repeat me-1"></i>ຄຳນວນລາຄາໃໝ່ທັງໝົດ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Current rate preview card -->
+    <div class="card shadow-sm border-0 mt-3">
+      <div class="card-header fw-semibold"><i class="bi bi-info-circle me-1"></i>Rate ປັດຈຸບັນ</div>
+      <div class="card-body text-center">
+        <p class="display-6 fw-bold text-warning mb-0">{{ s.thb_to_lak }}</p>
+        <p class="text-muted">ກີບ / 1 ບາດ</p>
+        <hr/>
+        <div class="row text-center small">
+          <div class="col">
+            <div class="text-muted">฿100</div>
+            <div class="fw-bold">{{ "{:,.0f}".format(100 * s.thb_to_lak | float) }} ກີບ</div>
+          </div>
+          <div class="col">
+            <div class="text-muted">฿500</div>
+            <div class="fw-bold">{{ "{:,.0f}".format(500 * s.thb_to_lak | float) }} ກີບ</div>
+          </div>
+          <div class="col">
+            <div class="text-muted">฿1,000</div>
+            <div class="fw-bold">{{ "{:,.0f}".format(1000 * s.thb_to_lak | float) }} ກີບ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewCalc() {
+  const rate = parseFloat(document.getElementById('rateInput').value) || 0;
+  if (rate > 0) {
+    document.getElementById('ratePreview').innerHTML =
+      `ຕົວຢ່າງ: ฿100 = <strong>${(100*rate).toLocaleString()} ກີບ</strong>, ` +
+      `฿1,000 = <strong>${(1000*rate).toLocaleString()} ກີບ</strong>`;
+  }
+}
+previewCalc();
+</script>
+{% endblock %}

@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone, date
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import db, Product, Customer, Sale, SaleItem, Employee
+from models import db, Product, Customer, Sale, SaleItem, Employee, Setting
 
 pos_bp = Blueprint("pos", __name__)
 
@@ -136,4 +136,9 @@ def create_sale():
 @login_required
 def receipt(sale_id):
     sale = Sale.query.get_or_404(sale_id)
-    return render_template("pos/receipt.html", sale=sale)
+    return render_template("pos/receipt.html", sale=sale,
+        shop_name=Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ"),
+        shop_address=Setting.get("shop_address", ""),
+        shop_phone=Setting.get("shop_phone", ""),
+        shop_qr=Setting.get("shop_qr", ""),
+    )

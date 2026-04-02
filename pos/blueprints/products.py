@@ -1,6 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required
-from models import db, Product, Category
+from models import db, Product, Category, Setting
+
+
+def _compute_sell_price(price_thb, sell_price_manual):
+    """ຖ້າໃສ່ລາຄາ THB ຈະຄຳນວນ LAK ອັດຕະໂນມັດ, ຖ້າບໍ່ໃຊ້ ລາຄາ LAK ທີ່ກຳນົດ"""
+    thb = float(price_thb or 0)
+    if thb > 0:
+        try:
+            rate = float(Setting.get("thb_to_lak", "830"))
+        except ValueError:
+            rate = 830.0
+        return round(thb * rate), thb
+    return float(sell_price_manual or 0), None
 
 products_bp = Blueprint("products", __name__)
 
@@ -25,18 +37,22 @@ def list_products():
 @login_required
 def add_product():
     categories = Category.query.order_by(Category.name).all()
+    rate = Setting.get("thb_to_lak", "830")
     if request.method == "POST":
         code = request.form.get("code", "").strip()
         if not code:
-            # auto-generate
             last = Product.query.order_by(Product.id.desc()).first()
             code = f"P{(last.id + 1 if last else 1):05d}"
+        sell_price, price_thb = _compute_sell_price(
+            request.form.get("price_thb"), request.form.get("sell_price")
+        )
         p = Product(
             code=code,
             name=request.form.get("name", "").strip(),
             unit=request.form.get("unit", "ອັນ").strip(),
             cost_price=float(request.form.get("cost_price", 0) or 0),
-            sell_price=float(request.form.get("sell_price", 0) or 0),
+            price_thb=price_thb,
+            sell_price=sell_price,
             stock_qty=float(request.form.get("stock_qty", 0) or 0),
             category_id=int(request.form.get("category_id")) if request.form.get("category_id") else None,
         )
@@ -44,7 +60,7 @@ def add_product():
         db.session.commit()
         flash("ເພີ່ມສິນຄ້າສໍາເລັດ", "success")
         return redirect(url_for("products.list_products"))
-    return render_template("products/form.html", product=None, categories=categories)
+    return render_template("products/form.html", product=None, categories=categories, rate=rate)
 
 
 @products_bp.route("/<int:pid>/edit", methods=["GET", "POST"])
@@ -52,18 +68,23 @@ def add_product():
 def edit_product(pid):
     p = Product.query.get_or_404(pid)
     categories = Category.query.order_by(Category.name).all()
+    rate = Setting.get("thb_to_lak", "830")
     if request.method == "POST":
         p.code = request.form.get("code", p.code).strip()
         p.name = request.form.get("name", p.name).strip()
         p.unit = request.form.get("unit", p.unit).strip()
         p.cost_price = float(request.form.get("cost_price", 0) or 0)
-        p.sell_price = float(request.form.get("sell_price", 0) or 0)
         p.stock_qty = float(request.form.get("stock_qty", 0) or 0)
         p.category_id = int(request.form.get("category_id")) if request.form.get("category_id") else None
+        sell_price, price_thb = _compute_sell_price(
+            request.form.get("price_thb"), request.form.get("sell_price")
+        )
+        p.price_thb = price_thb
+        p.sell_price = sell_price
         db.session.commit()
         flash("ແກ້ໄຂສໍາເລັດ", "success")
         return redirect(url_for("products.list_products"))
-    return render_template("products/form.html", product=p, categories=categories)
+    return render_template("products/form.html", product=p, categories=categories, rate=rate)
 
 
 @products_bp.route("/<int:pid>/delete", methods=["POST"])
