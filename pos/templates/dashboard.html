@@ -84,7 +84,7 @@
     {% if low_stock %}
     <div class="card shadow-sm border-0 border-start border-warning border-3">
       <div class="card-header fw-semibold text-warning">
-        <i class="bi bi-exclamation-triangle me-1"></i>ສ ock ຕໍ່າ
+        <i class="bi bi-exclamation-triangle me-1"></i>Stock <10
       </div>
       <ul class="list-group list-group-flush">
         {% for p in low_stock %}
@@ -117,7 +117,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 const monthly = {{ monthly | tojson }};
-const labels = monthly.map(r => `เดือน ${r[1]}`);
+const labels = monthly.map(r => `ເດືອນ ${r[1]}`);
 const data = monthly.map(r => r[2]);
 new Chart(document.getElementById('monthlyChart'), {
   type: 'bar',

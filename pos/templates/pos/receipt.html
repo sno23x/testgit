@@ -34,27 +34,25 @@
       margin-bottom: 4mm;
     }
     .shop-info { flex: 1; }
-    .shop-name { font-size: 11pt; font-weight: 700; line-height: 1.4; }
+    .shop-name { font-size: 13pt; font-weight: 700; line-height: 1.4; }
     .shop-addr { font-size: 9pt; line-height: 1.5; color: #222; }
 
     .header-right { text-align: right; flex-shrink: 0; margin-left: 6mm; }
-    .header-right img.qr { width: 22mm; height: 22mm; object-fit: contain; }
+    .header-right img.qr { width: 25mm; height: 25mm; object-fit: contain; }
     .qr-placeholder {
-      width: 22mm; height: 22mm;
+      width: 25mm; height: 25mm;
       border: 1.5px solid #000;
       display: flex; align-items: center; justify-content: center;
       font-size: 7pt; color: #888; text-align: center;
     }
-    .header-right .date-line { font-size: 8.5pt; margin-top: 1mm; }
-    .header-right .cid-line { font-size: 8.5pt; margin-top: 1mm; }
+    .header-right .date-line { font-size: 8.5pt; margin-top: 0.5mm; }
+    .header-right .cid-line { font-size: 8.5pt; margin-top: 0.5mm; }
 
     /* ===== Title ===== */
     .bill-title {
       text-align: center;
-      font-size: 13pt;
+      font-size: 14pt;
       font-weight: 700;
-      border-top: 1.5px solid #000;
-      border-bottom: 1px solid #888;
       padding: 2mm 0;
       margin-bottom: 3mm;
     }
@@ -62,34 +60,33 @@
     /* ===== Customer info ===== */
     .cust-row {
       display: flex;
-      gap: 4mm;
+      gap: 6mm;
       margin-bottom: 1.5mm;
       font-size: 10pt;
     }
     .cust-label { font-weight: 600; white-space: nowrap; }
-    .cust-row .divider { color: #aaa; }
+    .cust-row .divider { color: #ffffff; }
 
     /* ===== Product table ===== */
     table.items {
       width: 100%;
       border-collapse: collapse;
       margin-top: 2mm;
-      font-size: 9.5pt;
+      font-size: 8.5pt;
     }
     table.items thead tr {
-      border-top: 1.5px solid #000;
-      border-bottom: 1px solid #555;
+      border-bottom: 1.5px solid #000000;
     }
     table.items thead th {
-      padding: 1.5mm 1mm;
+      padding: 0.1mm 0.1mm;
       font-weight: 700;
       text-align: center;
     }
-    table.items th.left, table.items td.left { text-align: left; }
-    table.items th.right, table.items td.right { text-align: right; }
+    table.items th.left, table.items td.left { text-align: center; }
+    table.items th.center, table.items td.right { text-align: center; }
 
     table.items tbody tr {
-      border-bottom: 0.4px solid #ddd;
+      border-bottom: 0.4px solid #ffffff;
     }
     table.items tbody td {
       padding: 1.5mm 1mm;
@@ -106,7 +103,7 @@
     .total-row {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: center;
       padding: 3mm 0 2mm 0;
       font-size: 13pt;
       font-weight: 700;
@@ -205,7 +202,7 @@
         <th class="left" style="width:18mm;">ລະຫັດ</th>
         <th class="left">ຊື່ສິນຄ້າ</th>
         <th style="width:10mm;">ຈ/ນ</th>
-        <th style="width:12mm;">ຫົວໜ່ວຍ</th>
+        <th style="width:12mm;">ໜ່ວຍ</th>
         <th class="right" style="width:22mm;">ລາຄາ</th>
         <th class="right" style="width:22mm;">ເປັນເງິນ</th>
       </tr>
@@ -249,7 +246,7 @@
 
   <!-- Payment type -->
   <div style="font-size:9pt; color:#555; margin-bottom:3mm;">
-    ປະເພດ: <strong>{{ 'ເງິນສົດ' if sale.payment_type == 'cash' else 'ຕິດໜີ້' }}</strong>
+    ປະເພດ: <strong>{{ 'ເງິນສົດ' if sale.payment_type == 'cash' else 'ຄ້າງຊຳລະ' }}</strong>
     {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
   </div>
 

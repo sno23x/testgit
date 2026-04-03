@@ -31,7 +31,7 @@
                      value="{{ product.name if product else '' }}"/>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ຫົວໜ່ວຍ</label>
+              <label class="form-label fw-semibold">ໜ່ວຍ</label>
               <div class="input-group">
                 <input type="text" name="unit" id="unitInput" class="form-control"
                        value="{{ product.unit if product else 'ອັນ' }}"/>
@@ -40,19 +40,19 @@
                   <i class="bi bi-chevron-down"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  {% for u in ['ອັນ','ຖົງ','ກ','ກິໂລ','ລິດ','ກ່ອງ','ໂຕນ','ທ່ອນ','ດຳ','ແຜ່ນ','ຄູ່','ເຕ','ດ້ານ','ຫ່ໍ','ຈ່ຽງ'] %}
+                  {% for u in ['ອັນ','ຖົງ','ກິໂລ','ກ່ອງ','ໂຕນ','ແຜ່ນ'] %}
                   <li><a class="dropdown-item" href="#" onclick="setUnit('{{ u }}');return false;">{{ u }}</a></li>
                   {% endfor %}
                 </ul>
               </div>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ຈໍານວນ (ສ ock)</label>
+              <label class="form-label fw-semibold">ຈໍານວນ (Stock)</label>
               <input type="number" name="stock_qty" class="form-control" step="0.01" min="0"
                      value="{{ product.stock_qty if product else 0 }}"/>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ລາຄາຕ້ນທຶນ (ກີບ)</label>
+              <label class="form-label fw-semibold">ລາຄາຕົ້ນທຶນ (ກີບ)</label>
               <input type="number" name="cost_price" class="form-control" step="0.01" min="0"
                      value="{{ product.cost_price if product else 0 }}"/>
             </div>

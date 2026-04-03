@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}ລະບົບ POS – ຮ້ານວັດສະດຸກໍ່ສ້າງ{% endblock %}</title>
+  <title>{% block title %}ລະບົບ POS – ຮ້ານວັນນາຂາຍເຄື່ອງກໍ່ສ້າງ{% endblock %}</title>
   <!-- Noto Sans Lao -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -19,7 +19,7 @@
   <nav class="sidebar d-flex flex-column flex-shrink-0 p-0" id="sidebar">
     <a class="sidebar-brand d-flex align-items-center px-3 py-3 text-white text-decoration-none" href="{{ url_for('pos.dashboard') }}">
       <i class="bi bi-building me-2 fs-5"></i>
-      <span class="fw-bold">POS ວັດສະດຸ</span>
+      <span class="fw-bold">ຮ້ານວັນນາຂາຍເຄື່ອງກໍ່ສ້າງ</span>
     </a>
     <hr class="text-white-50 my-0"/>
     <ul class="nav nav-pills flex-column mb-auto px-2 pt-2">
@@ -36,7 +36,7 @@
       <hr class="text-white-50 my-1"/>
       <li class="nav-item">
         <a href="{{ url_for('products.list_products') }}" class="nav-link text-white {{ 'active' if 'products' in request.endpoint }}">
-          <i class="bi bi-box-seam me-2"></i>ສິນຄ້າ / ສ໋ອກ
+          <i class="bi bi-box-seam me-2"></i>ສິນຄ້າ / Stock
         </a>
       </li>
       <li class="nav-item">
