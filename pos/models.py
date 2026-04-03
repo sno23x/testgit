@@ -197,9 +197,13 @@ class PayrollRecord(db.Model):
     employee = db.relationship("Employee")
 
     def calc_net(self):
-        daily = self.base_salary / max(self.working_days, 1)
-        deduct_absent = daily * self.absent_days
-        ot_amount = self.ot_hours * self.ot_rate
-        self.net_salary = max(0, self.base_salary - deduct_absent + ot_amount
-                              + self.bonus - self.other_deductions)
+        base    = float(self.base_salary or 0)
+        days    = max(int(self.working_days or 26), 1)
+        absent  = int(self.absent_days or 0)
+        ot_h    = float(self.ot_hours or 0)
+        ot_r    = float(self.ot_rate or 0)
+        bonus   = float(self.bonus or 0)
+        deduct  = float(self.other_deductions or 0)
+        daily_rate = base / days
+        self.net_salary = max(0, base - daily_rate * absent + ot_h * ot_r + bonus - deduct)
         return self.net_salary
