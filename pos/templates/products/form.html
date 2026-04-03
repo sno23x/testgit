@@ -104,10 +104,15 @@
 const rate = parseFloat("{{ rate }}") || 830;
 document.getElementById('rateDisplay').textContent = rate.toLocaleString();
 
+function roundPrice(p) {
+  p = Math.floor(p);
+  const rem = p % 1000;
+  return rem >= 500 ? p - rem + 1000 : p - rem;
+}
 function calcKip() {
   const thb = parseFloat(document.getElementById('price_thb').value) || 0;
   if (thb > 0) {
-    const kip = Math.round(thb * rate);
+    const kip = roundPrice(thb * rate);
     document.getElementById('sell_price').value = kip;
     document.getElementById('calcResult').textContent =
       `฿${thb.toLocaleString()} × ${rate.toLocaleString()} = ${kip.toLocaleString()} ກີບ`;

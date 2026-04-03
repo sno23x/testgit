@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import db, Setting, Product
+from models import db, Setting, Product, round_price
 
 settings_bp = Blueprint("settings", __name__)
 
@@ -60,7 +60,7 @@ def recalculate():
     updated = 0
     for p in Product.query.filter(Product.price_thb.isnot(None), Product.active == True).all():
         if p.price_thb and p.price_thb > 0:
-            p.sell_price = round(p.price_thb * rate)
+            p.sell_price = round_price(p.price_thb * rate)
             updated += 1
     db.session.commit()
     flash(f"ຄຳນວນລາຄາໃໝ່ {updated} ລາຍການ (rate: 1 ບາດ = {rate:,.0f} ກີບ)", "success")
