@@ -73,6 +73,7 @@ class Product(db.Model):
 class Customer(db.Model):
     __tablename__ = "customers"
     id = db.Column(db.Integer, primary_key=True)
+    cust_code = db.Column(db.String(50), default="")   # External Cust ID (e.g. CID001)
     name = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(50), default="")
     address = db.Column(db.Text, default="")

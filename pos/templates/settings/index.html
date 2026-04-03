@@ -57,6 +57,49 @@
     </div>
   </div>
 
+  <!-- Receipt settings -->
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold"><i class="bi bi-receipt me-1"></i>ຕັ້ງຄ່າໃບບິນ</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <!-- Hidden fields to re-submit shop fields unchanged -->
+          <input type="hidden" name="shop_name" value="{{ s.shop_name }}"/>
+          <input type="hidden" name="shop_address" value="{{ s.shop_address }}"/>
+          <input type="hidden" name="shop_phone" value="{{ s.shop_phone }}"/>
+          <input type="hidden" name="shop_qr" value="{{ s.shop_qr }}"/>
+          <input type="hidden" name="thb_to_lak" value="{{ s.thb_to_lak }}"/>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">ຈໍານວນແຖວ / ໜ້າ</label>
+              <input type="number" name="receipt_rows" class="form-control"
+                     value="{{ s.receipt_rows }}" min="5" max="30" step="1"/>
+              <div class="form-text">ໃນ 1 ໜ້າ A5 (ເລີ່ມຕົ້ນ 15)</div>
+            </div>
+            <div class="col-md-3 d-flex align-items-center gap-3 pt-4">
+              <div class="form-check form-switch">
+                <input type="checkbox" name="receipt_auto_print" value="1"
+                       class="form-check-input" id="autoPrint"
+                       {{ 'checked' if s.receipt_auto_print == '1' }}/>
+                <label class="form-check-label fw-semibold" for="autoPrint">ພິມອັດຕະໂນມັດ</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">ຂໍ້ຄວາມທ້າຍໃບບິນ</label>
+              <input type="text" name="receipt_footer" class="form-control"
+                     value="{{ s.receipt_footer }}" placeholder="ຂອບໃຈທີ່ໃຊ້ບໍລິການ..."/>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-save me-1"></i>ບັນທຶກຕັ້ງຄ່າໃບບິນ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Recalculate prices -->
   <div class="col-lg-5">
     <div class="card shadow-sm border-0 border-start border-warning border-3">

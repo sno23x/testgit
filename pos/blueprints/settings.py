@@ -8,8 +8,11 @@ DEFAULT_SETTINGS = {
     "shop_name": "ຮ້ານວັດສະດຸກໍ່ສ້າງ",
     "shop_address": "ທີ່ຢູ່ຮ້ານ",
     "shop_phone": "020-XXXXXXXX",
-    "shop_qr": "",        # URL ຫຼື path ຮູບ QR ຮ້ານ
-    "thb_to_lak": "830",  # 1 ບາດ = 830 ກີບ (ຄ່າເລີ່ມຕົ້ນ)
+    "shop_qr": "",
+    "thb_to_lak": "830",
+    "receipt_rows": "15",        # ຈໍານວນແຖວໃນຕາຕະລາງໃບບິນ
+    "receipt_auto_print": "1",   # 1=ພິມອັດຕະໂນມັດ, 0=ບໍ່
+    "receipt_footer": "",        # ຂໍ້ຄວາມທ້າຍໃບບິນ
 }
 
 
@@ -30,8 +33,12 @@ def save():
         flash("ສິດທິ admin ເທົ່ານັ້ນ", "danger")
         return redirect(url_for("pos.dashboard"))
     for key in DEFAULT_SETTINGS:
-        val = request.form.get(key, "").strip()
-        Setting.set(key, val)
+        if key in request.form:
+            # checkbox (receipt_auto_print) only sent when checked
+            Setting.set(key, request.form.get(key, "").strip())
+    # Handle unchecked checkboxes explicitly
+    if "receipt_auto_print" not in request.form and "receipt_rows" in request.form:
+        Setting.set("receipt_auto_print", "0")
     db.session.commit()
     flash("ບັນທຶກການຕັ້ງຄ່າສໍາເລັດ", "success")
     return redirect(url_for("settings.index"))

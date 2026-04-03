@@ -67,6 +67,17 @@ body { font-family: 'Noto Sans Lao', 'Segoe UI', sans-serif; }
 .badge { font-size: 0.75rem; }
 .card { border-radius: 10px; }
 
+/* ===== Sticky toolbar ===== */
+.sticky-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bs-body-bg, #f5f7fa);
+  padding: 8px 0 4px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
 /* ===== Dark mode ===== */
 [data-bs-theme="dark"] .topbar {
   background: #1e1e2e;

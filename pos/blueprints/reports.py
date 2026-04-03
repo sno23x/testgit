@@ -54,8 +54,8 @@ def index():
             func.sum(Sale.total).label("t")
         ).filter(extract("year", Sale.created_at) == sel_year)\
          .group_by("m").order_by("m").all()
-        chart_labels = [f"ເດືອນ {int(r.m)}" for r in monthly_data]
-        chart_data = [float(r.t) for r in monthly_data]
+        chart_labels = [f"ເດືອນ {int(r[0])}" for r in monthly_data]
+        chart_data = [float(r[1] or 0) for r in monthly_data]
         context = dict(view=view, sales=sales, total=total, label=label,
                        sel_year=sel_year, chart_labels=chart_labels, chart_data=chart_data)
 
