@@ -57,9 +57,11 @@ def run_migrations(app):
     with app.app_context():
         os.makedirs("instance", exist_ok=True)
         os.makedirs(os.path.join("static", "img"), exist_ok=True)
+        os.makedirs(os.path.join("static", "uploads", "products"), exist_ok=True)
         db.create_all()
         migrations = [
             "ALTER TABLE products ADD COLUMN price_thb FLOAT",
+            "ALTER TABLE products ADD COLUMN image VARCHAR(200) DEFAULT ''",
             "ALTER TABLE employees ADD COLUMN base_salary FLOAT DEFAULT 0",
             "ALTER TABLE employees ADD COLUMN ot_rate FLOAT DEFAULT 0",
             "ALTER TABLE sales ADD COLUMN currency VARCHAR(5) DEFAULT 'LAK'",

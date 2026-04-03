@@ -1,6 +1,23 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+import os, uuid
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required
+from werkzeug.utils import secure_filename
 from models import db, Product, Category, Setting, round_price
+
+ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
+
+def _save_image(file_obj, old_filename=""):
+    """Save uploaded image, return filename or old_filename if no new file."""
+    if not file_obj or file_obj.filename == "":
+        return old_filename
+    ext = file_obj.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ALLOWED_EXT:
+        return old_filename
+    fname = f"{uuid.uuid4().hex}.{ext}"
+    upload_dir = os.path.join(current_app.static_folder, "uploads", "products")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_obj.save(os.path.join(upload_dir, fname))
+    return fname
 
 
 def _compute_sell_price(price_thb, sell_price_manual):
@@ -57,6 +74,7 @@ def add_product():
             sell_price=sell_price,
             stock_qty=float(request.form.get("stock_qty", 0) or 0),
             category_id=int(request.form.get("category_id")) if request.form.get("category_id") else None,
+            image=_save_image(request.files.get("image")),
         )
         db.session.add(p)
         db.session.commit()
@@ -83,6 +101,8 @@ def edit_product(pid):
         )
         p.price_thb = price_thb
         p.sell_price = sell_price
+        new_img = _save_image(request.files.get("image"), p.image or "")
+        p.image = new_img
         db.session.commit()
         flash("ແກ້ໄຂສໍາເລັດ", "success")
         return redirect(url_for("products.list_products"))

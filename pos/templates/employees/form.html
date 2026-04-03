@@ -26,8 +26,16 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">ສິດທິ</label>
             <select name="role" class="form-select">
-              <option value="cashier" {{ 'selected' if employee and employee.role == 'cashier' }}>cashier</option>
-              <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>admin</option>
+              {% set roles = [
+                ('admin',    'ຜູ້ດູແລລະບົບ (Admin)'),
+                ('cashier',  'ແຄຊຽ (Cashier)'),
+                ('accountant', 'ບັນຊີ (Accountant)'),
+                ('driver',   'ໂຊເຟີລົດ (Driver)'),
+                ('porter',   'ພະນັກງານແບກຫາມ (Porter)'),
+              ] %}
+              {% for val, label in roles %}
+              <option value="{{ val }}" {{ 'selected' if employee and employee.role == val }}>{{ label }}</option>
+              {% endfor %}
             </select>
           </div>
           <hr/>
