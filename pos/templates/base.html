@@ -59,6 +59,11 @@
           <i class="bi bi-person-badge me-2"></i>ພະນັກງານ
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{{ url_for('payroll.index') }}" class="nav-link text-white {{ 'active' if 'payroll' in request.endpoint }}">
+          <i class="bi bi-wallet2 me-2"></i>ເງິນເດືອນ
+        </a>
+      </li>
       <hr class="text-white-50 my-1"/>
       <li class="nav-item">
         <a href="{{ url_for('reports.index') }}" class="nav-link text-white {{ 'active' if 'reports' in request.endpoint }}">
@@ -88,9 +93,14 @@
         <i class="bi bi-list"></i>
       </button>
       <span class="fw-semibold text-muted">{% block page_title %}{% endblock %}</span>
-      <div class="ms-auto small text-muted">
-        <i class="bi bi-calendar me-1"></i>
-        <span id="clock"></span>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-outline-secondary" id="darkToggle" title="Dark / Light mode" onclick="toggleDark()">
+          <i class="bi bi-moon-stars-fill" id="darkIcon"></i>
+        </button>
+        <small class="text-muted">
+          <i class="bi bi-calendar me-1"></i>
+          <span id="clock"></span>
+        </small>
       </div>
     </header>
 
@@ -126,6 +136,18 @@
   document.querySelectorAll('.alert-dismissible').forEach(el => {
     setTimeout(() => bootstrap.Alert.getOrCreateInstance(el)?.close(), 4000);
   });
+
+  // Dark mode
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-bs-theme', on ? 'dark' : 'light');
+    document.getElementById('darkIcon').className = on ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+    localStorage.setItem('darkMode', on ? '1' : '0');
+  }
+  function toggleDark() {
+    applyDark(document.documentElement.getAttribute('data-bs-theme') !== 'dark');
+  }
+  // Restore preference
+  applyDark(localStorage.getItem('darkMode') === '1');
 </script>
 <script src="{{ url_for('static', filename='js/pos.js') }}"></script>
 {% block scripts %}{% endblock %}

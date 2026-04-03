@@ -1,4 +1,5 @@
 import os
+import sqlalchemy as sa
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
 from config import Config
@@ -12,6 +13,8 @@ from blueprints.expenses import expenses_bp
 from blueprints.employees import employees_bp
 from blueprints.reports import reports_bp
 from blueprints.settings import settings_bp
+from blueprints.import_data import import_bp
+from blueprints.payroll import payroll_bp
 
 login_manager = LoginManager()
 
@@ -39,6 +42,8 @@ def create_app():
     app.register_blueprint(employees_bp, url_prefix="/employees")
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(settings_bp, url_prefix="/settings")
+    app.register_blueprint(import_bp, url_prefix="/import")
+    app.register_blueprint(payroll_bp, url_prefix="/payroll")
 
     @app.route("/")
     def index():
@@ -48,20 +53,25 @@ def create_app():
 
 
 def run_migrations(app):
-    """ເພີ່ມ column ໃໝ່ທີ່ອາດຈະຍັງບໍ່ມີໃນ DB ເກົ່າ"""
-    import sqlalchemy as sa
+    """ເພີ່ມ column ໃໝ່ທີ່ອາດຍັງບໍ່ມີໃນ DB ເກົ່າ"""
     with app.app_context():
         os.makedirs("instance", exist_ok=True)
+        os.makedirs(os.path.join("static", "img"), exist_ok=True)
         db.create_all()
+        migrations = [
+            "ALTER TABLE products ADD COLUMN price_thb FLOAT",
+            "ALTER TABLE employees ADD COLUMN base_salary FLOAT DEFAULT 0",
+            "ALTER TABLE employees ADD COLUMN ot_rate FLOAT DEFAULT 0",
+            "ALTER TABLE sales ADD COLUMN currency VARCHAR(5) DEFAULT 'LAK'",
+            "ALTER TABLE sale_items ADD COLUMN item_discount FLOAT DEFAULT 0",
+        ]
         with db.engine.connect() as conn:
-            for stmt in [
-                "ALTER TABLE products ADD COLUMN price_thb FLOAT",
-            ]:
+            for stmt in migrations:
                 try:
                     conn.execute(sa.text(stmt))
                     conn.commit()
                 except Exception:
-                    pass  # column already exists
+                    pass
 
 
 if __name__ == "__main__":

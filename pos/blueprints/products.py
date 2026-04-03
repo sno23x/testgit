@@ -124,3 +124,29 @@ def delete_category(cid):
     db.session.commit()
     flash("ລຶບໝວດໝູ່ສໍາເລັດ", "success")
     return redirect(url_for("products.list_categories"))
+
+
+# --- Bulk operations ---
+@products_bp.route("/bulk-delete", methods=["POST"])
+@login_required
+def bulk_delete():
+    data = request.get_json()
+    ids = data.get("ids", [])
+    if not ids:
+        return jsonify({"ok": False, "error": "ບໍ່ມີ ID"})
+    Product.query.filter(Product.id.in_(ids)).update({"active": False}, synchronize_session=False)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@products_bp.route("/bulk-category", methods=["POST"])
+@login_required
+def bulk_category():
+    data = request.get_json()
+    ids = data.get("ids", [])
+    cat_id = data.get("category_id")
+    if not ids or not cat_id:
+        return jsonify({"ok": False, "error": "ຂໍ້ມູນບໍ່ຄົບ"})
+    Product.query.filter(Product.id.in_(ids)).update({"category_id": cat_id}, synchronize_session=False)
+    db.session.commit()
+    return jsonify({"ok": True})

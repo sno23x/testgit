@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}ບັນທຶກການເຂົ້າວຽກ{% endblock %}
+{% block page_title %}ບັນທຶກການເຂົ້າວຽກ{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-2 mb-3 align-items-center">
+  <a href="{{ url_for('payroll.index') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>ກັບ
+  </a>
+  <!-- Date picker -->
+  <form class="d-flex gap-2 align-items-center" method="GET" id="dateForm">
+    <label class="small fw-semibold text-nowrap">ວັນທີ:</label>
+    <input type="date" name="date" class="form-control form-control-sm" style="width:160px;"
+           value="{{ sel_date }}" onchange="this.form.submit()"/>
+  </form>
+  <div class="ms-auto">
+    <button type="button" class="btn btn-sm btn-outline-success" onclick="setAll('present')">ທຸກຄົນມາ</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAll('absent')">ທຸກຄົນຂາດ</button>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <form method="POST">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ພະນັກງານ</th>
+            <th>ສະຖານະ</th>
+            <th class="text-center" style="width:100px;">OT (ຊມ)</th>
+            <th>ໝາຍເຫດ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+          {% set a = records.get(emp.id) %}
+          <tr>
+            <td class="fw-semibold">{{ emp.name }}</td>
+            <td>
+              <select name="status_{{ emp.id }}" class="form-select form-select-sm status-sel"
+                      style="width:130px;" onchange="colorRow(this)">
+                {% for s, label in [('present','ມາວຽກ'),('absent','ຂາດ'),('late','ມາຊ້າ'),('half_day','ເຄິ່ງວັນ'),('holiday','ພັກ')] %}
+                <option value="{{ s }}"
+                  {{ 'selected' if a and a.status == s else ('selected' if not a and s == 'present' else '') }}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="text-center">
+              <input type="number" name="ot_{{ emp.id }}" class="form-control form-control-sm text-center"
+                     style="width:80px;" value="{{ a.ot_hours if a else 0 }}" min="0" step="0.5"/>
+            </td>
+            <td>
+              <input type="text" name="note_{{ emp.id }}" class="form-control form-control-sm"
+                     value="{{ a.note if a else '' }}" placeholder="ໝາຍເຫດ..."/>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-4">ບໍ່ມີພະນັກງານ</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex gap-2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save me-1"></i>ບັນທຶກ
+      </button>
+      <input type="hidden" name="dummy" value="1"/>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const statusColors = {
+  present: '', absent: 'table-danger', late: 'table-warning',
+  half_day: 'table-info', holiday: 'table-secondary'
+};
+
+function colorRow(sel) {
+  const tr = sel.closest('tr');
+  Object.values(statusColors).forEach(c => { if (c) tr.classList.remove(c); });
+  const c = statusColors[sel.value];
+  if (c) tr.classList.add(c);
+}
+
+function setAll(status) {
+  document.querySelectorAll('.status-sel').forEach(s => {
+    s.value = status;
+    colorRow(s);
+  });
+}
+
+// Color on load
+document.querySelectorAll('.status-sel').forEach(colorRow);
+</script>
+{% endblock %}

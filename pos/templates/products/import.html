@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}ນໍາເຂົ້າສິນຄ້າ{% endblock %}
+{% block page_title %}ນໍາເຂົ້າສິນຄ້າຈາກ Excel{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-file-earmark-excel me-1 text-success"></i>ອັບໂຫຼດໄຟລ໌ Excel</div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('import_data.import_products') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ເລືອກໄຟລ໌ (.xlsx / .xls)</label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required/>
+          </div>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-upload me-1"></i>ນໍາເຂົ້າ
+          </button>
+          <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary ms-2">ຍົກເລີກ</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Format guide -->
+    <div class="card shadow-sm border-0 border-start border-info border-3">
+      <div class="card-header fw-semibold text-info">
+        <i class="bi bi-info-circle me-1"></i>ຮູບແບບ Excel ທີ່ຮອງຮັບ
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-2">ລະບົບຈະຊອກຫາ header row ໂດຍອັດຕະໂນມັດ. Column ທີ່ຮອງຮັບ:</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered small">
+            <thead class="table-light">
+              <tr>
+                <th>Column</th>
+                <th>ຊື່ທີ່ຮອງຮັບ</th>
+                <th>ໝາຍເຫດ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-secondary">B</span></td>
+                <td>BARCODE, CODE, ລະຫັດ</td>
+                <td>ລະຫັດສິນຄ້າ (ຖ້າວ່າງ ຈະສ້າງໃໝ່)</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">C</span></td>
+                <td>ຊື່ສິນຄ້າ, ຊື່, NAME</td>
+                <td class="text-danger fw-semibold">ຈຳເປັນ</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">D</span></td>
+                <td>ປະເພດ, ໝວດ, TYPE, CATEGORY</td>
+                <td>ຈະສ້າງໝວດໝູ່ໃໝ່ຖ້າຍັງບໍ່ມີ</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">E</span></td>
+                <td>ລາຄາ, PRICE</td>
+                <td>ລາຄາຕົວເລກ (ກີບ ຫຼື ບາດ)</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">F</span></td>
+                <td>THB, CURRENCY</td>
+                <td>ໃສ່ <code>THB</code> ຖ້າລາຄາເປັນບາດ → ຈະແປງເປັນກີບ</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">G</span></td>
+                <td>STOCK, ຈໍານວນ</td>
+                <td>ຈໍານວນສ ock</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-secondary">H</span></td>
+                <td>ໜ່ວຍ, UNIT</td>
+                <td>ຫົວໜ່ວຍ (ອັນ, ກ, ຖົງ...)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted mb-0">
+          ⚠️ ຖ້າ BARCODE ຊ້ຳ ຈະອັບເດດສິນຄ້າທີ່ມີຢູ່ແລ້ວ.
+          ອັດຕາ THB → ກີບ ດຶງຈາກ <a href="{{ url_for('settings.index') }}">ຕັ້ງຄ່າລະບົບ</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

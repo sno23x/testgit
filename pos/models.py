@@ -6,18 +6,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 
 
-class Category(db.Model):
-    __tablename__ = "categories"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    products = db.relationship("Product", backref="category", lazy=True)
-
-    def __repr__(self):
-        return self.name
+def round_price(price):
+    """ປັດ 3 ໂຕທ້າຍ: ≥500 ປັດຂຶ້ນ, <500 ປັດລົງ"""
+    price = int(price)
+    remainder = price % 1000
+    if remainder >= 500:
+        return price - remainder + 1000
+    return price - remainder
 
 
 class Setting(db.Model):
-    """ຕັ້ງຄ່າລະບົບ (key-value)"""
     __tablename__ = "settings"
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False)
@@ -37,6 +35,16 @@ class Setting(db.Model):
             db.session.add(Setting(key=key, value=str(value)))
 
 
+class Category(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    products = db.relationship("Product", backref="category", lazy=True)
+
+    def __repr__(self):
+        return self.name
+
+
 class Product(db.Model):
     __tablename__ = "products"
     id = db.Column(db.Integer, primary_key=True)
@@ -44,8 +52,8 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False)
     unit = db.Column(db.String(50), default="ອັນ")
     cost_price = db.Column(db.Float, default=0)
-    price_thb = db.Column(db.Float, nullable=True)   # ລາຄາໃນເງິນບາດ (ໄທ)
-    sell_price = db.Column(db.Float, nullable=False)  # ລາຄາໃນກີບ (ຄຳນວນອັດຕະໂນມັດ ຫຼື ກຳນົດເອງ)
+    price_thb = db.Column(db.Float, nullable=True)
+    sell_price = db.Column(db.Float, nullable=False)
     stock_qty = db.Column(db.Float, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
     active = db.Column(db.Boolean, default=True)
@@ -78,8 +86,10 @@ class Employee(db.Model, UserMixin):
     name = db.Column(db.String(200), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), default="cashier")  # admin / cashier
+    role = db.Column(db.String(20), default="cashier")
     active = db.Column(db.Boolean, default=True)
+    base_salary = db.Column(db.Float, default=0)
+    ot_rate = db.Column(db.Float, default=0)   # ຄ່າ OT ຕໍ່ຊົ່ວໂມງ
 
     def set_password(self, pw):
         self.password_hash = generate_password_hash(pw)
@@ -101,6 +111,7 @@ class Sale(db.Model):
     discount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
     payment_type = db.Column(db.String(10), default="cash")  # cash / debt
+    currency = db.Column(db.String(5), default="LAK")        # LAK / THB
     paid_amount = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -126,6 +137,7 @@ class SaleItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     qty = db.Column(db.Float, nullable=False)
     unit_price = db.Column(db.Float, nullable=False)
+    item_discount = db.Column(db.Float, default=0)   # ສ່ວນຫຼຸດລາຍການ (%)
     subtotal = db.Column(db.Float, nullable=False)
     product = db.relationship("Product")
 
@@ -148,3 +160,43 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     note = db.Column(db.Text, default="")
     date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+
+
+class Attendance(db.Model):
+    __tablename__ = "attendance"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    # present / absent / late / half_day / holiday
+    status = db.Column(db.String(20), default="present")
+    ot_hours = db.Column(db.Float, default=0)
+    note = db.Column(db.Text, default="")
+    employee = db.relationship("Employee")
+
+
+class PayrollRecord(db.Model):
+    __tablename__ = "payroll_records"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    base_salary = db.Column(db.Float, default=0)
+    working_days = db.Column(db.Integer, default=26)
+    absent_days = db.Column(db.Integer, default=0)
+    ot_hours = db.Column(db.Float, default=0)
+    ot_rate = db.Column(db.Float, default=0)
+    bonus = db.Column(db.Float, default=0)
+    other_deductions = db.Column(db.Float, default=0)
+    net_salary = db.Column(db.Float, default=0)
+    note = db.Column(db.Text, default="")
+    paid = db.Column(db.Boolean, default=False)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    employee = db.relationship("Employee")
+
+    def calc_net(self):
+        daily = self.base_salary / max(self.working_days, 1)
+        deduct_absent = daily * self.absent_days
+        ot_amount = self.ot_hours * self.ot_rate
+        self.net_salary = max(0, self.base_salary - deduct_absent + ot_amount
+                              + self.bonus - self.other_deductions)
+        return self.net_salary
