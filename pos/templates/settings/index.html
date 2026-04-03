@@ -27,7 +27,27 @@
             <label class="form-label fw-semibold">URL ຮູບ QR ຮ້ານ (ໃສ່ຖ້າມີ)</label>
             <input type="text" name="shop_qr" class="form-control"
                    value="{{ s.shop_qr }}" placeholder="https://... ຫຼື ເສັ້ນທາງໄຟລ໌"/>
-            <div class="form-text">ຈະສະແດງໃນໃບບິນ (ຂວາ-ເທິງ)</div>
+            <div class="form-text">ຈະສະແດງໃນໃບບິນ ແລະ ໜ້າ QR ໂອນເງິນ</div>
+          </div>
+
+          <hr/>
+          <p class="fw-semibold mb-2"><i class="bi bi-bank me-1 text-info"></i>ຂໍ້ມູນໂອນເງິນ</p>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small">ທະນາຄານ / Mobile Banking</label>
+              <input type="text" name="bank_name" class="form-control form-control-sm"
+                     value="{{ s.bank_name }}" placeholder="ເຊັ່ນ: BCEL One, LDB..."/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">ຊື່ບັນຊີ</label>
+              <input type="text" name="bank_account_name" class="form-control form-control-sm"
+                     value="{{ s.bank_account_name }}" placeholder="ຊື່ເຈົ້າຂອງບັນຊີ"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">ເລກບັນຊີ</label>
+              <input type="text" name="bank_account_no" class="form-control form-control-sm"
+                     value="{{ s.bank_account_no }}" placeholder="xxxx-xxxx-xxxx"/>
+            </div>
           </div>
 
           <hr/>
@@ -68,6 +88,9 @@
           <input type="hidden" name="shop_address" value="{{ s.shop_address }}"/>
           <input type="hidden" name="shop_phone" value="{{ s.shop_phone }}"/>
           <input type="hidden" name="shop_qr" value="{{ s.shop_qr }}"/>
+          <input type="hidden" name="bank_name" value="{{ s.bank_name }}"/>
+          <input type="hidden" name="bank_account_name" value="{{ s.bank_account_name }}"/>
+          <input type="hidden" name="bank_account_no" value="{{ s.bank_account_no }}"/>
           <input type="hidden" name="thb_to_lak" value="{{ s.thb_to_lak }}"/>
           <div class="row g-3">
             <div class="col-md-3">

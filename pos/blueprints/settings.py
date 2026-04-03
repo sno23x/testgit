@@ -9,10 +9,13 @@ DEFAULT_SETTINGS = {
     "shop_address": "ທີ່ຢູ່ຮ້ານ",
     "shop_phone": "020-XXXXXXXX",
     "shop_qr": "",
+    "bank_name": "",           # ຊື່ທະນາຄານ / ຊື່ Mobile Banking
+    "bank_account_name": "",   # ຊື່ບັນຊີ
+    "bank_account_no": "",     # ເລກບັນຊີ
     "thb_to_lak": "830",
-    "receipt_rows": "15",        # ຈໍານວນແຖວໃນຕາຕະລາງໃບບິນ
-    "receipt_auto_print": "1",   # 1=ພິມອັດຕະໂນມັດ, 0=ບໍ່
-    "receipt_footer": "",        # ຂໍ້ຄວາມທ້າຍໃບບິນ
+    "receipt_rows": "15",
+    "receipt_auto_print": "1",
+    "receipt_footer": "",
 }
 
 

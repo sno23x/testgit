@@ -47,7 +47,15 @@ def dashboard():
 def pos_page():
     customers = Customer.query.order_by(Customer.name).all()
     rate = Setting.get("thb_to_lak", "830")
-    return render_template("pos/index.html", customers=customers, rate=rate)
+    shop_qr          = Setting.get("shop_qr", "")
+    bank_name        = Setting.get("bank_name", "")
+    bank_account_name = Setting.get("bank_account_name", "")
+    bank_account_no  = Setting.get("bank_account_no", "")
+    return render_template("pos/index.html",
+        customers=customers, rate=rate,
+        shop_qr=shop_qr, bank_name=bank_name,
+        bank_account_name=bank_account_name, bank_account_no=bank_account_no,
+    )
 
 
 # ──────────────── Product search (text + barcode) ────────────────

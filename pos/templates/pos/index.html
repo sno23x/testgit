@@ -142,6 +142,56 @@
   </div>
 </div>
 
+<!-- Transfer QR modal -->
+<div class="modal fade" id="transferModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-dark py-2">
+        <h5 class="modal-title fw-bold"><i class="bi bi-phone me-2"></i>ໂອນເງິນ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-3">
+
+        <!-- Amount -->
+        <div class="mb-3">
+          <p class="text-muted small mb-1">ຍອດທີ່ຕ້ອງໂອນ</p>
+          <h2 class="fw-bold text-primary" id="transferAmountDisplay"></h2>
+        </div>
+
+        <!-- QR -->
+        {% if shop_qr %}
+        <img src="{{ shop_qr }}" alt="QR" class="img-fluid mb-2 rounded border"
+             style="max-width:200px; max-height:200px;"/>
+        {% else %}
+        <div class="border rounded d-inline-flex align-items-center justify-content-center mb-2
+                    text-muted small" style="width:160px;height:160px;">
+          <div><i class="bi bi-qr-code fs-1 d-block mb-1"></i>ຍັງບໍ່ມີ QR<br/>
+            <a href="/settings/" class="small">ຕັ້ງຄ່າ</a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Bank info -->
+        {% if bank_name or bank_account_no %}
+        <div class="bg-light rounded p-2 text-start small mx-auto mb-2" style="max-width:260px;">
+          {% if bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong>{{ bank_name }}</strong></div>{% endif %}
+          {% if bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong>{{ bank_account_name }}</strong></div>{% endif %}
+          {% if bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong>{{ bank_account_no }}</strong></div>{% endif %}
+        </div>
+        {% endif %}
+
+        <p class="text-muted small">ໃຫ້ລູກຄ້າສະແກນ QR ແລ້ວໂອນ ຫຼັງຈາກນັ້ນກົດຢືນຢັນ</p>
+      </div>
+      <div class="modal-footer justify-content-center gap-2 py-2">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">ຍົກເລີກ</button>
+        <button class="btn btn-success btn-lg px-4 fw-bold" onclick="confirmTransfer()">
+          <i class="bi bi-check-lg me-1"></i>ຢືນຢັນໂອນແລ້ວ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Success modal -->
 <div class="modal fade" id="successModal" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -169,7 +219,8 @@
 const LAK_RATE = parseFloat("{{ rate }}") || 830;
 let cart = [];
 let rateVal = LAK_RATE;
-const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+const successModal  = new bootstrap.Modal(document.getElementById('successModal'));
+const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
 
 // ─── Barcode / search ───
 let searchTimer, barcodeBuffer = '', barcodeTimer;
@@ -457,6 +508,27 @@ function submitSale(type) {
     document.getElementById('customerSearch').focus();
     return;
   }
+  // ໂອນເງິນ: ສະແດງ QR modal ກ່ອນ
+  if (type === 'transfer') {
+    const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+    const currency = document.querySelector('input[name="currency"]:checked')?.value || 'LAK';
+    const fmt = currency === 'THB'
+      ? (total / (rateVal || 830)).toFixed(2) + ' ບາດ'
+      : Number(total).toLocaleString() + ' ກີບ';
+    document.getElementById('transferAmountDisplay').textContent = fmt;
+    transferModal.show();
+    return;
+  }
+  doSubmit(type);
+}
+
+function confirmTransfer() {
+  transferModal.hide();
+  doSubmit('transfer');
+}
+
+function doSubmit(type) {
+  const customerId = document.getElementById('customerId').value;
   const currency = document.querySelector('input[name="currency"]:checked')?.value || 'LAK';
   const payload = {
     items: cart.map(i => ({
