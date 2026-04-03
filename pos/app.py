@@ -15,6 +15,7 @@ from blueprints.reports import reports_bp
 from blueprints.settings import settings_bp
 from blueprints.import_data import import_bp
 from blueprints.payroll import payroll_bp
+from blueprints.salary_advance import salary_advance_bp
 
 login_manager = LoginManager()
 
@@ -44,6 +45,7 @@ def create_app():
     app.register_blueprint(settings_bp, url_prefix="/settings")
     app.register_blueprint(import_bp, url_prefix="/import")
     app.register_blueprint(payroll_bp, url_prefix="/payroll")
+    app.register_blueprint(salary_advance_bp, url_prefix="/salary-advance")
 
     @app.route("/")
     def index():

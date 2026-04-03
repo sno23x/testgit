@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ 'ແກ້ໄຂ' if advance else 'ເບີກເງິນລ່ວງໜ້າ' }}{% endblock %}
+{% block page_title %}{{ 'ແກ້ໄຂ' if advance else 'ເພີ່ມການເບີກເງິນລ່ວງໜ້າ' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ພະນັກງານ <span class="text-danger">*</span></label>
+            <select name="employee_id" class="form-select" required>
+              <option value="">-- ເລືອກ --</option>
+              {% for e in employees %}
+              <option value="{{ e.id }}" {{ 'selected' if advance and advance.employee_id == e.id }}>
+                {{ e.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ຈຳນວນເງິນ (ກີບ) <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" name="amount" class="form-control" min="1" step="1000" required
+                     value="{{ advance.amount if advance else '' }}" placeholder="0"/>
+              <span class="input-group-text">ກີບ</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ວັນທີ</label>
+            <input type="date" name="advance_date" class="form-control"
+                   value="{{ advance.advance_date.strftime('%Y-%m-%d') if advance else today }}"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ເຫດຜົນ</label>
+            <input type="text" name="reason" class="form-control"
+                   value="{{ advance.reason if advance else '' }}"
+                   placeholder="ເຫດຜົນໃນການເບີກ..."/>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">ໝາຍເຫດ</label>
+            <textarea name="note" class="form-control" rows="2"
+                      placeholder="ໝາຍເຫດ (ຖ້າມີ)...">{{ advance.note if advance else '' }}</textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>ບັນທຶກ
+            </button>
+            <a href="{{ url_for('salary_advance.list_advances') }}" class="btn btn-outline-secondary">ຍົກເລີກ</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set today as default date if no advance
+document.addEventListener('DOMContentLoaded', function() {
+  const dateInput = document.querySelector('input[name="advance_date"]');
+  if (dateInput && !dateInput.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+});
+</script>
+{% endblock %}

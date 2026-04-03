@@ -126,8 +126,11 @@
             <button class="btn btn-success btn-lg" onclick="submitSale('cash')">
               <i class="bi bi-cash me-1"></i>ເງິນສົດ
             </button>
+            <button class="btn btn-info btn-lg text-dark" onclick="submitSale('transfer')">
+              <i class="bi bi-phone me-1"></i>ໂອນເງິນ
+            </button>
             <button class="btn btn-warning btn-lg text-dark" onclick="submitSale('debt')">
-              <i class="bi bi-credit-card me-1"></i>ຕິດໜີ້
+              <i class="bi bi-truck me-1"></i>ຈັດສົ່ງ
             </button>
           </div>
           <button class="btn btn-outline-secondary btn-sm" onclick="toggleRate()">
@@ -450,7 +453,7 @@ function submitSale(type) {
   if (!cart.length) { alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
   const customerId = document.getElementById('customerId').value;
   if (type === 'debt' && !customerId) {
-    alert('ກະລຸນາເລືອກລູກຄ້າເມື່ອຕິດໜີ້');
+    alert('ກະລຸນາເລືອກລູກຄ້າສຳລັບການຈັດສົ່ງ (ຄ້າງຊຳລະ)');
     document.getElementById('customerSearch').focus();
     return;
   }

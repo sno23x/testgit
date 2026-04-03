@@ -103,7 +103,7 @@ def export_excel():
             s.sale_no,
             s.created_at.strftime("%d/%m/%Y %H:%M"),
             s.customer.name if s.customer else "-",
-            "ເງິນສົດ" if s.payment_type == "cash" else "ຕິດໜີ້",
+            "ເງິນສົດ" if s.payment_type == "cash" else ("ໂອນເງິນ" if s.payment_type == "transfer" else "ຄ້າງຊຳລະ"),
             s.discount,
             s.total,
         ])

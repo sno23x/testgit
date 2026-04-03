@@ -7,31 +7,33 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wdth,wght@100,300;100,400;100,600;100,700&display=swap" rel="stylesheet"/>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
       font-family: 'Noto Sans Lao', sans-serif;
-      font-size: 11pt;
+      font-size: 9pt;
       color: #000;
       background: #fff;
     }
 
-    /* A5 page */
+    /* ── Screen preview ── */
     .page {
       width: 148mm;
-      min-height: 210mm;
+      height: 210mm;
+      overflow: hidden;
       margin: 0 auto;
-      padding: 8mm 10mm 8mm 10mm;
+      padding: 7mm 9mm 6mm 9mm;
       display: flex;
       flex-direction: column;
+      background: #fff;
     }
 
-    /* ===== Header ===== */
+    /* ── Header ── */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 4mm;
+      margin-bottom: 2mm;
     }
     .shop-info { flex: 1; }
     .shop-name { font-size: 13pt; font-weight: 700; line-height: 1.4; }
@@ -48,59 +50,54 @@
     .header-right .date-line { font-size: 8.5pt; margin-top: 0.5mm; }
     .header-right .cid-line { font-size: 8.5pt; margin-top: 0.5mm; }
 
-    /* ===== Title ===== */
+    /* ── Title: 2 borders only ── */
     .bill-title {
       text-align: center;
       font-size: 14pt;
       font-weight: 700;
+      border-top: 2px solid #000;
+      border-bottom: 1px solid #000;
       padding: 2mm 0;
       margin-bottom: 3mm;
     }
 
-    /* ===== Customer info ===== */
-    .cust-row {
+    /* ── Customer rows ── */
+    .cust-line {
+      font-size: 10pt;
+      margin-bottom: 1.5mm;
       display: flex;
       gap: 6mm;
-      margin-bottom: 1.5mm;
-      font-size: 10pt;
+      flex-wrap: wrap;
     }
     .cust-label { font-weight: 600; white-space: nowrap; }
-    .cust-row .divider { color: #ffffff; }
 
-    /* ===== Product table ===== */
+    /* ── Items table ── */
     table.items {
       width: 100%;
       border-collapse: collapse;
       margin-top: 2mm;
       font-size: 8.5pt;
+      flex-shrink: 0;
     }
     table.items thead tr {
-      border-bottom: 1.5px solid #000000;
+      border-top: 1.5px solid #000;
+      border-bottom: 1.5px solid #000;
     }
     table.items thead th {
-      padding: 0.1mm 0.1mm;
+      padding: 1mm 0.8mm;
       font-weight: 700;
       text-align: center;
     }
-    table.items th.left, table.items td.left { text-align: center; }
-    table.items th.center, table.items td.right { text-align: center; }
+    table.items th.L, table.items td.L { text-align: left; }
+    table.items th.R, table.items td.R { text-align: right; }
 
-    table.items tbody tr {
-      border-bottom: 0.4px solid #ffffff;
-    }
-    table.items tbody td {
-      padding: 1.5mm 1mm;
-      vertical-align: middle;
-    }
-    table.items tbody tr.empty td { color: #ccc; }
+    table.items tbody tr { border-bottom: 0.4px solid #ccc; }
+    table.items tbody td { padding: 1.5mm 1mm; vertical-align: middle; }
+    table.items tbody tr.empty td { color: #ccc; font-size: 8pt; }
+    table.items tbody tr:last-child { border-bottom: 1.5px solid #000; }
 
-    /* last border */
-    table.items tbody tr:last-child {
-      border-bottom: 1.5px solid #000;
-    }
-
-    /* ===== Total ===== */
-    .total-row {
+    /* ── Total ── */
+    .total-section {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -108,52 +105,74 @@
       font-size: 13pt;
       font-weight: 700;
     }
-    .total-row .label { font-size: 11pt; }
 
-    /* ===== Signatures ===== */
+    /* ── Payment / note ── */
+    .pay-line {
+      font-size: 9pt;
+      color: #555;
+      margin-bottom: 3mm;
+    }
+
+    /* ── Footer text ── */
+    .footer-text {
+      text-align: center;
+      font-size: 8pt;
+      color: #555;
+      border-top: 0.5px solid #ccc;
+      padding-top: 1mm;
+      margin-top: 1mm;
+    }
+
+    /* ── Signatures ── */
     .sig-row {
       display: flex;
       justify-content: space-between;
       margin-top: auto;
-      padding-top: 8mm;
+      padding-top: 5mm;
     }
     .sig-box { text-align: center; flex: 1; }
-    .sig-line {
-      border-bottom: 1px solid #555;
-      height: 12mm;
-      margin: 0 5mm 1mm 5mm;
-    }
-    .sig-label { font-size: 9.5pt; font-weight: 600; }
+    .sig-line { border-bottom: 1px solid #555; height: 9mm; margin: 0 4mm 1mm 4mm; }
+    .sig-label { font-size: 9pt; font-weight: 600; }
 
-    /* ===== Print controls ===== */
+    /* ── Print controls (screen only) ── */
     .no-print {
       text-align: center;
-      padding: 12px;
+      padding: 10px;
       background: #f8f9fa;
       border-top: 1px solid #dee2e6;
     }
-    .no-print button {
-      padding: 8px 24px; margin: 4px; cursor: pointer;
-      border: none; border-radius: 4px; font-family: inherit; font-size: 10pt;
+    .no-print button, .no-print a {
+      display: inline-block;
+      padding: 7px 20px; margin: 3px;
+      cursor: pointer; border: none; border-radius: 4px;
+      font-family: inherit; font-size: 9.5pt; text-decoration: none;
     }
-    .btn-print { background: #0d6efd; color: #fff; }
-    .btn-close-w { background: #6c757d; color: #fff; }
+    .btn-print  { background: #0d6efd; color: #fff; }
+    .btn-close2 { background: #6c757d; color: #fff; }
+    .btn-set    { background: #adb5bd; color: #fff; }
 
-    /* ===== Print ===== */
+    /* ── Print ── */
     @page {
       size: A5 portrait;
-      margin: 0;
+      margin: 7mm 9mm 6mm 9mm;
     }
     @media print {
       body { background: #fff; }
       .no-print { display: none !important; }
-      .page { width: 148mm; margin: 0; }
+      .page {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
     }
   </style>
 </head>
 <body>
 
 <div class="page">
+
   <!-- Header -->
   <div class="header">
     <div class="shop-info">
@@ -167,44 +186,40 @@
       {% else %}
         <div class="qr-placeholder">QR<br/>ຮ້ານ</div>
       {% endif %}
-      <div class="date-line">
-        ວັນທີ {{ sale.created_at.strftime('%d/%m/%Y') }}
-      </div>
+      <div class="date-line">ວັນທີ {{ sale.created_at.strftime('%d/%m/%Y') }}</div>
       {% if sale.customer %}
-      <div class="cid-line">
-        <strong>ID ລູກຄ້າ:</strong> CID{{ '%03d' % sale.customer.id }}
-      </div>
+      <div class="cid-line"><strong>ID:</strong> {{ sale.customer.cust_code or ('CID%03d' % sale.customer.id) }}</div>
       {% endif %}
     </div>
   </div>
 
-  <!-- Title -->
+  <!-- Title (2 borders) -->
   <div class="bill-title">ໃບບິນສິນຄ້າ</div>
 
   <!-- Customer info -->
-  <div class="cust-row">
+  <div class="cust-line">
     <span class="cust-label">ຊື່:</span>
     <span>{{ sale.customer.name if sale.customer else '-' }}</span>
-    <span class="divider">|</span>
+    <span style="color:#bbb;">|</span>
     <span class="cust-label">ເບີໂທ:</span>
     <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
   </div>
-  <div class="cust-row">
+  <div class="cust-line" style="margin-bottom:0;">
     <span class="cust-label">ທີ່ຢູ່:</span>
     <span>{{ sale.customer.address if sale.customer and sale.customer.address else '-' }}</span>
   </div>
 
-  <!-- Product table (always 15 rows) -->
+  <!-- Items table -->
   <table class="items">
     <thead>
       <tr>
         <th style="width:6mm;">ລ/ດ</th>
-        <th class="left" style="width:18mm;">ລະຫັດ</th>
-        <th class="left">ຊື່ສິນຄ້າ</th>
+        <th class="L" style="width:18mm;">ລະຫັດ</th>
+        <th class="L">ຊື່ສິນຄ້າ</th>
         <th style="width:10mm;">ຈ/ນ</th>
         <th style="width:12mm;">ໜ່ວຍ</th>
-        <th class="right" style="width:22mm;">ລາຄາ</th>
-        <th class="right" style="width:22mm;">ເປັນເງິນ</th>
+        <th class="R" style="width:22mm;">ລາຄາ</th>
+        <th class="R" style="width:22mm;">ເປັນເງິນ</th>
       </tr>
     </thead>
     <tbody>
@@ -213,15 +228,14 @@
       {% set ns.count = ns.count + 1 %}
       <tr>
         <td style="text-align:center;">{{ ns.count }}</td>
-        <td class="left"><small>{{ item.product.code }}</small></td>
-        <td class="left">{{ item.product.name }}</td>
+        <td class="L"><small>{{ item.product.code }}</small></td>
+        <td class="L">{{ item.product.name }}</td>
         <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
         <td style="text-align:center;">{{ item.product.unit }}</td>
-        <td class="right">{{ "{:,.0f}".format(item.unit_price) }}</td>
-        <td class="right">{{ "{:,.0f}".format(item.subtotal) }}</td>
+        <td class="R">{{ "{:,.0f}".format(item.unit_price) }}</td>
+        <td class="R">{{ "{:,.0f}".format(item.subtotal) }}</td>
       </tr>
       {% endfor %}
-      {# Fill remaining rows up to receipt_rows #}
       {% for i in range(ns.count + 1, receipt_rows + 1) %}
       <tr class="empty">
         <td style="text-align:center;">{{ i }}</td>
@@ -232,8 +246,8 @@
   </table>
 
   <!-- Total -->
-  <div class="total-row">
-    <span class="label">ເປັນເງິນ</span>
+  <div class="total-section">
+    <span>ເປັນເງິນ</span>
     <span>{{ "{:,.0f}".format(sale.total) }}</span>
   </div>
 
@@ -245,15 +259,13 @@
   {% endif %}
 
   <!-- Payment type -->
-  <div style="font-size:9pt; color:#555; margin-bottom:3mm;">
-    ປະເພດ: <strong>{{ 'ເງິນສົດ' if sale.payment_type == 'cash' else 'ຄ້າງຊຳລະ' }}</strong>
+  <div class="pay-line">
+    ປະເພດ: <strong>{% if sale.payment_type == 'cash' %}ເງິນສົດ{% elif sale.payment_type == 'transfer' %}ໂອນເງິນ{% else %}ຈັດສົ່ງ (ຄ້າງຊຳລະ){% endif %}</strong>
     {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
   </div>
 
   {% if receipt_footer %}
-  <div style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
-    {{ receipt_footer }}
-  </div>
+  <div class="footer-text">{{ receipt_footer }}</div>
   {% endif %}
 
   <!-- Signatures -->
@@ -267,16 +279,14 @@
       <div class="sig-label">ຜູ້ຮັບເງິນ</div>
     </div>
   </div>
-</div>
 
-<!-- Print controls -->
+</div><!-- .page -->
+
+<!-- Screen controls -->
 <div class="no-print">
-  <button class="btn-print" onclick="window.print()">🖨 ພິມໃບບິນ (A5)</button>
-  <button class="btn-close-w" onclick="window.close()">ປິດ</button>
-  <a href="/settings/" target="_blank"
-     style="display:inline-block;padding:8px 16px;margin:4px;background:#6c757d;color:#fff;border-radius:4px;text-decoration:none;font-size:10pt;">
-    ⚙ ຕັ້ງຄ່າໃບບິນ
-  </a>
+  <button class="btn-print" onclick="window.print()">🖨 ພິມ (A5)</button>
+  <button class="btn-close2" onclick="window.close()">ປິດ</button>
+  <a href="/settings/" target="_blank" class="btn-set">⚙ ຕັ້ງຄ່າໃບບິນ</a>
 </div>
 
 <script>

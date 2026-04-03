@@ -177,6 +177,19 @@ class Attendance(db.Model):
     employee = db.relationship("Employee")
 
 
+class SalaryAdvance(db.Model):
+    __tablename__ = "salary_advances"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    reason = db.Column(db.Text, default="")
+    advance_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    repaid = db.Column(db.Boolean, default=False)
+    repaid_at = db.Column(db.DateTime, nullable=True)
+    note = db.Column(db.Text, default="")
+    employee = db.relationship("Employee")
+
+
 class PayrollRecord(db.Model):
     __tablename__ = "payroll_records"
     id = db.Column(db.Integer, primary_key=True)

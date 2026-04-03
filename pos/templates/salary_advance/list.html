@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}ເບີກເງິນເດືອນລ່ວງໜ້າ{% endblock %}
+{% block page_title %}ເບີກເງິນເດືອນລ່ວງໜ້າ{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex gap-2 align-items-center">
+    <form method="GET" class="d-flex gap-2">
+      <select name="emp" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">ທຸກພະນັກງານ</option>
+        {% for e in employees %}
+        <option value="{{ e.id }}" {{ 'selected' if emp_filter == e.id|string }}>{{ e.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% if total_unpaid > 0 %}
+    <span class="badge bg-danger fs-6">ຍັງຄ້າງ: {{ "{:,.0f}".format(total_unpaid) }} ກີບ</span>
+    {% endif %}
+  </div>
+  <a href="{{ url_for('salary_advance.add_advance') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg me-1"></i>ເບີກເງິນໃໝ່
+  </a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>ພະນັກງານ</th>
+          <th>ວັນທີ</th>
+          <th>ເຫດຜົນ</th>
+          <th class="text-end">ຈຳນວນ (ກີບ)</th>
+          <th class="text-center">ສະຖານະ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in advances %}
+        <tr class="{{ 'table-success' if a.repaid else '' }}">
+          <td>{{ loop.index }}</td>
+          <td class="fw-semibold">{{ a.employee.name }}</td>
+          <td>{{ a.advance_date.strftime('%d/%m/%Y') }}</td>
+          <td>{{ a.reason or '-' }}</td>
+          <td class="text-end fw-bold">{{ "{:,.0f}".format(a.amount) }}</td>
+          <td class="text-center">
+            {% if a.repaid %}
+            <span class="badge bg-success">ຊຳລະຄືນແລ້ວ</span>
+            {% else %}
+            <span class="badge bg-danger">ຍັງຄ້າງ</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex gap-1 justify-content-end">
+              {% if not a.repaid %}
+              <form method="POST" action="{{ url_for('salary_advance.mark_repaid', adv_id=a.id) }}"
+                    onsubmit="return confirm('ໝາຍວ່າຊຳລະຄືນແລ້ວ?')">
+                <button class="btn btn-success btn-sm">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              <a href="{{ url_for('salary_advance.edit_advance', adv_id=a.id) }}"
+                 class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% endif %}
+              <form method="POST" action="{{ url_for('salary_advance.delete_advance', adv_id=a.id) }}"
+                    onsubmit="return confirm('ລຶບລາຍການນີ້?')">
+                <button class="btn btn-outline-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">ບໍ່ມີລາຍການ</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -121,7 +121,7 @@ def create_sale():
     note         = data.get("note", "")
 
     if payment_type == "debt" and not customer_id:
-        return jsonify({"error": "ຕ້ອງເລືອກລູກຄ້າເມື່ອຕິດໜີ້"}), 400
+        return jsonify({"error": "ຕ້ອງເລືອກລູກຄ້າສຳລັບການຈັດສົ່ງ (ຄ້າງຊຳລະ)"}), 400
 
     try:
         rate = float(Setting.get("thb_to_lak", "830"))
@@ -152,7 +152,7 @@ def create_sale():
         total=total_kip,
         payment_type=payment_type,
         currency=currency,
-        paid_amount=total_kip if payment_type == "cash" else 0,
+        paid_amount=total_kip if payment_type in ("cash", "transfer") else 0,
         note=note,
     )
     db.session.add(sale)

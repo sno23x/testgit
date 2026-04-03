@@ -36,8 +36,8 @@
               <td><a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank">{{ s.sale_no }}</a></td>
               <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
               <td>
-                <span class="badge {{ 'bg-success' if s.payment_type == 'cash' else 'bg-warning text-dark' }}">
-                  {{ 'ເງິນສົດ' if s.payment_type == 'cash' else 'ຕິດໜີ້' }}
+                <span class="badge {% if s.payment_type == 'cash' %}bg-success{% elif s.payment_type == 'transfer' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
+                  {% if s.payment_type == 'cash' %}ເງິນສົດ{% elif s.payment_type == 'transfer' %}ໂອນເງິນ{% else %}ຄ້າງຊຳລະ{% endif %}
                 </span>
               </td>
               <td class="text-end">{{ "{:,.0f}".format(s.total) }}</td>
