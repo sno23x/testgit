@@ -32,8 +32,19 @@
             </div>
             <div class="col-6">
               <label class="form-label fw-semibold">ຫົວໜ່ວຍ</label>
-              <input type="text" name="unit" class="form-control"
-                     value="{{ product.unit if product else 'ອັນ' }}"/>
+              <div class="input-group">
+                <input type="text" name="unit" id="unitInput" class="form-control"
+                       value="{{ product.unit if product else 'ອັນ' }}"/>
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false" tabindex="-1">
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  {% for u in ['ອັນ','ຖົງ','ກ','ກິໂລ','ລິດ','ກ່ອງ','ໂຕນ','ທ່ອນ','ດຳ','ແຜ່ນ','ຄູ່','ເຕ','ດ້ານ','ຫ່ໍ','ຈ່ຽງ'] %}
+                  <li><a class="dropdown-item" href="#" onclick="setUnit('{{ u }}');return false;">{{ u }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
             </div>
             <div class="col-6">
               <label class="form-label fw-semibold">ຈໍານວນ (Stock)</label>
@@ -106,5 +117,9 @@ function calcKip() {
 }
 // Calculate on load if editing
 window.addEventListener('load', calcKip);
+
+function setUnit(u) {
+  document.getElementById('unitInput').value = u;
+}
 </script>
 {% endblock %}

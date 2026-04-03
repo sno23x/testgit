@@ -23,6 +23,8 @@ def add_employee():
             name=request.form.get("name", "").strip(),
             username=request.form.get("username", "").strip(),
             role=request.form.get("role", "cashier"),
+            base_salary=float(request.form.get("base_salary", 0) or 0),
+            ot_rate=float(request.form.get("ot_rate", 0) or 0),
         )
         emp.set_password(request.form.get("password", ""))
         db.session.add(emp)
@@ -43,6 +45,8 @@ def edit_employee(eid):
         emp.name = request.form.get("name", emp.name).strip()
         emp.username = request.form.get("username", emp.username).strip()
         emp.role = request.form.get("role", emp.role)
+        emp.base_salary = float(request.form.get("base_salary", emp.base_salary) or 0)
+        emp.ot_rate = float(request.form.get("ot_rate", emp.ot_rate) or 0)
         pw = request.form.get("password", "").strip()
         if pw:
             emp.set_password(pw)

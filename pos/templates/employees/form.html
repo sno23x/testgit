@@ -23,12 +23,26 @@
             <input type="password" name="password" class="form-control"
                    {{ 'required' if not employee }}/>
           </div>
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label fw-semibold">ສິດທິ</label>
             <select name="role" class="form-select">
               <option value="cashier" {{ 'selected' if employee and employee.role == 'cashier' }}>cashier</option>
               <option value="admin" {{ 'selected' if employee and employee.role == 'admin' }}>admin</option>
             </select>
+          </div>
+          <hr/>
+          <p class="small fw-semibold text-muted mb-2"><i class="bi bi-wallet2 me-1"></i>ຂໍ້ມູນເງິນເດືອນ</p>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="form-label fw-semibold">ເງິນເດືອນພື້ນຖານ (ກີບ)</label>
+              <input type="number" name="base_salary" class="form-control" min="0" step="1000"
+                     value="{{ employee.base_salary if employee else 0 }}"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ອັດຕາ OT ຕໍ່ຊົ່ວໂມງ (ກີບ)</label>
+              <input type="number" name="ot_rate" class="form-control" min="0" step="1000"
+                     value="{{ employee.ot_rate if employee else 0 }}"/>
+            </div>
           </div>
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>ບັນທຶກ</button>

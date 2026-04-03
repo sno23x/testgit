@@ -66,3 +66,22 @@ body { font-family: 'Noto Sans Lao', 'Segoe UI', sans-serif; }
 .table td, .table th { vertical-align: middle; }
 .badge { font-size: 0.75rem; }
 .card { border-radius: 10px; }
+
+/* ===== Dark mode ===== */
+[data-bs-theme="dark"] .topbar {
+  background: #1e1e2e;
+  border-color: #333;
+}
+[data-bs-theme="dark"] #main-content {
+  background: #13131f;
+}
+[data-bs-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, #111827 0%, #1a2340 100%);
+}
+[data-bs-theme="dark"] .product-tile {
+  border-color: #444;
+}
+[data-bs-theme="dark"] .product-tile:hover {
+  border-color: #0d6efd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
