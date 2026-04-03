@@ -57,7 +57,6 @@ class Product(db.Model):
     stock_qty = db.Column(db.Float, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
     active = db.Column(db.Boolean, default=True)
-    image = db.Column(db.String(200), default="")  # filename in uploads/products/
 
     def to_dict(self):
         return {
@@ -68,7 +67,6 @@ class Product(db.Model):
             "sell_price": self.sell_price,
             "price_thb": self.price_thb or 0,
             "stock_qty": self.stock_qty,
-            "image": self.image or "",
         }
 
 
