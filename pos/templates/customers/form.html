@@ -8,22 +8,6 @@
     <div class="card shadow-sm border-0">
       <div class="card-body">
         <form method="POST">
-          <!-- CID -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold">ລະຫັດລູກຄ້າ (CID)</label>
-            <div class="input-group">
-              <input type="text" name="cust_code" id="custCodeInput" class="form-control"
-                     value="{{ customer.cust_code if customer else (next_cid or '') }}"
-                     placeholder="CID001"/>
-              {% if not customer %}
-              <button type="button" class="btn btn-outline-secondary" onclick="refreshCid()" title="ສ້າງ CID ໃໝ່">
-                <i class="bi bi-arrow-repeat"></i>
-              </button>
-              {% endif %}
-            </div>
-            <div class="form-text">CID ໃຊ້ match ເວລານໍາເຂົ້າ Excel</div>
-          </div>
-
           <div class="mb-3">
             <label class="form-label fw-semibold">ຊື່ລູກຄ້າ <span class="text-danger">*</span></label>
             <input type="text" name="name" class="form-control" required
@@ -47,14 +31,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-function refreshCid() {
-  fetch('/customers/next-cid')
-    .then(r => r.json())
-    .then(d => { document.getElementById('custCodeInput').value = d.cid; });
-}
-</script>
 {% endblock %}

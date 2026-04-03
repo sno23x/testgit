@@ -24,15 +24,9 @@
           <td>{{ emp.name }}</td>
           <td><code>{{ emp.username }}</code></td>
           <td>
-            {% set role_map = {
-              'admin': ('bg-danger', 'ຜູ້ດູແລລະບົບ'),
-              'cashier': ('bg-primary', 'ແຄຊຽ'),
-              'accountant': ('bg-success', 'ບັນຊີ'),
-              'driver': ('bg-warning text-dark', 'ໂຊເຟີລົດ'),
-              'porter': ('bg-secondary', 'ພະນັກງານແບກຫາມ'),
-            } %}
-            {% set cls, lbl = role_map.get(emp.role, ('bg-secondary', emp.role)) %}
-            <span class="badge {{ cls }}">{{ lbl }}</span>
+            <span class="badge {{ 'bg-danger' if emp.role == 'admin' else 'bg-secondary' }}">
+              {{ emp.role }}
+            </span>
           </td>
           <td>
             {% if current_user.is_admin() %}
