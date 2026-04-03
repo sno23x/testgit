@@ -37,10 +37,19 @@
             </button>
           </li>
         </ul>
-        <small class="text-muted ms-auto" id="resultCount"></small>
+        <small class="text-muted mx-2" id="resultCount"></small>
+        <!-- View toggle -->
+        <div class="btn-group btn-group-sm ms-auto">
+          <button class="btn btn-outline-secondary py-0 px-2 active" id="btnGrid" onclick="setView('grid',this)" title="Grid">
+            <i class="bi bi-grid-3x3-gap"></i>
+          </button>
+          <button class="btn btn-outline-secondary py-0 px-2" id="btnList" onclick="setView('list',this)" title="List">
+            <i class="bi bi-list-ul"></i>
+          </button>
+        </div>
       </div>
       <div class="card-body p-2 overflow-auto" style="max-height:55vh;">
-        <div id="searchResults" class="row g-2"></div>
+        <div id="searchResults"></div>
       </div>
     </div>
   </div>
@@ -213,25 +222,76 @@ function loadSuggestions(mode, btn) {
     .then(r => r.json()).then(renderResults);
 }
 
+let viewMode = localStorage.getItem('posView') || 'grid';
+
+function setView(mode, btn) {
+  viewMode = mode;
+  localStorage.setItem('posView', mode);
+  document.getElementById('btnGrid').classList.toggle('active', mode === 'grid');
+  document.getElementById('btnList').classList.toggle('active', mode === 'list');
+  // Re-render with last data if available
+  if (lastProducts.length) renderResults(lastProducts);
+}
+
+let lastProducts = [];
+
+function imgUrl(p) {
+  return p.image ? `/static/uploads/products/${p.image}` : '';
+}
+
 function renderResults(products) {
+  lastProducts = products;
   const div = document.getElementById('searchResults');
   document.getElementById('resultCount').textContent = products.length ? `${products.length} ລາຍການ` : '';
   if (!products.length) { div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>'; return; }
-  div.innerHTML = products.map(p => `
-    <div class="col-6 col-md-4">
-      <div class="card product-tile h-100" onclick='addToCart(${JSON.stringify(p)})'>
-        <div class="card-body p-2 text-center">
-          <i class="bi bi-box-seam text-primary fs-4"></i>
-          <p class="small fw-semibold mb-0 mt-1 text-truncate" title="${p.name}">${p.name}</p>
-          <p class="small text-muted mb-1">${p.code}</p>
-          <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
-          ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb).toLocaleString()}</small><br/>` : ''}
-          <small class="text-muted">ຄ/ຫ: ${p.stock_qty} ${p.unit}</small>
-        </div>
-      </div>
-    </div>
-  `).join('');
+
+  if (viewMode === 'list') {
+    div.innerHTML = `<div class="list-group list-group-flush">` +
+      products.map(p => {
+        const img = imgUrl(p);
+        return `
+        <div class="list-group-item list-group-item-action px-2 py-2 d-flex align-items-center gap-2"
+             onclick='addToCart(${JSON.stringify(p)})' style="cursor:pointer;">
+          ${img
+            ? `<img src="${img}" class="rounded" style="width:48px;height:48px;object-fit:cover;flex-shrink:0;"/>`
+            : `<div class="rounded bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                style="width:48px;height:48px;"><i class="bi bi-box-seam text-secondary"></i></div>`}
+          <div class="flex-grow-1 min-width-0">
+            <div class="fw-semibold small text-truncate">${p.name}</div>
+            <small class="text-muted">${p.code} · ${p.stock_qty} ${p.unit}</small>
+          </div>
+          <div class="text-end flex-shrink-0">
+            <div class="fw-bold text-success small">${Number(p.sell_price).toLocaleString()}</div>
+            ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb)}</small>` : ''}
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+  } else {
+    div.innerHTML = `<div class="row g-2">` +
+      products.map(p => {
+        const img = imgUrl(p);
+        return `
+        <div class="col-6 col-md-4">
+          <div class="card product-tile h-100" onclick='addToCart(${JSON.stringify(p)})'>
+            ${img ? `<img src="${img}" class="card-img-top" style="height:80px;object-fit:cover;border-radius:8px 8px 0 0;"/>` : ''}
+            <div class="card-body p-2 text-center">
+              ${!img ? '<i class="bi bi-box-seam text-primary fs-4"></i>' : ''}
+              <p class="small fw-semibold mb-0 mt-1 text-truncate" title="${p.name}">${p.name}</p>
+              <p class="small text-muted mb-1">${p.code}</p>
+              <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
+              ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb).toLocaleString()}</small><br/>` : ''}
+              <small class="text-muted">ຄ/ຫ: ${p.stock_qty} ${p.unit}</small>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
 }
+
+// Restore saved view
+window.addEventListener('DOMContentLoaded', () => {
+  setView(viewMode, document.getElementById(viewMode === 'list' ? 'btnList' : 'btnGrid'));
+});
 
 // ─── Cart ───
 function addToCart(p) {

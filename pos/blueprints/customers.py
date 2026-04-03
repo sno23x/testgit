@@ -6,24 +6,58 @@ import openpyxl, io
 customers_bp = Blueprint("customers", __name__)
 
 
+def _next_cid():
+    """ສ້າງ CID ຕໍ່ໄປ (CID001, CID002…)"""
+    last = Customer.query.filter(Customer.cust_code.ilike("CID%"))\
+        .order_by(Customer.cust_code.desc()).first()
+    if last and last.cust_code:
+        try:
+            num = int(last.cust_code[3:]) + 1
+        except ValueError:
+            num = Customer.query.count() + 1
+    else:
+        num = Customer.query.count() + 1
+    return f"CID{num:03d}"
+
+
+@customers_bp.route("/next-cid")
+@login_required
+def next_cid():
+    return {"cid": _next_cid()}
+
+
 @customers_bp.route("/")
 @login_required
 def list_customers():
     q = request.args.get("q", "")
+    debt_filter = request.args.get("debt", "all")   # all / has / none
     page = max(1, int(request.args.get("page", 1) or 1))
     query = Customer.query
     if q:
-        query = query.filter(db.or_(Customer.name.ilike(f"%{q}%"), Customer.phone.ilike(f"%{q}%")))
+        query = query.filter(db.or_(
+            Customer.name.ilike(f"%{q}%"),
+            Customer.phone.ilike(f"%{q}%"),
+            Customer.cust_code.ilike(f"%{q}%"),
+        ))
+    if debt_filter == "has":
+        query = query.filter(Customer.total_debt > 0)
+    elif debt_filter == "none":
+        query = query.filter(Customer.total_debt <= 0)
     pagination = query.order_by(Customer.name).paginate(page=page, per_page=50, error_out=False)
     return render_template("customers/list.html",
-                           customers=pagination.items, pagination=pagination, q=q)
+                           customers=pagination.items, pagination=pagination,
+                           q=q, debt_filter=debt_filter)
 
 
 @customers_bp.route("/add", methods=["GET", "POST"])
 @login_required
 def add_customer():
     if request.method == "POST":
+        cust_code = request.form.get("cust_code", "").strip()
+        if not cust_code:
+            cust_code = _next_cid()
         c = Customer(
+            cust_code=cust_code,
             name=request.form.get("name", "").strip(),
             phone=request.form.get("phone", "").strip(),
             address=request.form.get("address", "").strip(),
@@ -32,7 +66,8 @@ def add_customer():
         db.session.commit()
         flash("ເພີ່ມລູກຄ້າສໍາເລັດ", "success")
         return redirect(url_for("customers.list_customers"))
-    return render_template("customers/form.html", customer=None)
+    next_id = _next_cid()
+    return render_template("customers/form.html", customer=None, next_cid=next_id)
 
 
 @customers_bp.route("/<int:cid>/edit", methods=["GET", "POST"])
@@ -40,13 +75,14 @@ def add_customer():
 def edit_customer(cid):
     c = Customer.query.get_or_404(cid)
     if request.method == "POST":
+        c.cust_code = request.form.get("cust_code", c.cust_code).strip()
         c.name = request.form.get("name", c.name).strip()
         c.phone = request.form.get("phone", c.phone).strip()
         c.address = request.form.get("address", c.address).strip()
         db.session.commit()
         flash("ແກ້ໄຂສໍາເລັດ", "success")
         return redirect(url_for("customers.list_customers"))
-    return render_template("customers/form.html", customer=c)
+    return render_template("customers/form.html", customer=c, next_cid=None)
 
 
 @customers_bp.route("/import-excel", methods=["GET", "POST"])

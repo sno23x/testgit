@@ -7,7 +7,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm border-0">
       <div class="card-body">
-        <form method="POST" id="productForm">
+        <form method="POST" id="productForm" enctype="multipart/form-data">
           <div class="row g-3">
             <div class="col-6">
               <label class="form-label fw-semibold">ລະຫັດສິນຄ້າ</label>
@@ -86,6 +86,32 @@
             </div>
           </div>
 
+          <!-- Image upload -->
+          <hr class="my-3"/>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">ຮູບສິນຄ້າ <small class="text-muted">(ຖ້າມີ)</small></label>
+              <div class="d-flex gap-3 align-items-start">
+                <div>
+                  {% if product and product.image %}
+                  <img id="imgPreview" src="{{ url_for('static', filename='uploads/products/' ~ product.image) }}"
+                       class="rounded border" style="width:80px;height:80px;object-fit:cover;"/>
+                  {% else %}
+                  <div id="imgPreview" class="rounded border d-flex align-items-center justify-content-center bg-light text-muted"
+                       style="width:80px;height:80px;font-size:2rem;">
+                    <i class="bi bi-image"></i>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                  <input type="file" name="image" class="form-control form-control-sm"
+                         accept="image/*" onchange="previewImg(this)"/>
+                  <div class="form-text">PNG, JPG, WEBP (ຂະໜາດສູງສຸດ 5 MB)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-save me-1"></i>ບັນທຶກ
@@ -125,6 +151,17 @@ window.addEventListener('load', calcKip);
 
 function setUnit(u) {
   document.getElementById('unitInput').value = u;
+}
+function previewImg(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const el = document.getElementById('imgPreview');
+      el.outerHTML = `<img id="imgPreview" src="${e.target.result}"
+        class="rounded border" style="width:80px;height:80px;object-fit:cover;"/>`;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
 }
 </script>
 {% endblock %}

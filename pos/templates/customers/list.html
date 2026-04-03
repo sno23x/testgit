@@ -3,7 +3,6 @@
 {% block page_title %}ລາຍຊື່ລູກຄ້າ{% endblock %}
 
 {% block content %}
-<!-- Sticky search toolbar -->
 <div class="sticky-toolbar mb-3">
   <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
     <a href="{{ url_for('customers.add_customer') }}" class="btn btn-primary btn-sm">
@@ -13,9 +12,21 @@
       <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
     </a>
   </div>
-  <form class="d-flex gap-2 flex-wrap" method="GET">
-    <input type="text" name="q" class="form-control form-control-sm w-auto"
-           placeholder="ຊອກຊື່ / ເບີໂທ..." value="{{ q }}" autofocus/>
+
+  <form class="d-flex gap-2 flex-wrap align-items-center" method="GET">
+    <input type="text" name="q" class="form-control form-control-sm" style="max-width:220px;"
+           placeholder="ຊື່ / CID / ເບີໂທ..." value="{{ q }}" autofocus/>
+
+    <!-- Debt filter -->
+    <div class="btn-group btn-group-sm" role="group">
+      <a href="{{ url_for('customers.list_customers', q=q, debt='all') }}"
+         class="btn {{ 'btn-primary' if debt_filter=='all' else 'btn-outline-secondary' }}">ທັງໝົດ</a>
+      <a href="{{ url_for('customers.list_customers', q=q, debt='has') }}"
+         class="btn {{ 'btn-danger' if debt_filter=='has' else 'btn-outline-danger' }}">ມີໜີ້</a>
+      <a href="{{ url_for('customers.list_customers', q=q, debt='none') }}"
+         class="btn {{ 'btn-success' if debt_filter=='none' else 'btn-outline-success' }}">ບໍ່ມີໜີ້</a>
+    </div>
+
     <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
     {% if q %}<a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary btn-sm">ລ້າງ</a>{% endif %}
   </form>
@@ -27,7 +38,7 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
-          <th>ID</th>
+          <th>CID</th>
           <th>ຊື່</th>
           <th>ເບີໂທ</th>
           <th>ທີ່ຢູ່</th>
@@ -39,15 +50,19 @@
         {% for c in customers %}
         <tr>
           <td class="text-muted small">{{ (pagination.page - 1) * 50 + loop.index }}</td>
-          <td><small class="text-muted">{{ c.cust_code or '-' }}</small></td>
+          <td>
+            {% if c.cust_code %}
+            <span class="badge bg-secondary">{{ c.cust_code }}</span>
+            {% else %}-{% endif %}
+          </td>
           <td>
             <a href="{{ url_for('customers.customer_detail', cid=c.id) }}"
                class="fw-semibold text-decoration-none">{{ c.name }}</a>
           </td>
           <td>{{ c.phone or '-' }}</td>
           <td class="text-muted small">{{ c.address or '-' }}</td>
-          <td class="text-end {{ 'text-danger fw-bold' if c.total_debt > 0 else '' }}">
-            {{ "{:,.0f}".format(c.total_debt) }} ກີບ
+          <td class="text-end {{ 'text-danger fw-bold' if c.total_debt > 0 else 'text-muted' }}">
+            {{ "{:,.0f}".format(c.total_debt) }}
           </td>
           <td>
             <a href="{{ url_for('customers.edit_customer', cid=c.id) }}"
@@ -70,19 +85,19 @@
     <nav>
       <ul class="pagination pagination-sm mb-0">
         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
-          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.prev_num, q=q) }}">‹</a>
+          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.prev_num, q=q, debt=debt_filter) }}">‹</a>
         </li>
         {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
           {% if p %}
           <li class="page-item {{ 'active' if p == pagination.page }}">
-            <a class="page-link" href="{{ url_for('customers.list_customers', page=p, q=q) }}">{{ p }}</a>
+            <a class="page-link" href="{{ url_for('customers.list_customers', page=p, q=q, debt=debt_filter) }}">{{ p }}</a>
           </li>
           {% else %}
           <li class="page-item disabled"><span class="page-link">…</span></li>
           {% endif %}
         {% endfor %}
         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
-          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.next_num, q=q) }}">›</a>
+          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.next_num, q=q, debt=debt_filter) }}">›</a>
         </li>
       </ul>
     </nav>
