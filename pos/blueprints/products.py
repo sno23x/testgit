@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required
-from models import db, Product, Category, Setting
+from models import db, Product, Category, Setting, round_price
 
 
 def _compute_sell_price(price_thb, sell_price_manual):
@@ -11,7 +11,7 @@ def _compute_sell_price(price_thb, sell_price_manual):
             rate = float(Setting.get("thb_to_lak", "830"))
         except ValueError:
             rate = 830.0
-        return round(thb * rate), thb
+        return round_price(thb * rate), thb
     return float(sell_price_manual or 0), None
 
 products_bp = Blueprint("products", __name__)
