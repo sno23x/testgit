@@ -134,13 +134,11 @@ def create_sale():
         product = Product.query.get(it["product_id"])
         if not product:
             continue
-        qty          = float(it["qty"])
-        unit_price   = float(it.get("unit_price", product.sell_price))
-        item_disc_pct = float(it.get("item_discount", 0))  # % discount
-        price_after  = unit_price * (1 - item_disc_pct / 100)
-        sub          = qty * price_after
-        subtotal    += sub
-        sale_items.append((product, qty, price_after, item_disc_pct, sub))
+        qty        = float(it["qty"])
+        unit_price = float(it.get("unit_price", product.sell_price))
+        sub        = qty * unit_price
+        subtotal  += sub
+        sale_items.append((product, qty, unit_price, sub))
 
     total_kip = max(0, subtotal - discount)
 
@@ -160,10 +158,9 @@ def create_sale():
     db.session.add(sale)
     db.session.flush()
 
-    for product, qty, price, item_disc, sub in sale_items:
+    for product, qty, price, sub in sale_items:
         si = SaleItem(sale_id=sale.id, product_id=product.id,
-                      qty=qty, unit_price=price,
-                      item_discount=item_disc, subtotal=sub)
+                      qty=qty, unit_price=price, subtotal=sub)
         db.session.add(si)
         product.stock_qty = max(0, product.stock_qty - qty)
 
@@ -185,9 +182,16 @@ def receipt(sale_id):
         rate = float(Setting.get("thb_to_lak", "830"))
     except Exception:
         rate = 830.0
+    try:
+        receipt_rows = int(Setting.get("receipt_rows", "15"))
+    except Exception:
+        receipt_rows = 15
     return render_template("pos/receipt.html", sale=sale,
         shop_name=Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ"),
         shop_address=Setting.get("shop_address", ""),
         shop_phone=Setting.get("shop_phone", ""),
         shop_qr=Setting.get("shop_qr", ""),
+        receipt_footer=Setting.get("receipt_footer", ""),
+        receipt_auto_print=Setting.get("receipt_auto_print", "1"),
+        receipt_rows=receipt_rows,
         rate=rate)

@@ -64,6 +64,7 @@ def run_migrations(app):
             "ALTER TABLE employees ADD COLUMN ot_rate FLOAT DEFAULT 0",
             "ALTER TABLE sales ADD COLUMN currency VARCHAR(5) DEFAULT 'LAK'",
             "ALTER TABLE sale_items ADD COLUMN item_discount FLOAT DEFAULT 0",
+            "ALTER TABLE customers ADD COLUMN cust_code VARCHAR(50) DEFAULT ''",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:

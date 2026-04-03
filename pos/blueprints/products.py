@@ -22,15 +22,17 @@ products_bp = Blueprint("products", __name__)
 def list_products():
     q = request.args.get("q", "")
     cat_id = request.args.get("cat", "")
+    page = max(1, int(request.args.get("page", 1) or 1))
     query = Product.query.filter_by(active=True)
     if q:
         query = query.filter(db.or_(Product.name.ilike(f"%{q}%"), Product.code.ilike(f"%{q}%")))
     if cat_id:
         query = query.filter_by(category_id=int(cat_id))
-    products = query.order_by(Product.name).all()
+    pagination = query.order_by(Product.name).paginate(page=page, per_page=50, error_out=False)
     categories = Category.query.order_by(Category.name).all()
-    return render_template("products/list.html", products=products, categories=categories,
-                           q=q, cat_id=cat_id)
+    return render_template("products/list.html",
+                           products=pagination.items, pagination=pagination,
+                           categories=categories, q=q, cat_id=cat_id)
 
 
 @products_bp.route("/add", methods=["GET", "POST"])

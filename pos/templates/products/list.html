@@ -3,43 +3,49 @@
 {% block page_title %}ສິນຄ້າ / ສ໋ອກ{% endblock %}
 
 {% block content %}
-<div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-  <a href="{{ url_for('products.add_product') }}" class="btn btn-primary">
-    <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າ
-  </a>
-  <a href="{{ url_for('products.list_categories') }}" class="btn btn-outline-secondary">
-    <i class="bi bi-tags me-1"></i>ໝວດໝູ່
-  </a>
-  <a href="{{ url_for('import_data.import_products') }}" class="btn btn-outline-success">
-    <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
-  </a>
+<!-- Sticky search toolbar -->
+<div class="sticky-toolbar mb-3">
+  <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
+    <a href="{{ url_for('products.add_product') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າ
+    </a>
+    <a href="{{ url_for('products.list_categories') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-tags me-1"></i>ໝວດໝູ່
+    </a>
+    <a href="{{ url_for('import_data.import_products') }}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
+    </a>
 
-  <!-- Bulk action bar (hidden until selection) -->
-  <div id="bulkBar" class="d-none ms-auto d-flex gap-2 align-items-center">
-    <small class="text-muted" id="selectedCount">0 ລາຍການ</small>
-    <select id="bulkCatSelect" class="form-select form-select-sm" style="width:auto;">
-      <option value="">ປ່ຽນໝວດ...</option>
+    <!-- Bulk action bar -->
+    <div id="bulkBar" class="d-none ms-auto d-flex gap-2 align-items-center">
+      <small class="text-muted" id="selectedCount">0 ລາຍການ</small>
+      <select id="bulkCatSelect" class="form-select form-select-sm" style="width:auto;">
+        <option value="">ປ່ຽນໝວດ...</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-outline-primary" onclick="bulkCategory()">ຕັ້ງ</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+        <i class="bi bi-trash me-1"></i>ລຶບ
+      </button>
+    </div>
+  </div>
+
+  <form class="d-flex gap-2 flex-wrap" method="GET">
+    <input type="text" name="q" class="form-control form-control-sm w-auto" placeholder="ຊອກຫາ..." value="{{ q }}" autofocus/>
+    <select name="cat" class="form-select form-select-sm w-auto">
+      <option value="">ທຸກໝວດ</option>
       {% for c in categories %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
+      <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn-sm btn-outline-primary" onclick="bulkCategory()">ຕັ້ງ</button>
-    <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
-      <i class="bi bi-trash me-1"></i>ລຶບ
-    </button>
-  </div>
+    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
+    {% if q or cat_id %}
+    <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary btn-sm">ລ້າງ</a>
+    {% endif %}
+  </form>
 </div>
-
-<form class="d-flex gap-2 mb-3 flex-wrap" method="GET">
-  <input type="text" name="q" class="form-control w-auto" placeholder="ຊອກຫາ..." value="{{ q }}"/>
-  <select name="cat" class="form-select w-auto">
-    <option value="">ທຸກໝວດ</option>
-    {% for c in categories %}
-    <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
-</form>
 
 <div class="card shadow-sm border-0">
   <div class="table-responsive">
@@ -93,7 +99,32 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer text-muted small">ທັງໝົດ {{ products|length }} ລາຍການ</div>
+  <div class="card-footer d-flex align-items-center justify-content-between">
+    <small class="text-muted">
+      ໜ້າ {{ pagination.page }}/{{ pagination.pages }} · ທັງໝົດ {{ pagination.total }} ລາຍການ
+    </small>
+    {% if pagination.pages > 1 %}
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.prev_num, q=q, cat=cat_id) }}">‹</a>
+        </li>
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+          <li class="page-item {{ 'active' if p == pagination.page }}">
+            <a class="page-link" href="{{ url_for('products.list_products', page=p, q=q, cat=cat_id) }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.next_num, q=q, cat=cat_id) }}">›</a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
 
@@ -102,51 +133,34 @@
 function getSelected() {
   return [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.value));
 }
-
 function updateBulkBar() {
   const ids = getSelected();
   const bar = document.getElementById('bulkBar');
-  if (ids.length > 0) {
-    bar.classList.remove('d-none');
-    bar.classList.add('d-flex');
-    document.getElementById('selectedCount').textContent = ids.length + ' ລາຍການ';
-  } else {
-    bar.classList.add('d-none');
-    bar.classList.remove('d-flex');
-  }
+  bar.classList.toggle('d-none', ids.length === 0);
+  bar.classList.toggle('d-flex', ids.length > 0);
+  if (ids.length) document.getElementById('selectedCount').textContent = ids.length + ' ລາຍການ';
 }
-
 function toggleAll(cb) {
   document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
   updateBulkBar();
 }
-
 function bulkDelete() {
   const ids = getSelected();
   if (!ids.length) return;
-  if (!confirm(`ລຶບ ${ids.length} ລາຍການທີ່ເລືອກ?`)) return;
+  if (!confirm(`ລຶບ ${ids.length} ລາຍການ?`)) return;
   fetch('/products/bulk-delete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
-  }).then(r => r.json()).then(d => {
-    if (d.ok) location.reload();
-    else alert(d.error || 'ເກີດຂໍ້ຜິດພາດ');
-  });
+  }).then(r => r.json()).then(d => { if (d.ok) location.reload(); else alert(d.error); });
 }
-
 function bulkCategory() {
   const ids = getSelected();
   const catId = document.getElementById('bulkCatSelect').value;
   if (!ids.length || !catId) { alert('ກະລຸນາເລືອກໝວດ'); return; }
   fetch('/products/bulk-category', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids, category_id: parseInt(catId) }),
-  }).then(r => r.json()).then(d => {
-    if (d.ok) location.reload();
-    else alert(d.error || 'ເກີດຂໍ້ຜິດພາດ');
-  });
+  }).then(r => r.json()).then(d => { if (d.ok) location.reload(); else alert(d.error); });
 }
 </script>
 {% endblock %}

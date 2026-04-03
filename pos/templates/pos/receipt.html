@@ -224,8 +224,8 @@
         <td class="right">{{ "{:,.0f}".format(item.subtotal) }}</td>
       </tr>
       {% endfor %}
-      {# Fill remaining rows up to 15 #}
-      {% for i in range(ns.count + 1, 16) %}
+      {# Fill remaining rows up to receipt_rows #}
+      {% for i in range(ns.count + 1, receipt_rows + 1) %}
       <tr class="empty">
         <td style="text-align:center;">{{ i }}</td>
         <td></td><td></td><td></td><td></td><td></td><td></td>
@@ -253,6 +253,12 @@
     {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
   </div>
 
+  {% if receipt_footer %}
+  <div style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
+    {{ receipt_footer }}
+  </div>
+  {% endif %}
+
   <!-- Signatures -->
   <div class="sig-row">
     <div class="sig-box">
@@ -273,10 +279,9 @@
 </div>
 
 <script>
-  // Auto-print when opened in new tab
-  window.addEventListener('load', () => {
-    setTimeout(() => window.print(), 400);
-  });
+  {% if receipt_auto_print == '1' %}
+  window.addEventListener('load', () => { setTimeout(() => window.print(), 400); });
+  {% endif %}
 </script>
 </body>
 </html>

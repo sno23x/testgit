@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}ນໍາເຂົ້າລູກຄ້າ{% endblock %}
+{% block page_title %}ນໍາເຂົ້າລູກຄ້າຈາກ Excel{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-file-earmark-excel me-1 text-success"></i>ອັບໂຫຼດໄຟລ໌ Excel
+      </div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ເລືອກໄຟລ໌ (.xlsx / .xls)</label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required/>
+          </div>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-upload me-1"></i>ນໍາເຂົ້າ
+          </button>
+          <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary ms-2">ຍົກເລີກ</a>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 border-start border-info border-3">
+      <div class="card-header fw-semibold text-info">
+        <i class="bi bi-info-circle me-1"></i>ຮູບແບບ Excel ທີ່ຮອງຮັບ
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-2">ລະບົບຈະຊອກ header row ອັດຕະໂນມັດ. Column ທີ່ຮອງຮັບ:</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered small">
+            <thead class="table-light">
+              <tr><th>Column</th><th>ຊື່ທີ່ຮອງຮັບ</th><th>ໝາຍເຫດ</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cust ID</td>
+                <td>CUST, CID</td>
+                <td>ລະຫັດລູກຄ້າ – ໃຊ້ match ເວລາ update</td>
+              </tr>
+              <tr>
+                <td>ຊື່ <span class="text-danger">*</span></td>
+                <td>ຊື່ລູກຄ້າ, ຊື່, NAME</td>
+                <td class="text-danger">ຈຳເປັນ</td>
+              </tr>
+              <tr>
+                <td>ທີ່ຢູ່</td>
+                <td>ທີ່ຢູ່, ADDRESS</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>ເບີໂທ</td>
+                <td>ເບີໂທ, ເບີ, PHONE, TEL, MOBILE</td>
+                <td>ໃຊ້ match ຖ້າ Cust ID ບໍ່ມີ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted mb-0">
+          ⚠️ ຖ້າ Cust ID ຫຼື ເບີໂທຊ້ຳ ຈະ<strong>ອັບເດດ</strong>ຂໍ້ມູນທີ່ມີຢູ່.
+          ຖ້າໃໝ່ທັງໝົດ ຈະ<strong>ສ້າງ</strong>ລູກຄ້າໃໝ່.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
