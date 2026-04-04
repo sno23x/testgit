@@ -19,12 +19,13 @@
           <input type="text" id="productSearch" class="form-control form-control-lg fw-semibold"
                  style="border-left:0;font-size:1rem;"
                  placeholder="ສະແກນ Barcode ຫຼື ພິມຊື່ / ລະຫັດ..." autocomplete="off" autofocus/>
-          <button class="btn btn-outline-primary px-3" title="ສະແກນດ້ວຍກ້ອງ"
+          <button class="btn px-3" title="ສະແກນດ້ວຍກ້ອງ"
+                  style="border:1px solid #7c3aed;color:#7c3aed;border-radius:0;"
                   onclick="openBarcodeScanner(code => { document.getElementById('productSearch').value = code; doSearch(code, true); })">
             <i class="bi bi-camera fs-5"></i>
           </button>
-          <button class="btn btn-outline-secondary px-3" onclick="clearSearch()" title="ລ້າງ"
-                  style="border-radius:0 10px 10px 0;">
+          <button class="btn px-3" onclick="clearSearch()" title="ລ້າງ"
+                  style="border:1px solid #7c3aed;color:#7c3aed;border-radius:0 10px 10px 0;">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -246,8 +247,42 @@ const transferModal = new bootstrap.Modal(document.getElementById('transferModal
 let searchTimer, barcodeBuffer = '', barcodeTimer;
 const searchInput = document.getElementById('productSearch');
 
+// ─── Arrow key navigation for product search ───
+let prodFocusIdx = -1;
+
+function getProdItems() {
+  return document.querySelectorAll('#searchResults .product-tile, #searchResults .list-group-item');
+}
+
+function highlightProd(idx) {
+  const items = getProdItems();
+  items.forEach((el, i) => {
+    el.style.outline = (i === idx) ? '2px solid #6366f1' : '';
+    el.style.background = (i === idx)
+      ? (document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#1e1b4b' : '#ede9fe')
+      : '';
+  });
+  if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+}
+
 searchInput.addEventListener('keydown', function(e) {
+  const items = getProdItems();
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    prodFocusIdx = Math.min(prodFocusIdx + 1, items.length - 1);
+    highlightProd(prodFocusIdx); return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    prodFocusIdx = Math.max(prodFocusIdx - 1, -1);
+    highlightProd(prodFocusIdx); return;
+  }
   if (e.key === 'Enter') {
+    if (prodFocusIdx >= 0 && items[prodFocusIdx]) {
+      e.preventDefault();
+      items[prodFocusIdx].click();
+      prodFocusIdx = -1; return;
+    }
     clearTimeout(barcodeTimer);
     const q = barcodeBuffer.trim() || this.value.trim();
     barcodeBuffer = '';
@@ -255,6 +290,7 @@ searchInput.addEventListener('keydown', function(e) {
     e.preventDefault();
     return;
   }
+  prodFocusIdx = -1;
   if (e.key.length === 1) {
     barcodeBuffer += e.key;
     clearTimeout(barcodeTimer);
@@ -315,6 +351,7 @@ function imgUrl(p) {
 
 function renderResults(products) {
   lastProducts = products;
+  prodFocusIdx = -1;
   const div = document.getElementById('searchResults');
   document.getElementById('resultCount').textContent = products.length ? `${products.length} ລາຍການ` : '';
   if (!products.length) { div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>'; return; }
@@ -470,8 +507,39 @@ function toggleRate() {
   recalc();
 }
 
-// ─── Customer lookup ───
-let custTimer;
+// ─── Customer lookup with arrow-key navigation ───
+let custTimer, custFocusIdx = -1;
+
+function getCustItems() {
+  return document.querySelectorAll('#customerSuggestions .dropdown-item');
+}
+
+function highlightCust(idx) {
+  getCustItems().forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+}
+
+document.getElementById('customerSearch').addEventListener('keydown', function(e) {
+  const items = getCustItems();
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    custFocusIdx = Math.min(custFocusIdx + 1, items.length - 1);
+    highlightCust(custFocusIdx); return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    custFocusIdx = Math.max(custFocusIdx - 1, -1);
+    highlightCust(custFocusIdx); return;
+  }
+  if (e.key === 'Enter' && custFocusIdx >= 0 && items[custFocusIdx]) {
+    e.preventDefault();
+    items[custFocusIdx].click();
+    custFocusIdx = -1; return;
+  }
+  if (e.key === 'Escape') { hideCustomerSuggestions(); custFocusIdx = -1; }
+});
+
 function customerLookup() {
   clearTimeout(custTimer);
   const q = document.getElementById('customerSearch').value.trim();
@@ -487,6 +555,7 @@ function customerLookup() {
             ${c.phone ? `<small class="text-muted ms-1">${c.phone}</small>` : ''}
             ${c.debt > 0 ? `<span class="badge bg-danger ms-1 small">ໜີ້ ${Number(c.debt).toLocaleString()}</span>` : ''}
           </a>`).join('');
+        custFocusIdx = -1;
         box.classList.add('show');
       });
   }, 250);
