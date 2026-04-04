@@ -192,10 +192,11 @@
 
         <!-- Bank info -->
         {% if bank_name or bank_account_no %}
-        <div class="bg-light rounded p-2 text-start small mx-auto mb-2" style="max-width:260px;">
-          {% if bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong>{{ bank_name }}</strong></div>{% endif %}
-          {% if bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong>{{ bank_account_name }}</strong></div>{% endif %}
-          {% if bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong>{{ bank_account_no }}</strong></div>{% endif %}
+        <div class="rounded p-2 text-start small mx-auto mb-2"
+             style="max-width:260px;background:var(--bs-secondary-bg);border:1px solid var(--bs-border-color);">
+          {% if bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong class="text-body">{{ bank_name }}</strong></div>{% endif %}
+          {% if bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong class="text-body">{{ bank_account_name }}</strong></div>{% endif %}
+          {% if bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong class="text-body">{{ bank_account_no }}</strong></div>{% endif %}
         </div>
         {% endif %}
 
