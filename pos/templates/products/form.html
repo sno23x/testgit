@@ -11,8 +11,14 @@
           <div class="row g-3">
             <div class="col-6">
               <label class="form-label fw-semibold">ລະຫັດສິນຄ້າ</label>
-              <input type="text" name="code" class="form-control"
-                     value="{{ product.code if product else '' }}" placeholder="ອັດຕະໂນມັດ"/>
+              <div class="input-group">
+                <input type="text" name="code" id="productCodeInput" class="form-control"
+                       value="{{ product.code if product else '' }}" placeholder="ອັດຕະໂນມັດ"/>
+                <button type="button" class="btn btn-outline-primary" title="ສະແກນ Barcode"
+                        onclick="openBarcodeScanner(code => { document.getElementById('productCodeInput').value = code; })">
+                  <i class="bi bi-camera"></i>
+                </button>
+              </div>
             </div>
             <div class="col-6">
               <label class="form-label fw-semibold">ໝວດໝູ່</label>

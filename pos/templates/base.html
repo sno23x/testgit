@@ -128,6 +128,68 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- ── Global Barcode Scanner Modal ── -->
+<div class="modal fade" id="barcodeScanModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title fw-bold mb-0">
+          <i class="bi bi-camera me-2"></i>ສະແກນ Barcode ດ້ວຍກ້ອງ
+        </h6>
+        <button type="button" class="btn-close btn-close-white" id="scanCloseBtn"></button>
+      </div>
+      <div class="modal-body p-2">
+        <div id="barcodeReaderBox" style="width:100%;"></div>
+        <p class="text-center text-muted small mt-2 mb-0">
+          <i class="bi bi-info-circle me-1"></i>ເຈາະ Barcode ໃຫ້ຢູ່ໃນກອບ
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _html5Qr = null;
+  let _scanCallback = null;
+
+  const _scanModal = new bootstrap.Modal(document.getElementById('barcodeScanModal'));
+
+  function openBarcodeScanner(callback) {
+    _scanCallback = callback;
+    _scanModal.show();
+  }
+
+  document.getElementById('barcodeScanModal').addEventListener('shown.bs.modal', () => {
+    _html5Qr = new Html5Qrcode('barcodeReaderBox');
+    _html5Qr.start(
+      { facingMode: 'environment' },
+      { fps: 12, qrbox: { width: 280, height: 120 }, aspectRatio: 1.4 },
+      (decodedText) => {
+        _stopScanner();
+        _scanModal.hide();
+        if (_scanCallback) _scanCallback(decodedText.trim());
+      },
+      () => {}
+    ).catch(err => {
+      document.getElementById('barcodeReaderBox').innerHTML =
+        '<div class="alert alert-danger small m-2">ບໍ່ສາມາດເປີດກ້ອງໄດ້: ' + err + '</div>';
+    });
+  });
+
+  function _stopScanner() {
+    if (_html5Qr) {
+      _html5Qr.stop().catch(() => {}).finally(() => {
+        _html5Qr.clear();
+        _html5Qr = null;
+      });
+    }
+  }
+
+  document.getElementById('barcodeScanModal').addEventListener('hide.bs.modal', _stopScanner);
+  document.getElementById('scanCloseBtn').addEventListener('click', () => _scanModal.hide());
+</script>
 <script>
   function updateClock(){
     const now = new Date();

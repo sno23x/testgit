@@ -15,6 +15,10 @@
           <span class="input-group-text bg-primary text-white"><i class="bi bi-upc-scan"></i></span>
           <input type="text" id="productSearch" class="form-control form-control-lg fw-semibold"
                  placeholder="ສະແກນ Barcode ຫຼື ພິມຊື່ / ລະຫັດ..." autocomplete="off" autofocus/>
+          <button class="btn btn-outline-primary" title="ສະແກນດ້ວຍກ້ອງ"
+                  onclick="openBarcodeScanner(code => { document.getElementById('productSearch').value = code; doSearch(code, true); })">
+            <i class="bi bi-camera"></i>
+          </button>
           <button class="btn btn-outline-secondary" onclick="clearSearch()" title="ລ້າງ">
             <i class="bi bi-x-lg"></i>
           </button>
