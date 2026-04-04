@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}ໜ້າຂາຍ – POS{% endblock %}
-{% block page_title %}ໜ້າຂາຍ (POS){% endblock %}
+{% block title %}POS{% endblock %}
+{% block page_title %}ໜ້າຂາຍ POS{% endblock %}
 
 {% block content %}
 <div class="row g-3" style="min-height:82vh;">
@@ -354,7 +354,7 @@ function renderResults(products) {
               <p class="small text-muted mb-1">${p.code}</p>
               <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
               ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb).toLocaleString()}</small><br/>` : ''}
-              <small class="text-muted">ຄ/ຫ: ${p.stock_qty} ${p.unit}</small>
+              <small class="text-muted">Stock: ${p.stock_qty} ${p.unit}</small>
             </div>
           </div>
         </div>`;
