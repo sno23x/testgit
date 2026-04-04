@@ -14,6 +14,11 @@ body {
   background: #f1f5f9;
 }
 
+/* Smooth dark/light transition */
+body, #main-content, .topbar, .card, .stat-card, .sidebar, .bill-item-row, main {
+  transition: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
 .table td, .table th { vertical-align: middle; }
 .badge { border-radius: 99px; font-size: 0.72rem; }
 a { transition: color 0.15s ease; }
