@@ -1,140 +1,258 @@
 {% extends "base.html" %}
-{% block title %}POS{% endblock %}
+{% block title %}ໜ້າຫຼັກ – POS{% endblock %}
 {% block page_title %}ໜ້າຫຼັກ{% endblock %}
 
 {% block content %}
-<!-- Summary cards -->
+
+<!-- ═══ Stat Cards ═══ -->
 <div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="card border-0 shadow-sm stat-card bg-success text-white">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <p class="small mb-1 opacity-75">ລາຍຮັບວັນນີ້ (ເງິນສົດ)</p>
-            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(revenue_today) }} ກີບ</h4>
-          </div>
-          <i class="bi bi-cash-coin fs-2 opacity-50"></i>
+
+  <!-- Revenue today -->
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card stat-success">
+      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+        <div class="stat-icon">
+          <i class="bi bi-cash-coin"></i>
+        </div>
+        <div class="min-width-0">
+          <div class="stat-value">{{ "{:,.0f}".format(revenue_today) }}</div>
+          <div class="stat-label">ລາຍຮັບວັນນີ້ (ກີບ)</div>
         </div>
       </div>
+      <div class="stat-accent"></div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card border-0 shadow-sm stat-card bg-warning text-dark">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <p class="small mb-1 opacity-75">ຄ້າງຊຳລະວັນນີ້</p>
-            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(debt_today) }} ກີບ</h4>
-          </div>
-          <i class="bi bi-credit-card fs-2 opacity-50"></i>
+
+  <!-- Debt today -->
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card stat-warning">
+      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+        <div class="stat-icon">
+          <i class="bi bi-credit-card"></i>
+        </div>
+        <div class="min-width-0">
+          <div class="stat-value">{{ "{:,.0f}".format(debt_today) }}</div>
+          <div class="stat-label">ຄ້າງຊຳລະວັນນີ້ (ກີບ)</div>
         </div>
       </div>
+      <div class="stat-accent"></div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card border-0 shadow-sm stat-card bg-primary text-white">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <p class="small mb-1 opacity-75">ຈໍານວນບິນວັນນີ້</p>
-            <h4 class="fw-bold mb-0">{{ tx_count }} ບິນ</h4>
-          </div>
-          <i class="bi bi-receipt fs-2 opacity-50"></i>
+
+  <!-- Transaction count -->
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card stat-primary">
+      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+        <div class="stat-icon">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div class="min-width-0">
+          <div class="stat-value">{{ tx_count }}</div>
+          <div class="stat-label">ຈໍານວນບິນວັນນີ້</div>
         </div>
       </div>
+      <div class="stat-accent"></div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card border-0 shadow-sm stat-card bg-danger text-white">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <p class="small mb-1 opacity-75">ໜີ້ຄ້າງທັງໝົດ</p>
-            <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(total_debt_outstanding) }} ກີບ</h4>
-          </div>
-          <i class="bi bi-exclamation-triangle fs-2 opacity-50"></i>
+
+  <!-- Total outstanding debt -->
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card stat-danger">
+      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+        <div class="stat-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="min-width-0">
+          <div class="stat-value">{{ "{:,.0f}".format(total_debt_outstanding) }}</div>
+          <div class="stat-label">ໜີ້ຄ້າງທັງໝົດ (ກີບ)</div>
         </div>
       </div>
+      <div class="stat-accent"></div>
     </div>
   </div>
+
 </div>
 
+<!-- ═══ Bottom Row ═══ -->
 <div class="row g-3">
-  <!-- Quick actions -->
-  <div class="col-lg-4">
-    <div class="card shadow-sm border-0 mb-3">
-      <div class="card-header fw-semibold">ທາງລັດ</div>
-      <div class="card-body d-grid gap-2">
-        <a href="{{ url_for('pos.pos_page') }}" class="btn btn-primary btn-lg">
-          <i class="bi bi-cart-plus me-2"></i>ເປີດໜ້າຂາຍ
+
+  <!-- Quick actions + Low stock -->
+  <div class="col-lg-4 d-flex flex-column gap-3">
+
+    <!-- Quick actions -->
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-lightning-charge text-warning"></i>
+        <span>ທາງລັດ</span>
+      </div>
+      <div class="card-body d-grid gap-2 pb-3">
+
+        <a href="{{ url_for('pos.pos_page') }}"
+           class="quick-action-btn btn"
+           style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:0;box-shadow:0 2px 8px rgba(99,102,241,.28);">
+          <span style="background:rgba(255,255,255,.2);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-cart-plus"></i>
+          </span>
+          <div>
+            <div class="fw-bold" style="font-size:.9rem;">ເປີດໜ້າຂາຍ</div>
+            <div style="font-size:.72rem;opacity:.8;">POS Terminal</div>
+          </div>
         </a>
-        <a href="{{ url_for('products.add_product') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າ
+
+        <a href="{{ url_for('products.add_product') }}"
+           class="quick-action-btn btn btn-outline-secondary">
+          <span style="background:#f1f5f9;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4f46e5;">
+            <i class="bi bi-plus-circle"></i>
+          </span>
+          <span>ເພີ່ມສິນຄ້າ</span>
         </a>
-        <a href="{{ url_for('customers.add_customer') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-person-plus me-1"></i>ເພີ່ມລູກຄ້າ
+
+        <a href="{{ url_for('customers.add_customer') }}"
+           class="quick-action-btn btn btn-outline-secondary">
+          <span style="background:#f1f5f9;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#16a34a;">
+            <i class="bi bi-person-plus"></i>
+          </span>
+          <span>ເພີ່ມລູກຄ້າ</span>
         </a>
-        <a href="{{ url_for('debts.list_debts') }}" class="btn btn-outline-warning">
-          <i class="bi bi-credit-card me-1"></i>ຈັດການໜີ້ສິນ
+
+        <a href="{{ url_for('debts.list_debts') }}"
+           class="quick-action-btn btn btn-outline-warning">
+          <span style="background:#fef3c7;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#d97706;">
+            <i class="bi bi-credit-card"></i>
+          </span>
+          <span>ຈັດການໜີ້ສິນ</span>
         </a>
+
       </div>
     </div>
 
     <!-- Low stock warning -->
     {% if low_stock %}
-    <div class="card shadow-sm border-0 border-start border-warning border-3">
-      <div class="card-header fw-semibold text-warning">
-        <i class="bi bi-exclamation-triangle me-1"></i>Stock <10
+    <div class="card" style="border-left:3px solid #d97706;">
+      <div class="card-header d-flex align-items-center gap-2" style="color:#d97706;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Stock ໃກ້ໝົດ</span>
+        <span class="badge ms-auto" style="background:#fef3c7;color:#b45309;font-size:.7rem;">{{ low_stock|length }} ລາຍການ</span>
       </div>
-      <ul class="list-group list-group-flush">
-        {% for p in low_stock %}
-        <li class="list-group-item d-flex justify-content-between py-1">
-          <span class="small">{{ p.name }}</span>
-          <span class="badge bg-warning text-dark">{{ p.stock_qty }} {{ p.unit }}</span>
-        </li>
-        {% endfor %}
-      </ul>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for p in low_stock %}
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+            <span class="small text-truncate me-2" style="max-width:160px;">{{ p.name }}</span>
+            <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;font-size:.72rem;">
+              {{ p.stock_qty }} {{ p.unit }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
     {% endif %}
+
   </div>
 
-  <!-- Sales chart placeholder -->
+  <!-- Monthly sales chart -->
   <div class="col-lg-8">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-header fw-semibold d-flex justify-content-between">
-        <span>ຍອດຂາຍລາຍເດືອນ</span>
-        <a href="{{ url_for('reports.index', view='yearly') }}" class="btn btn-sm btn-outline-primary">ລາຍງານເຕັມ</a>
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-line text-primary"></i>
+          <span>ຍອດຂາຍລາຍເດືອນ</span>
+        </div>
+        <a href="{{ url_for('reports.index', view='yearly') }}"
+           class="btn btn-sm btn-outline-primary rounded-pill px-3">
+          <i class="bi bi-arrow-right me-1"></i>ລາຍງານເຕັມ
+        </a>
       </div>
-      <div class="card-body">
-        <canvas id="monthlyChart" height="120"></canvas>
+      <div class="card-body" style="padding:1.25rem 1.25rem 1rem;">
+        <canvas id="monthlyChart" height="110"></canvas>
       </div>
     </div>
   </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
-const monthly = {{ monthly | tojson }};
-const labels = monthly.map(r => `ເດືອນ ${r[1]}`);
-const data = monthly.map(r => r[2]);
-new Chart(document.getElementById('monthlyChart'), {
-  type: 'bar',
-  data: {
-    labels,
-    datasets: [{
-      label: 'ຍອດຂາຍ (ກີບ)',
-      data,
-      backgroundColor: 'rgba(13,110,253,0.7)',
-      borderRadius: 4,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true } }
-  }
-});
+(function() {
+  const monthly = {{ monthly | tojson }};
+  const labels  = monthly.map(r => `ເດືອນ ${r[1]}`);
+  const data    = monthly.map(r => r[2]);
+
+  const isDark = () => document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  const gridColor = () => isDark() ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)';
+  const textColor = () => isDark() ? '#8b949e' : '#64748b';
+
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, 280);
+  grad.addColorStop(0,   'rgba(99,102,241,.85)');
+  grad.addColorStop(0.65,'rgba(124,58,237,.55)');
+  grad.addColorStop(1,   'rgba(124,58,237,.08)');
+
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'ຍອດຂາຍ (ກີບ)',
+        data,
+        backgroundColor: grad,
+        borderRadius: 8,
+        borderSkipped: false,
+        hoverBackgroundColor: 'rgba(99,102,241,.95)',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark() ? '#1e2433' : '#fff',
+          titleColor: isDark() ? '#c9d1d9' : '#0f172a',
+          bodyColor:  isDark() ? '#8b949e'  : '#64748b',
+          borderColor: isDark() ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => ' ' + Number(ctx.parsed.y).toLocaleString() + ' ກີບ'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor() },
+          ticks: { color: textColor(), font: { size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor() },
+          ticks: {
+            color: textColor(),
+            font: { size: 11 },
+            callback: v => Number(v).toLocaleString()
+          }
+        }
+      }
+    }
+  });
+
+  // Re-theme chart on dark mode toggle
+  const observer = new MutationObserver(() => {
+    chart.options.scales.x.grid.color = gridColor();
+    chart.options.scales.x.ticks.color = textColor();
+    chart.options.scales.y.grid.color = gridColor();
+    chart.options.scales.y.ticks.color = textColor();
+    chart.options.plugins.tooltip.backgroundColor = isDark() ? '#1e2433' : '#fff';
+    chart.options.plugins.tooltip.titleColor = isDark() ? '#c9d1d9' : '#0f172a';
+    chart.options.plugins.tooltip.bodyColor   = isDark() ? '#8b949e'  : '#64748b';
+    chart.update('none');
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+})();
 </script>
 {% endblock %}

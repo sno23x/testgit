@@ -3,88 +3,99 @@
 {% block page_title %}ໜ້າຂາຍ (POS){% endblock %}
 
 {% block content %}
-<div class="row g-2" style="min-height:82vh;">
+<div class="row g-3" style="min-height:82vh;">
 
-  <!-- Left: Search + suggestions -->
-  <div class="col-lg-7 d-flex flex-column gap-2">
+  <!-- ═══ Left: Search + Product Grid ═══ -->
+  <div class="col-lg-7 d-flex flex-column gap-3">
 
-    <!-- Barcode / search bar -->
-    <div class="card shadow-sm border-0">
-      <div class="card-body py-2">
+    <!-- Search bar -->
+    <div class="card">
+      <div class="card-body py-2 px-3">
         <div class="input-group">
-          <span class="input-group-text bg-primary text-white"><i class="bi bi-upc-scan"></i></span>
+          <span class="input-group-text text-white fw-bold"
+                style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border:0;border-radius:10px 0 0 10px;">
+            <i class="bi bi-upc-scan fs-5"></i>
+          </span>
           <input type="text" id="productSearch" class="form-control form-control-lg fw-semibold"
+                 style="border-left:0;font-size:1rem;"
                  placeholder="ສະແກນ Barcode ຫຼື ພິມຊື່ / ລະຫັດ..." autocomplete="off" autofocus/>
-          <button class="btn btn-outline-primary" title="ສະແກນດ້ວຍກ້ອງ"
+          <button class="btn btn-outline-primary px-3" title="ສະແກນດ້ວຍກ້ອງ"
                   onclick="openBarcodeScanner(code => { document.getElementById('productSearch').value = code; doSearch(code, true); })">
-            <i class="bi bi-camera"></i>
+            <i class="bi bi-camera fs-5"></i>
           </button>
-          <button class="btn btn-outline-secondary" onclick="clearSearch()" title="ລ້າງ">
+          <button class="btn btn-outline-secondary px-3" onclick="clearSearch()" title="ລ້າງ"
+                  style="border-radius:0 10px 10px 0;">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Suggestion tabs -->
-    <div class="card shadow-sm border-0 flex-grow-1">
-      <div class="card-header py-1 px-3 d-flex gap-2 align-items-center">
-        <ul class="nav nav-pills nav-sm mb-0" id="suggestTabs">
+    <!-- Products card -->
+    <div class="card flex-grow-1 d-flex flex-column" style="min-height:0;">
+      <div class="card-header py-2 px-3 d-flex align-items-center gap-2" style="background:transparent;">
+        <!-- Suggestion tabs -->
+        <ul class="nav pos-nav-pills mb-0" id="suggestTabs">
           <li class="nav-item">
-            <button class="nav-link active py-1 px-2 small" onclick="loadSuggestions('bestseller', this)">
+            <button class="nav-link active" onclick="loadSuggestions('bestseller', this)">
               <i class="bi bi-trophy me-1"></i>ຂາຍດີ
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link py-1 px-2 small" onclick="loadSuggestions('recent', this)">
+            <button class="nav-link" onclick="loadSuggestions('recent', this)">
               <i class="bi bi-clock-history me-1"></i>ຫາກໍ່ຂາຍ
             </button>
           </li>
         </ul>
-        <small class="text-muted mx-2" id="resultCount"></small>
+        <small class="text-muted" id="resultCount"></small>
         <!-- View toggle -->
         <div class="btn-group btn-group-sm ms-auto">
-          <button class="btn btn-outline-secondary py-0 px-2 active" id="btnGrid" onclick="setView('grid',this)" title="Grid">
+          <button class="btn btn-outline-secondary active" id="btnGrid" onclick="setView('grid',this)" title="Grid">
             <i class="bi bi-grid-3x3-gap"></i>
           </button>
-          <button class="btn btn-outline-secondary py-0 px-2" id="btnList" onclick="setView('list',this)" title="List">
+          <button class="btn btn-outline-secondary" id="btnList" onclick="setView('list',this)" title="List">
             <i class="bi bi-list-ul"></i>
           </button>
         </div>
       </div>
-      <div class="card-body p-2 overflow-auto" style="max-height:55vh;">
+      <div class="card-body p-2 overflow-auto flex-grow-1" style="max-height:58vh;">
         <div id="searchResults"></div>
       </div>
     </div>
   </div>
 
-  <!-- Right: Bill / Cart -->
+  <!-- ═══ Right: Bill / Cart ═══ -->
   <div class="col-lg-5 d-flex flex-column">
-    <div class="card shadow-sm border-0 flex-grow-1 d-flex flex-column">
-      <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between align-items-center py-2">
-        <span><i class="bi bi-receipt me-1"></i>ໃບບິນ</span>
-        <div class="d-flex gap-1 align-items-center">
+    <div class="card flex-grow-1 d-flex flex-column" style="min-height:0;">
+
+      <!-- Cart header -->
+      <div class="card-header cart-header-gradient d-flex justify-content-between align-items-center py-2 px-3">
+        <span class="fw-bold"><i class="bi bi-receipt me-2"></i>ໃບບິນ</span>
+        <div class="d-flex align-items-center gap-2">
           <!-- Currency toggle -->
-          <div class="btn-group btn-group-sm" role="group">
+          <div class="btn-group btn-group-sm">
             <input type="radio" class="btn-check" name="currency" id="curLAK" value="LAK" checked/>
             <label class="btn btn-outline-light btn-sm py-0 px-2" for="curLAK">ກີບ</label>
             <input type="radio" class="btn-check" name="currency" id="curTHB" value="THB"/>
-            <label class="btn btn-outline-light btn-sm py-0 px-2" for="curTHB">฿ ບາດ</label>
+            <label class="btn btn-outline-light btn-sm py-0 px-2" for="curTHB">฿</label>
           </div>
-          <button class="btn btn-sm btn-outline-light ms-1" onclick="clearBill()" title="ລ້າງ">
+          <button class="btn btn-sm btn-outline-light" onclick="clearBill()" title="ລ້າງບິນ">
             <i class="bi bi-trash"></i>
           </button>
         </div>
       </div>
 
       <!-- Bill items -->
-      <div class="flex-grow-1 overflow-auto p-2" id="billItems" style="max-height:38vh; min-height:100px;">
-        <p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>
+      <div class="flex-grow-1 overflow-auto px-2 pt-2" id="billItems" style="max-height:36vh; min-height:80px;">
+        <p class="text-muted text-center mt-4 small" id="emptyMsg">
+          <i class="bi bi-cart d-block fs-2 mb-2 opacity-25"></i>ຍັງບໍ່ມີລາຍການ
+        </p>
       </div>
 
       <div class="card-footer p-2">
-        <!-- Exchange rate row (hidden by default) -->
-        <div id="rateRow" class="d-none mb-2 p-2 rounded border">
+
+        <!-- Exchange rate (hidden by default) -->
+        <div id="rateRow" class="d-none mb-2 p-2 rounded-3 border">
           <div class="d-flex align-items-center gap-2">
             <small class="fw-semibold text-nowrap">฿1 =</small>
             <input type="number" id="rateInput" class="form-control form-control-sm" style="width:100px;"
@@ -94,7 +105,7 @@
           </div>
         </div>
 
-        <!-- Customer phone lookup -->
+        <!-- Customer lookup -->
         <div class="mb-2 position-relative">
           <div class="input-group input-group-sm">
             <span class="input-group-text"><i class="bi bi-person-circle"></i></span>
@@ -105,39 +116,43 @@
               <i class="bi bi-x"></i>
             </button>
           </div>
-          <div id="customerSuggestions" class="dropdown-menu w-100 shadow-sm small" style="max-height:160px;overflow-y:auto;"></div>
+          <div id="customerSuggestions" class="dropdown-menu w-100 shadow small"
+               style="max-height:160px;overflow-y:auto;border-radius:10px;margin-top:2px;"></div>
           <input type="hidden" id="customerId" value=""/>
-          <div id="selectedCustomer" class="small text-success mt-1 d-none"></div>
+          <div id="selectedCustomer" class="small text-success mt-1 d-none fw-semibold"></div>
         </div>
 
-        <!-- Total -->
-        <div class="d-flex justify-content-between fw-bold fs-5 mb-2">
-          <span>ລວມທັງໝົດ:</span>
-          <span class="text-primary" id="totalDisplay">0 ກີບ</span>
-        </div>
-        <div id="thbTotalRow" class="d-none d-flex justify-content-between small text-warning mb-2">
-          <span>ເທົ່າກັບ THB:</span>
-          <span id="thbTotalDisplay"></span>
+        <!-- Total display -->
+        <div class="rounded-3 mb-2 px-3 py-2" style="background:linear-gradient(135deg,rgba(79,70,229,.08),rgba(124,58,237,.05));border:1.5px solid rgba(99,102,241,.15);">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-muted small">ລວມທັງໝົດ</span>
+            <span class="fw-bold fs-5 text-primary" id="totalDisplay">0 ກີບ</span>
+          </div>
+          <div id="thbTotalRow" class="d-none d-flex justify-content-between small text-warning mt-1">
+            <span>ເທົ່າກັບ THB:</span>
+            <span id="thbTotalDisplay"></span>
+          </div>
         </div>
 
         <!-- Note -->
         <input type="text" id="noteInput" class="form-control form-control-sm mb-2"
-               placeholder="ໝາຍເຫດ (ຖ້າມີ)..."/>
+               placeholder="ໝາຍເຫດ (ຖ້າມີ)..." style="border-radius:8px;"/>
 
         <!-- Payment buttons -->
         <div class="d-grid gap-2">
-          <div class="btn-group w-100">
-            <button class="btn btn-success btn-lg" onclick="submitSale('cash')">
-              <i class="bi bi-cash me-1"></i>ເງິນສົດ
-            </button>
-            <button class="btn btn-info btn-lg text-dark" onclick="submitSale('transfer')">
-              <i class="bi bi-phone me-1"></i>ໂອນເງິນ
-            </button>
-            <button class="btn btn-warning btn-lg text-dark" onclick="submitSale('debt')">
-              <i class="bi bi-truck me-1"></i>ຈັດສົ່ງ
-            </button>
-          </div>
-          <button class="btn btn-outline-secondary btn-sm" onclick="toggleRate()">
+          <button class="pay-btn pay-btn-cash" onclick="submitSale('cash')">
+            <div class="pay-icon"><i class="bi bi-cash"></i></div>
+            <div><div class="pay-label">ເງິນສົດ</div><div class="pay-desc">Cash Payment</div></div>
+          </button>
+          <button class="pay-btn pay-btn-transfer" onclick="submitSale('transfer')">
+            <div class="pay-icon"><i class="bi bi-phone"></i></div>
+            <div><div class="pay-label">ໂອນເງິນ</div><div class="pay-desc">Bank Transfer / QR</div></div>
+          </button>
+          <button class="pay-btn pay-btn-debt" onclick="submitSale('debt')">
+            <div class="pay-icon"><i class="bi bi-truck"></i></div>
+            <div><div class="pay-label">ຈັດສົ່ງ</div><div class="pay-desc">ຄ້າງຊຳລະ</div></div>
+          </button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="toggleRate()">
             <i class="bi bi-currency-exchange me-1"></i>ອັດຕາແລກປ່ຽນ
           </button>
         </div>

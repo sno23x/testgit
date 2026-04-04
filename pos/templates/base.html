@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0f172a"/>
   <title>{% block title %}ລະບົບ POS – ຮ້ານວັນນາຂາຍເຄື່ອງກໍ່ສ້າງ{% endblock %}</title>
   <!-- Noto Sans Lao -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -15,105 +16,123 @@
 <body>
 
 <div class="d-flex" id="wrapper">
-  <!-- Sidebar -->
-  <nav class="sidebar d-flex flex-column flex-shrink-0 p-0" id="sidebar">
-    <a class="sidebar-brand d-flex align-items-center px-3 py-3 text-white text-decoration-none" href="{{ url_for('pos.dashboard') }}">
-      <i class="bi bi-building me-2 fs-5"></i>
-      <span class="fw-bold">ຮ້ານວັນນາຂາຍເຄື່ອງກໍ່ສ້າງ</span>
+  <!-- ═══════════════ Sidebar ═══════════════ -->
+  <nav class="sidebar flex-shrink-0" id="sidebar">
+
+    <!-- Brand -->
+    <a class="sidebar-brand" href="{{ url_for('pos.dashboard') }}">
+      <div class="brand-icon">
+        <i class="bi bi-building"></i>
+      </div>
+      <span class="brand-text">ຮ້ານວັນນາ<br/>ຂາຍເຄື່ອງກໍ່ສ້າງ</span>
     </a>
-    <hr class="text-white-50 my-0"/>
-    <ul class="nav nav-pills flex-column mb-auto px-2 pt-2">
+
+    <!-- Navigation -->
+    <ul class="nav flex-column mb-auto px-2 pt-1 flex-grow-1" id="sidebarNav">
+
+      <!-- Dashboard -->
       <li class="nav-item">
-        <a href="{{ url_for('pos.dashboard') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'pos.dashboard' }}">
-          <i class="bi bi-speedometer2 me-2"></i>ໜ້າຫຼັກ
+        <a href="{{ url_for('pos.dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'pos.dashboard' }}">
+          <i class="bi bi-speedometer2"></i>ໜ້າຫຼັກ
+        </a>
+      </li>
+
+      <!-- Section: ການຂາຍ -->
+      <li><div class="sidebar-section-label">ການຂາຍ</div></li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('pos.pos_page') }}" class="nav-link {{ 'active' if request.endpoint == 'pos.pos_page' }}">
+          <i class="bi bi-cart-check"></i>ໜ້າຂາຍ (POS)
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('pos.pos_page') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'pos.pos_page' }}">
-          <i class="bi bi-cart-check me-2"></i>ໜ້າຂາຍ (POS)
-        </a>
-      </li>
-      <hr class="text-white-50 my-1"/>
-      <li class="nav-item">
-        <a href="{{ url_for('products.list_products') }}" class="nav-link text-white {{ 'active' if 'products' in request.endpoint }}">
-          <i class="bi bi-box-seam me-2"></i>ສິນຄ້າ / Stock
+        <a href="{{ url_for('products.list_products') }}" class="nav-link {{ 'active' if 'products' in request.endpoint }}">
+          <i class="bi bi-box-seam"></i>ສິນຄ້າ / Stock
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('customers.list_customers') }}" class="nav-link text-white {{ 'active' if 'customers' in request.endpoint }}">
-          <i class="bi bi-people me-2"></i>ລູກຄ້າ
+        <a href="{{ url_for('customers.list_customers') }}" class="nav-link {{ 'active' if 'customers' in request.endpoint }}">
+          <i class="bi bi-people"></i>ລູກຄ້າ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('debts.list_debts') }}" class="nav-link text-white {{ 'active' if 'debts' in request.endpoint }}">
-          <i class="bi bi-credit-card me-2"></i>ໜີ້ສິນ
+        <a href="{{ url_for('debts.list_debts') }}" class="nav-link {{ 'active' if 'debts' in request.endpoint }}">
+          <i class="bi bi-credit-card"></i>ໜີ້ສິນ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link text-white {{ 'active' if 'expenses' in request.endpoint }}">
-          <i class="bi bi-cash-stack me-2"></i>ລາຍຮັບ/ລາຍຈ່າຍ
+        <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {{ 'active' if 'expenses' in request.endpoint }}">
+          <i class="bi bi-cash-stack"></i>ລາຍຮັບ/ລາຍຈ່າຍ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('employees.list_employees') }}" class="nav-link text-white {{ 'active' if 'employees' in request.endpoint }}">
-          <i class="bi bi-person-badge me-2"></i>ພະນັກງານ
+        <a href="{{ url_for('employees.list_employees') }}" class="nav-link {{ 'active' if 'employees' in request.endpoint }}">
+          <i class="bi bi-person-badge"></i>ພະນັກງານ
+        </a>
+      </li>
+
+      <!-- Section: ລາຍງານ & ການຈັດການ -->
+      <li><div class="sidebar-section-label">ລາຍງານ &amp; ການຈັດການ</div></li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('payroll.index') }}" class="nav-link {{ 'active' if 'payroll' in request.endpoint }}">
+          <i class="bi bi-wallet2"></i>ເງິນເດືອນ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('payroll.index') }}" class="nav-link text-white {{ 'active' if 'payroll' in request.endpoint }}">
-          <i class="bi bi-wallet2 me-2"></i>ເງິນເດືອນ
+        <a href="{{ url_for('salary_advance.list_advances') }}" class="nav-link {{ 'active' if 'salary_advance' in request.endpoint }}">
+          <i class="bi bi-cash-coin"></i>ເບີກເງິນລ່ວງໜ້າ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('salary_advance.list_advances') }}" class="nav-link text-white {{ 'active' if 'salary_advance' in request.endpoint }}">
-          <i class="bi bi-cash-coin me-2"></i>ເບີກເງິນລ່ວງໜ້າ
-        </a>
-      </li>
-      <hr class="text-white-50 my-1"/>
-      <li class="nav-item">
-        <a href="{{ url_for('reports.index') }}" class="nav-link text-white {{ 'active' if 'reports' in request.endpoint }}">
-          <i class="bi bi-bar-chart-line me-2"></i>ລາຍງານ
+        <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if 'reports' in request.endpoint }}">
+          <i class="bi bi-bar-chart-line"></i>ລາຍງານ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('settings.index') }}" class="nav-link text-white {{ 'active' if 'settings' in request.endpoint }}">
-          <i class="bi bi-gear me-2"></i>ຕັ້ງຄ່າລະບົບ
+        <a href="{{ url_for('settings.index') }}" class="nav-link {{ 'active' if 'settings' in request.endpoint }}">
+          <i class="bi bi-gear"></i>ຕັ້ງຄ່າລະບົບ
         </a>
       </li>
     </ul>
-    <hr class="text-white-50 my-0"/>
-    <div class="px-3 py-2 text-white-50 small d-flex justify-content-between align-items-center">
+
+    <!-- Sidebar footer: user info -->
+    <div class="sidebar-footer">
       <span><i class="bi bi-person-circle me-1"></i>{{ current_user.name }}</span>
-      <a href="{{ url_for('auth.logout') }}" class="text-white-50" title="ອອກຈາກລະບົບ">
-        <i class="bi bi-box-arrow-right"></i>
+      <a href="{{ url_for('auth.logout') }}" title="ອອກຈາກລະບົບ">
+        <i class="bi bi-box-arrow-right fs-5"></i>
       </a>
     </div>
   </nav>
 
-  <!-- Main content -->
+  <!-- ═══════════════ Main content ═══════════════ -->
   <div class="flex-grow-1 d-flex flex-column" id="main-content">
+
     <!-- Top bar -->
-    <header class="topbar d-flex align-items-center px-3 py-2 border-bottom">
-      <button class="btn btn-sm btn-outline-secondary me-2 d-lg-none" id="toggleSidebar">
+    <header class="topbar d-flex align-items-center px-3 px-lg-4 gap-3 no-print">
+      <button class="btn btn-sm btn-outline-secondary d-lg-none" id="toggleSidebar">
         <i class="bi bi-list"></i>
       </button>
-      <span class="fw-semibold text-muted">{% block page_title %}{% endblock %}</span>
+      <h6 class="page-title mb-0">{% block page_title %}{% endblock %}</h6>
       <div class="ms-auto d-flex align-items-center gap-3">
         <button class="btn btn-sm btn-outline-secondary" id="darkToggle" title="Dark / Light mode" onclick="toggleDark()">
           <i class="bi bi-moon-stars-fill" id="darkIcon"></i>
         </button>
-        <small class="text-muted">
-          <i class="bi bi-calendar me-1"></i>
-          <span id="clock"></span>
+        <small class="text-muted d-none d-sm-block">
+          <i class="bi bi-calendar me-1"></i><span id="clock"></span>
         </small>
       </div>
     </header>
 
     <!-- Flash messages -->
-    <div class="px-3 pt-2">
+    <div class="px-3 px-lg-4 pt-2 flash-area no-print">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for cat, msg in messages %}
           <div class="alert alert-{{ cat }} alert-dismissible fade show py-2 mb-2" role="alert">
+            {% if cat == 'success' %}<i class="bi bi-check-circle me-2"></i>
+            {% elif cat == 'danger' or cat == 'error' %}<i class="bi bi-exclamation-circle me-2"></i>
+            {% elif cat == 'warning' %}<i class="bi bi-exclamation-triangle me-2"></i>
+            {% else %}<i class="bi bi-info-circle me-2"></i>{% endif %}
             {{ msg }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
@@ -121,11 +140,15 @@
       {% endwith %}
     </div>
 
-    <main class="p-3 flex-grow-1">
+    <main class="p-3 p-lg-4 flex-grow-1">
       {% block content %}{% endblock %}
     </main>
   </div>
 </div>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebarOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100"
+     style="z-index:1044;background:rgba(0,0,0,.45);" onclick="closeSidebar()"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -197,9 +220,19 @@
       now.toLocaleDateString('lo-LA') + ' ' + now.toLocaleTimeString('lo-LA');
   }
   setInterval(updateClock, 1000); updateClock();
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('sidebarOverlay').classList.add('d-none');
+  }
+
   document.getElementById('toggleSidebar')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('show');
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    sb.classList.toggle('show');
+    ov.classList.toggle('d-none', !sb.classList.contains('show'));
   });
+
   document.querySelectorAll('.alert-dismissible').forEach(el => {
     setTimeout(() => bootstrap.Alert.getOrCreateInstance(el)?.close(), 4000);
   });
