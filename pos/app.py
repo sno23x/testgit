@@ -82,4 +82,10 @@ def run_migrations(app):
 if __name__ == "__main__":
     app = create_app()
     run_migrations(app)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # ssl_context='adhoc' ຕ້ອງການ: pip install pyOpenSSL
+    # ເຮັດໃຫ້ browser ຍອມໃຊ້ກ້ອງ (camera) ໄດ້ຜ່ານ HTTPS
+    try:
+        app.run(debug=True, host="0.0.0.0", port=5000, ssl_context="adhoc")
+    except Exception:
+        # fallback ຖ້າ pyOpenSSL ຍັງບໍ່ໄດ້ຕິດຕັ້ງ
+        app.run(debug=True, host="0.0.0.0", port=5000)

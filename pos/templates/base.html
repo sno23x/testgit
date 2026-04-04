@@ -196,8 +196,15 @@
       },
       () => {}
     ).catch(err => {
-      document.getElementById('barcodeReaderBox').innerHTML =
-        '<div class="alert alert-danger small m-2">ບໍ່ສາມາດເປີດກ້ອງໄດ້: ' + err + '</div>';
+      const isHttps = location.protocol === 'https:';
+      document.getElementById('barcodeReaderBox').innerHTML = isHttps
+        ? `<div class="alert alert-danger small m-2"><i class="bi bi-exclamation-triangle me-1"></i>ບໍ່ສາມາດເປີດກ້ອງໄດ້: ${err}</div>`
+        : `<div class="alert alert-warning m-2">
+            <i class="bi bi-lock me-1"></i><strong>ຕ້ອງໃຊ້ HTTPS</strong><br/>
+            <small>Browser ບໍ່ອະນຸຍາດໃຊ້ກ້ອງຜ່ານ HTTP.<br/>
+            ກະລຸນາເຂົ້າຜ່ານ <strong>https://</strong>${location.host}${location.pathname}<br/>
+            (ກົດ "Advanced" → "Proceed" ຖ້າ browser ເຕືອນ)</small>
+           </div>`;
     });
   });
 
