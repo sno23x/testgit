@@ -22,12 +22,13 @@ def list_expenses():
         db.extract("month", Expense.date) == m,
     ).order_by(Expense.date.desc()).all()
 
-    # Income from sales this month
+    # Income from sales this month (exclude voided, include cash + transfer)
     from sqlalchemy import extract, func
     income = db.session.query(func.sum(Sale.total)).filter(
         extract("year", Sale.created_at) == y,
         extract("month", Sale.created_at) == m,
-        Sale.payment_type == "cash",
+        Sale.payment_type.in_(["cash", "transfer"]),
+        Sale.voided == False,
     ).scalar() or 0
 
     total_expense = sum(e.amount for e in expenses)
