@@ -281,11 +281,35 @@ div.total-section {
 
 </div><!-- .page -->
 
+<!-- VOIDED watermark -->
+{% if sale.voided %}
+<div style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="transform:rotate(-35deg);font-size:64pt;font-weight:900;color:rgba(220,38,38,.18);border:8px solid rgba(220,38,38,.18);padding:8px 24px;border-radius:8px;white-space:nowrap;">
+    ຍົກເລີກ
+  </div>
+</div>
+{% endif %}
+
 <!-- Screen controls -->
-<div class="no-print">
+<div class="no-print" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px;">
+  {% if not sale.voided %}
   <button class="btn-print" onclick="window.print()">🖨 ພິມ (A5)</button>
+  {% endif %}
   <button class="btn-close2" onclick="window.close()">ປິດ</button>
-  <a href="/settings/" target="_blank" class="btn-set">⚙ ຕັ້ງຄ່າໃບບິນ</a>
+  <a href="/settings/" target="_blank" class="btn-set">⚙ ຕັ້ງຄ່າ</a>
+  {% if not sale.voided %}
+  <form method="POST" action="/pos/void/{{ sale.id }}"
+        onsubmit="return confirm('ຍົກເລີກບິນ {{ sale.sale_no }}?\nສິນຄ້າຈະກັບຄືນ stock ແລະ ບໍ່ໄລ່ເປັນລາຍຮັບ')">
+    <button type="submit"
+            style="background:#dc2626;color:#fff;padding:7px 16px;border:none;border-radius:4px;font-family:inherit;font-size:9.5pt;cursor:pointer;">
+      🗑 ຍົກເລີກບິນ
+    </button>
+  </form>
+  {% else %}
+  <span style="background:#dc2626;color:#fff;padding:7px 16px;border-radius:4px;font-size:9.5pt;">
+    ✕ ຍົກເລີກແລ້ວ – {{ sale.voided_at.strftime('%d/%m/%Y %H:%M') if sale.voided_at else '' }}
+  </span>
+  {% endif %}
 </div>
 
 <script>

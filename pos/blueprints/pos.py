@@ -19,8 +19,11 @@ def next_sale_no():
 @login_required
 def dashboard():
     today = date.today()
-    sales_today = Sale.query.filter(db.func.date(Sale.created_at) == today).all()
-    revenue_today = sum(s.total for s in sales_today if s.payment_type == "cash")
+    sales_today = Sale.query.filter(
+        db.func.date(Sale.created_at) == today,
+        Sale.voided == False
+    ).all()
+    revenue_today = sum(s.total for s in sales_today if s.payment_type in ("cash", "transfer"))
     debt_today    = sum(s.total for s in sales_today if s.payment_type == "debt")
     tx_count      = len(sales_today)
 
@@ -28,10 +31,10 @@ def dashboard():
         extract("year",  Sale.created_at).label("y"),
         extract("month", Sale.created_at).label("m"),
         func.sum(Sale.total).label("total")
-    ).group_by("y", "m").order_by("y", "m").limit(12).all()
+    ).filter(Sale.voided == False).group_by("y", "m").order_by("y", "m").limit(12).all()
     monthly = [(int(r.y), int(r.m), float(r.total)) for r in monthly_rows]
 
-    debt_sales = Sale.query.filter_by(payment_type="debt").all()
+    debt_sales = Sale.query.filter_by(payment_type="debt", voided=False).all()
     total_debt_outstanding = sum(s.debt_remaining for s in debt_sales)
     low_stock = Product.query.filter(Product.stock_qty <= 5, Product.active == True).all()
 
@@ -203,3 +206,32 @@ def receipt(sale_id):
         receipt_auto_print=Setting.get("receipt_auto_print", "1"),
         receipt_rows=receipt_rows,
         rate=rate)
+
+
+# ──────────────── Void sale ────────────────
+@pos_bp.route("/void/<int:sale_id>", methods=["POST"])
+@login_required
+def void_sale(sale_id):
+    sale = Sale.query.get_or_404(sale_id)
+    if sale.voided:
+        flash("ບິນນີ້ຖືກຍົກເລີກໄປແລ້ວ", "warning")
+        return redirect(request.referrer or url_for("reports.index"))
+
+    # Restore stock
+    for item in sale.items:
+        if item.product:
+            item.product.stock_qty += item.qty
+
+    # Reverse customer debt if it was a debt sale
+    if sale.payment_type == "debt" and sale.customer_id:
+        cust = Customer.query.get(sale.customer_id)
+        if cust:
+            cust.total_debt = max(0, cust.total_debt - sale.total)
+
+    sale.voided = True
+    sale.voided_at = datetime.now(timezone.utc)
+    sale.voided_by = current_user.id
+    db.session.commit()
+
+    flash(f"ຍົກເລີກບິນ {sale.sale_no} ສໍາເລັດ — ສິນຄ້າກັບຄືນ stock ແລ້ວ", "success")
+    return redirect(request.referrer or url_for("reports.index"))

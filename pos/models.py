@@ -113,15 +113,19 @@ class Sale(db.Model):
     subtotal = db.Column(db.Float, default=0)
     discount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
-    payment_type = db.Column(db.String(10), default="cash")  # cash / debt
-    currency = db.Column(db.String(5), default="LAK")        # LAK / THB
+    payment_type = db.Column(db.String(10), default="cash")  # cash / debt / transfer
+    currency = db.Column(db.String(5), default="LAK")
     paid_amount = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    voided = db.Column(db.Boolean, default=False)
+    voided_at = db.Column(db.DateTime, nullable=True)
+    voided_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
 
     items = db.relationship("SaleItem", backref="sale", lazy=True, cascade="all, delete-orphan")
     debt_payments = db.relationship("DebtPayment", backref="sale", lazy=True)
     employee = db.relationship("Employee", foreign_keys=[employee_id])
+    voided_by_emp = db.relationship("Employee", foreign_keys=[voided_by])
 
     @property
     def debt_remaining(self):

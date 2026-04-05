@@ -14,17 +14,22 @@ def index():
     view = request.args.get("view", "daily")
     today = date.today()
 
+    show_voided = request.args.get("show_voided", "0") == "1"
+
     if view == "daily":
         sel_date = request.args.get("date", today.isoformat())
         try:
             sel_dt = date.fromisoformat(sel_date)
         except Exception:
             sel_dt = today
-        sales = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)\
-            .order_by(Sale.created_at.desc()).all()
-        total = sum(s.total for s in sales)
+        q = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)
+        if not show_voided:
+            q = q.filter(Sale.voided == False)
+        sales = q.order_by(Sale.created_at.desc()).all()
+        total = sum(s.total for s in sales if not s.voided)
         label = f"ລາຍວັນ – {sel_dt.strftime('%d/%m/%Y')}"
-        context = dict(view=view, sales=sales, total=total, label=label, sel_date=str(sel_dt))
+        context = dict(view=view, sales=sales, total=total, label=label,
+                       sel_date=str(sel_dt), show_voided=show_voided)
 
     elif view == "monthly":
         sel_month = request.args.get("month", today.strftime("%Y-%m"))
@@ -32,39 +37,48 @@ def index():
             y, m = map(int, sel_month.split("-"))
         except Exception:
             y, m = today.year, today.month
-        sales = Sale.query.filter(
+        q = Sale.query.filter(
             extract("year", Sale.created_at) == y,
             extract("month", Sale.created_at) == m,
-        ).order_by(Sale.created_at.desc()).all()
-        total = sum(s.total for s in sales)
+        )
+        if not show_voided:
+            q = q.filter(Sale.voided == False)
+        sales = q.order_by(Sale.created_at.desc()).all()
+        total = sum(s.total for s in sales if not s.voided)
         label = f"ລາຍເດືອນ – {m:02d}/{y}"
-        context = dict(view=view, sales=sales, total=total, label=label, sel_month=sel_month)
+        context = dict(view=view, sales=sales, total=total, label=label,
+                       sel_month=sel_month, show_voided=show_voided)
 
     else:  # yearly
         sel_year = int(request.args.get("year", today.year))
-        sales = Sale.query.filter(
-            extract("year", Sale.created_at) == sel_year,
-        ).order_by(Sale.created_at.desc()).all()
-        total = sum(s.total for s in sales)
+        q = Sale.query.filter(extract("year", Sale.created_at) == sel_year)
+        if not show_voided:
+            q = q.filter(Sale.voided == False)
+        sales = q.order_by(Sale.created_at.desc()).all()
+        total = sum(s.total for s in sales if not s.voided)
         label = f"ລາຍປີ – {sel_year}"
 
-        # monthly breakdown for chart
         monthly_data = db.session.query(
             extract("month", Sale.created_at).label("m"),
             func.sum(Sale.total).label("t")
-        ).filter(extract("year", Sale.created_at) == sel_year)\
-         .group_by("m").order_by("m").all()
+        ).filter(
+            extract("year", Sale.created_at) == sel_year,
+            Sale.voided == False
+        ).group_by("m").order_by("m").all()
         chart_labels = [f"ເດືອນ {int(r[0])}" for r in monthly_data]
         chart_data = [float(r[1] or 0) for r in monthly_data]
         context = dict(view=view, sales=sales, total=total, label=label,
-                       sel_year=sel_year, chart_labels=chart_labels, chart_data=chart_data)
+                       sel_year=sel_year, chart_labels=chart_labels,
+                       chart_data=chart_data, show_voided=show_voided)
 
-    # Top 10 products (all time)
+    # Top 10 products (exclude voided)
     top_products = db.session.query(
         Product.name,
         func.sum(SaleItem.qty).label("qty"),
         func.sum(SaleItem.subtotal).label("revenue")
     ).join(SaleItem, Product.id == SaleItem.product_id)\
+     .join(Sale, Sale.id == SaleItem.sale_id)\
+     .filter(Sale.voided == False)\
      .group_by(Product.id).order_by(func.sum(SaleItem.subtotal).desc()).limit(10).all()
 
     context["top_products"] = top_products
