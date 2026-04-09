@@ -169,6 +169,12 @@
           <i class="bi bi-camera me-2"></i>ສະແກນ Barcode
         </h6>
         <div class="ms-auto d-flex gap-2 align-items-center">
+          <!-- Zoom controls (shown when device supports zoom) -->
+          <div id="zoomControls" style="display:none;" class="d-flex align-items-center gap-1">
+            <button type="button" class="btn btn-sm btn-outline-light px-2 py-0" onclick="adjustZoom(-0.5)" title="ຫຼຸດ Zoom">−</button>
+            <span id="zoomLabel" class="text-white small" style="min-width:2.8rem;text-align:center;">1×</span>
+            <button type="button" class="btn btn-sm btn-outline-light px-2 py-0" onclick="adjustZoom(+0.5)" title="ເພີ່ມ Zoom">+</button>
+          </div>
           <button type="button" class="btn btn-sm btn-outline-light" id="torchBtn"
                   title="ໄຟສ່ອງ" style="display:none;" onclick="toggleTorch()">
             <i class="bi bi-lightning-charge-fill"></i>
@@ -182,14 +188,11 @@
         <div id="scanOverlay" style="
           position:absolute;inset:0;pointer-events:none;display:flex;
           align-items:center;justify-content:center;">
-          <div style="
-            width:88%;height:38%;border:none;position:relative;">
-            <!-- Corner markers -->
+          <div style="width:88%;height:38%;border:none;position:relative;">
             <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></div>
             <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 3px 0 0;"></div>
             <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 3px;"></div>
             <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 3px 0;"></div>
-            <!-- Scan line animation -->
             <div id="scanLine" style="
               position:absolute;left:4px;right:4px;height:2px;
               background:linear-gradient(90deg,transparent,#22c55e,transparent);
@@ -197,7 +200,7 @@
           </div>
         </div>
         <p class="text-center text-white small py-2 mb-0" style="background:rgba(0,0,0,.55);position:relative;z-index:2;">
-          <i class="bi bi-info-circle me-1"></i>ວາງ Barcode ໃນກອບ · ໃຊ້ໄຟ ⚡ ຖ້າແສງໜ້ອຍ
+          <i class="bi bi-info-circle me-1"></i>ວາງ Barcode ໃນກອບ · ໃຊ້ + ຂະຫຍາຍໄກ · ⚡ ຖ້າແສງໜ້ອຍ
         </p>
         <div id="scanLastResult" class="text-center text-success small fw-semibold py-1"
              style="background:rgba(0,0,0,.55);min-height:1.6rem;position:relative;z-index:2;"></div>
@@ -212,6 +215,8 @@
   let _torchOn = false;
   let _lastScan = '';
   let _lastScanTime = 0;
+  let _currentZoom = 1;
+  let _zoomMin = 1, _zoomMax = 1;
 
   const _scanModal = new bootstrap.Modal(document.getElementById('barcodeScanModal'));
 
@@ -220,13 +225,14 @@
     _torchOn = false;
     _lastScan = '';
     document.getElementById('scanLastResult').textContent = '';
+    document.getElementById('zoomControls').style.display = 'none';
+    document.getElementById('torchBtn').style.display = 'none';
     _scanModal.show();
   }
 
   document.getElementById('barcodeScanModal').addEventListener('shown.bs.modal', () => {
     _html5Qr = new Html5Qrcode('barcodeReaderBox');
 
-    // All common barcode formats
     const formats = [
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.EAN_8,
@@ -243,10 +249,14 @@
     ].filter(Boolean);
 
     _html5Qr.start(
-      { facingMode: 'environment' },
+      {
+        facingMode: 'environment',
+        // Request high resolution so distant barcodes have more pixels
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
       {
         fps: 25,
-        // NO qrbox → scan the full camera frame, works at any distance
         aspectRatio: window.innerHeight > window.innerWidth ? 1.33 : 1.7,
         formatsToSupport: formats,
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
@@ -254,37 +264,60 @@
         disableFlip: false,
       },
       (decodedText) => {
-        // Debounce: ignore duplicate scan within 1.5s
         const now = Date.now();
         if (decodedText === _lastScan && now - _lastScanTime < 1500) return;
         _lastScan = decodedText;
         _lastScanTime = now;
-
-        // Haptic + visual feedback
         if (navigator.vibrate) navigator.vibrate(80);
         document.getElementById('scanLastResult').textContent = '✓ ' + decodedText.trim();
-
         _stopScanner();
         _scanModal.hide();
         if (_scanCallback) _scanCallback(decodedText.trim());
       },
-      () => {} // per-frame error: ignore
-    ).then(cameraId => {
-      // Show torch button if supported
-      if (_html5Qr.getRunningTrackCapabilities?.()?.torch !== undefined) {
-        document.getElementById('torchBtn').style.display = '';
-      }
+      () => {}
+    ).then(() => {
+      // Check capabilities after camera starts
+      try {
+        const caps = _html5Qr.getRunningTrackCapabilities?.() || {};
+
+        // Torch
+        if (caps.torch !== undefined) {
+          document.getElementById('torchBtn').style.display = '';
+        }
+
+        // Zoom
+        if (caps.zoom) {
+          _zoomMin = caps.zoom.min || 1;
+          _zoomMax = Math.min(caps.zoom.max || 1, 6);
+          _currentZoom = Math.min(2, _zoomMax); // Start at 2× (helps distant barcodes)
+          _applyZoom(_currentZoom);
+          document.getElementById('zoomControls').style.display = '';
+          _updateZoomLabel();
+        }
+      } catch(e) {}
     }).catch(err => {
       const isHttps = location.protocol === 'https:';
       document.getElementById('barcodeReaderBox').innerHTML = isHttps
         ? `<div class="alert alert-danger small m-2"><i class="bi bi-exclamation-triangle me-1"></i>ບໍ່ສາມາດເປີດກ້ອງ: ${err}</div>`
         : `<div class="alert alert-warning m-2">
             <i class="bi bi-lock me-1"></i><strong>ຕ້ອງໃຊ້ HTTPS</strong><br/>
-            <small>Browser ບໍ່ອະນຸຍາດໃຊ້ກ້ອງຜ່ານ HTTP<br/>
-            ເຂົ້າຜ່ານ <strong>https://</strong>${location.host}${location.pathname}</small>
+            <small>ເຂົ້າຜ່ານ <strong>https://</strong>${location.host}${location.pathname}</small>
            </div>`;
     });
   });
+
+  function _applyZoom(z) {
+    if (!_html5Qr) return;
+    _html5Qr.applyVideoConstraints({ advanced: [{ zoom: z }] }).catch(() => {});
+  }
+  function _updateZoomLabel() {
+    document.getElementById('zoomLabel').textContent = _currentZoom.toFixed(1) + '×';
+  }
+  function adjustZoom(delta) {
+    _currentZoom = Math.max(_zoomMin, Math.min(_zoomMax, _currentZoom + delta));
+    _applyZoom(_currentZoom);
+    _updateZoomLabel();
+  }
 
   function toggleTorch() {
     if (!_html5Qr) return;
@@ -301,6 +334,7 @@
         _html5Qr.clear();
         _html5Qr = null;
         _torchOn = false;
+        _currentZoom = 1;
       });
     }
   }
