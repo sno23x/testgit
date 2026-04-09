@@ -15,6 +15,9 @@
     <a href="{{ url_for('import_data.import_products') }}" class="btn btn-outline-success btn-sm">
       <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
     </a>
+    <a href="{{ url_for('products.export_excel') }}" class="btn btn-outline-info btn-sm">
+      <i class="bi bi-download me-1"></i>Export Excel
+    </a>
 
     <!-- Bulk action bar -->
     <div id="bulkBar" class="d-none ms-auto d-flex gap-2 align-items-center">
@@ -32,19 +35,24 @@
     </div>
   </div>
 
-  <form class="d-flex gap-2 flex-wrap" method="GET">
-    <input type="text" name="q" class="form-control form-control-sm w-auto" placeholder="ຊອກຫາ..." value="{{ q }}" autofocus/>
-    <select name="cat" class="form-select form-select-sm w-auto">
+  <!-- Live search bar -->
+  <div class="d-flex gap-2 flex-wrap align-items-center">
+    <div class="position-relative" style="min-width:260px;">
+      <input type="text" id="liveSearch" class="form-control form-control-sm"
+             placeholder="ຄົ້ນຫາຊື່ ຫຼື ລະຫັດສິນຄ້າ..." value="{{ q }}" autocomplete="off"/>
+      <div id="liveDropdown" class="position-absolute bg-body border rounded shadow-sm w-100"
+           style="z-index:1050;display:none;max-height:320px;overflow-y:auto;top:100%;left:0;"></div>
+    </div>
+    <select id="catFilter" class="form-select form-select-sm w-auto">
       <option value="">ທຸກໝວດ</option>
       {% for c in categories %}
       <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
     {% if q or cat_id %}
     <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary btn-sm">ລ້າງ</a>
     {% endif %}
-  </form>
+  </div>
 </div>
 
 <div class="card shadow-sm border-0">
@@ -56,8 +64,9 @@
             <input type="checkbox" class="form-check-input" id="checkAll" onchange="toggleAll(this)"/>
           </th>
           <th>ລະຫັດ</th><th>ຊື່ສິນຄ້າ</th><th>ໝວດ</th><th>ໜ່ວຍ</th>
+          <th class="text-end">ຕົ້ນທຶນ (ກີບ)</th>
           <th class="text-end">ລາຄາ (฿)</th>
-          <th class="text-end">ລາຄາ (ກີບ)</th>
+          <th class="text-end">ລາຄາຂາຍ (ກີບ)</th>
           <th class="text-end">Stock</th><th></th>
         </tr>
       </thead>
@@ -73,6 +82,9 @@
           <td><span class="badge bg-secondary">{{ p.category.name if p.category else '-' }}</span></td>
           <td>{{ p.unit }}</td>
           <td class="text-end text-muted small">
+            {{ "{:,.0f}".format(p.cost_price) if p.cost_price else '-' }}
+          </td>
+          <td class="text-end text-muted small">
             {{ "฿{:,.2f}".format(p.price_thb) if p.price_thb else '-' }}
           </td>
           <td class="text-end fw-semibold">{{ "{:,.0f}".format(p.sell_price) }}</td>
@@ -81,7 +93,7 @@
           </td>
           <td>
             <div class="d-flex gap-1 justify-content-end">
-              <a href="{{ url_for('products.edit_product', pid=p.id) }}" class="btn btn-sm btn-outline-primary">
+              <a href="{{ url_for('products.edit_product', pid=p.id, back_q=q) }}" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-pencil"></i>
               </a>
               <form method="POST" action="{{ url_for('products.delete_product', pid=p.id) }}"
@@ -94,7 +106,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="9" class="text-center text-muted py-4">ບໍ່ພົບສິນຄ້າ</td></tr>
+        <tr><td colspan="10" class="text-center text-muted py-4">ບໍ່ພົບສິນຄ້າ</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -130,6 +142,7 @@
 
 {% block scripts %}
 <script>
+// ──── Bulk actions ────
 function getSelected() {
   return [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.value));
 }
@@ -162,5 +175,100 @@ function bulkCategory() {
     body: JSON.stringify({ ids, category_id: parseInt(catId) }),
   }).then(r => r.json()).then(d => { if (d.ok) location.reload(); else alert(d.error); });
 }
+
+// ──── Live search dropdown ────
+const searchInput = document.getElementById('liveSearch');
+const dropdown = document.getElementById('liveDropdown');
+let searchTimer, focusIdx = -1;
+
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (!q) {
+    dropdown.style.display = 'none';
+    // When cleared, reload to /products
+    window.location.href = '/products';
+    return;
+  }
+  searchTimer = setTimeout(() => doSearch(q), 200);
+});
+
+searchInput.addEventListener('keydown', function(e) {
+  const items = dropdown.querySelectorAll('.search-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    focusIdx = Math.min(focusIdx + 1, items.length - 1);
+    highlightItem(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    focusIdx = Math.max(focusIdx - 1, -1);
+    highlightItem(items);
+  } else if (e.key === 'Enter') {
+    if (focusIdx >= 0 && items[focusIdx]) {
+      e.preventDefault();
+      items[focusIdx].click();
+    } else {
+      // Normal form search
+      const q = searchInput.value.trim();
+      if (q) window.location.href = '/products?q=' + encodeURIComponent(q);
+    }
+  } else if (e.key === 'Escape') {
+    dropdown.style.display = 'none';
+    focusIdx = -1;
+  }
+});
+
+function highlightItem(items) {
+  items.forEach((el, i) => el.classList.toggle('active', i === focusIdx));
+  if (focusIdx >= 0 && items[focusIdx]) items[focusIdx].scrollIntoView({block:'nearest'});
+}
+
+function doSearch(q) {
+  fetch('/products/api/search?q=' + encodeURIComponent(q))
+    .then(r => r.json())
+    .then(data => {
+      focusIdx = -1;
+      if (!data.length) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">ບໍ່ພົບສິນຄ້າ</div>';
+      } else {
+        dropdown.innerHTML = data.map(p => `
+          <div class="search-item px-3 py-2 d-flex justify-content-between align-items-center"
+               style="cursor:pointer;"
+               onmouseenter="this.classList.add('active')"
+               onmouseleave="this.classList.remove('active')"
+               onclick="window.location='/products/${p.id}/edit?back_q=${encodeURIComponent(searchInput.value)}'">
+            <div>
+              <span class="fw-semibold">${p.name}</span>
+              <small class="text-muted ms-2">${p.code}</small>
+            </div>
+            <div class="text-end">
+              <small class="text-muted">${p.stock_qty.toLocaleString()} ${p.unit}</small>
+              <small class="ms-2 text-success">${p.sell_price.toLocaleString()} ກີບ</small>
+            </div>
+          </div>`).join('');
+      }
+      dropdown.style.display = 'block';
+    });
+}
+
+document.addEventListener('click', function(e) {
+  if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+
+// Category filter change
+document.getElementById('catFilter').addEventListener('change', function() {
+  const q = searchInput.value.trim();
+  const cat = this.value;
+  let url = '/products?';
+  if (q) url += 'q=' + encodeURIComponent(q) + '&';
+  if (cat) url += 'cat=' + cat;
+  window.location.href = url;
+});
 </script>
+<style>
+.search-item.active { background: var(--bs-primary); color: #fff; }
+.search-item.active small { color: rgba(255,255,255,0.8) !important; }
+</style>
 {% endblock %}
