@@ -59,16 +59,20 @@
     </select>
 
     <!-- Stock filter -->
-    <div class="btn-group btn-group-sm" id="stockFilter">
+    <div class="d-flex gap-1" id="stockFilter">
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='') }}"
-         class="btn {{ 'btn-secondary' if not stock_filter else 'btn-outline-secondary' }}">ທຸກລາຍການ</a>
+         class="btn btn-sm rounded-pill px-3 {% if not stock_filter %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+        ທຸກລາຍການ
+      </a>
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='low') }}"
-         class="btn {{ 'btn-warning' if stock_filter == 'low' else 'btn-outline-warning' }}">
-        <i class="bi bi-exclamation-triangle me-1"></i>ໃກ້ໝົດ (≤5)
+         class="btn btn-sm rounded-pill px-3 {% if stock_filter == 'low' %}text-white{% endif %}"
+         style="{% if stock_filter == 'low' %}background:#f59e0b;border-color:#f59e0b;color:#fff;{% else %}border-color:#f59e0b;color:#f59e0b;background:transparent;{% endif %}">
+        <i class="bi bi-exclamation-triangle-fill me-1" style="font-size:.75rem;"></i>ໃກ້ໝົດ
       </a>
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='out') }}"
-         class="btn {{ 'btn-danger' if stock_filter == 'out' else 'btn-outline-danger' }}">
-        <i class="bi bi-x-circle me-1"></i>ໝົດແລ້ວ (0)
+         class="btn btn-sm rounded-pill px-3"
+         style="{% if stock_filter == 'out' %}background:#ef4444;border-color:#ef4444;color:#fff;{% else %}border-color:#ef4444;color:#ef4444;background:transparent;{% endif %}">
+        <i class="bi bi-slash-circle-fill me-1" style="font-size:.75rem;"></i>ໝົດແລ້ວ
       </a>
     </div>
   </div>
