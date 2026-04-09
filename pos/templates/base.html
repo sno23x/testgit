@@ -162,19 +162,26 @@
 
 <!-- ── Global Barcode Scanner Modal ── -->
 <div class="modal fade" id="barcodeScanModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white py-2">
         <h6 class="modal-title fw-bold mb-0">
-          <i class="bi bi-camera me-2"></i>ສະແກນ Barcode ດ້ວຍກ້ອງ
+          <i class="bi bi-camera me-2"></i>ສະແກນ Barcode
         </h6>
-        <button type="button" class="btn-close btn-close-white" id="scanCloseBtn"></button>
+        <div class="ms-auto d-flex gap-2 align-items-center">
+          <button type="button" class="btn btn-sm btn-outline-light" id="torchBtn"
+                  title="ໄຟສ່ອງ" style="display:none;" onclick="toggleTorch()">
+            <i class="bi bi-lightning-charge-fill"></i>
+          </button>
+          <button type="button" class="btn-close btn-close-white" id="scanCloseBtn"></button>
+        </div>
       </div>
       <div class="modal-body p-2">
         <div id="barcodeReaderBox" style="width:100%;"></div>
-        <p class="text-center text-muted small mt-2 mb-0">
-          <i class="bi bi-info-circle me-1"></i>ເຈາະ Barcode ໃຫ້ຢູ່ໃນກອບ
+        <p class="text-center text-muted small mt-2 mb-1">
+          <i class="bi bi-info-circle me-1"></i>ວາງ Barcode ໃຫ້ຢູ່ໃນກອບ · ໃຊ້ໄຟ <i class="bi bi-lightning-charge-fill"></i> ຖ້າແສງໜ້ອຍ
         </p>
+        <div id="scanLastResult" class="text-center text-success small fw-semibold" style="min-height:1.2rem;"></div>
       </div>
     </div>
   </div>
@@ -183,43 +190,101 @@
 <script>
   let _html5Qr = null;
   let _scanCallback = null;
+  let _torchOn = false;
+  let _lastScan = '';
+  let _lastScanTime = 0;
 
   const _scanModal = new bootstrap.Modal(document.getElementById('barcodeScanModal'));
 
   function openBarcodeScanner(callback) {
     _scanCallback = callback;
+    _torchOn = false;
+    _lastScan = '';
+    document.getElementById('scanLastResult').textContent = '';
     _scanModal.show();
   }
 
   document.getElementById('barcodeScanModal').addEventListener('shown.bs.modal', () => {
     _html5Qr = new Html5Qrcode('barcodeReaderBox');
+
+    // All common barcode formats
+    const formats = [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODABAR,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.PDF_417,
+      Html5QrcodeSupportedFormats.DATA_MATRIX,
+    ].filter(Boolean);
+
     _html5Qr.start(
       { facingMode: 'environment' },
-      { fps: 12, qrbox: { width: 280, height: 120 }, aspectRatio: 1.4 },
+      {
+        fps: 20,
+        qrbox: (w, h) => {
+          // Adaptive box: wide for barcodes, use 85% width
+          const side = Math.min(Math.floor(w * 0.85), 340);
+          return { width: side, height: Math.floor(side * 0.45) };
+        },
+        aspectRatio: 1.7,
+        formatsToSupport: formats,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+        rememberLastUsedCamera: true,
+      },
       (decodedText) => {
+        // Debounce: ignore duplicate scan within 1.5s
+        const now = Date.now();
+        if (decodedText === _lastScan && now - _lastScanTime < 1500) return;
+        _lastScan = decodedText;
+        _lastScanTime = now;
+
+        // Haptic + visual feedback
+        if (navigator.vibrate) navigator.vibrate(80);
+        document.getElementById('scanLastResult').textContent = '✓ ' + decodedText.trim();
+
         _stopScanner();
         _scanModal.hide();
         if (_scanCallback) _scanCallback(decodedText.trim());
       },
-      () => {}
-    ).catch(err => {
+      () => {} // per-frame error: ignore
+    ).then(cameraId => {
+      // Show torch button if supported
+      if (_html5Qr.getRunningTrackCapabilities?.()?.torch !== undefined) {
+        document.getElementById('torchBtn').style.display = '';
+      }
+    }).catch(err => {
       const isHttps = location.protocol === 'https:';
       document.getElementById('barcodeReaderBox').innerHTML = isHttps
-        ? `<div class="alert alert-danger small m-2"><i class="bi bi-exclamation-triangle me-1"></i>ບໍ່ສາມາດເປີດກ້ອງໄດ້: ${err}</div>`
+        ? `<div class="alert alert-danger small m-2"><i class="bi bi-exclamation-triangle me-1"></i>ບໍ່ສາມາດເປີດກ້ອງ: ${err}</div>`
         : `<div class="alert alert-warning m-2">
             <i class="bi bi-lock me-1"></i><strong>ຕ້ອງໃຊ້ HTTPS</strong><br/>
-            <small>Browser ບໍ່ອະນຸຍາດໃຊ້ກ້ອງຜ່ານ HTTP.<br/>
-            ກະລຸນາເຂົ້າຜ່ານ <strong>https://</strong>${location.host}${location.pathname}<br/>
-            (ກົດ "Advanced" → "Proceed" ຖ້າ browser ເຕືອນ)</small>
+            <small>Browser ບໍ່ອະນຸຍາດໃຊ້ກ້ອງຜ່ານ HTTP<br/>
+            ເຂົ້າຜ່ານ <strong>https://</strong>${location.host}${location.pathname}</small>
            </div>`;
     });
   });
+
+  function toggleTorch() {
+    if (!_html5Qr) return;
+    _torchOn = !_torchOn;
+    _html5Qr.applyVideoConstraints({ advanced: [{ torch: _torchOn }] });
+    const btn = document.getElementById('torchBtn');
+    btn.classList.toggle('btn-warning', _torchOn);
+    btn.classList.toggle('btn-outline-light', !_torchOn);
+  }
 
   function _stopScanner() {
     if (_html5Qr) {
       _html5Qr.stop().catch(() => {}).finally(() => {
         _html5Qr.clear();
         _html5Qr = null;
+        _torchOn = false;
       });
     }
   }

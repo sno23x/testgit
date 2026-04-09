@@ -35,20 +35,28 @@
     </div>
   </div>
 
-  <!-- Search bar (auto-submit, shows full table results) -->
+  <!-- Search bar (Enter to search) -->
   <div class="d-flex gap-2 flex-wrap align-items-center">
-    <input type="text" id="liveSearch" class="form-control form-control-sm"
-           placeholder="ຄົ້ນຫາຊື່ ຫຼື ລະຫັດສິນຄ້າ..." value="{{ q }}"
-           autocomplete="off" style="min-width:260px;"/>
+    <div class="input-group" style="min-width:280px;max-width:420px;">
+      <input type="text" id="liveSearch" class="form-control form-control-sm"
+             placeholder="ຄົ້ນຫາຊື່ ຫຼື ລະຫັດ... (Enter)" value="{{ q }}"
+             autocomplete="off"/>
+      {% if q %}
+      <a href="{{ url_for('products.list_products', cat=cat_id) }}" class="btn btn-sm btn-outline-secondary" title="ລ້າງ">
+        <i class="bi bi-x-lg"></i>
+      </a>
+      {% else %}
+      <button class="btn btn-sm btn-outline-primary" id="searchBtn" type="button">
+        <i class="bi bi-search"></i>
+      </button>
+      {% endif %}
+    </div>
     <select id="catFilter" class="form-select form-select-sm w-auto">
       <option value="">ທຸກໝວດ</option>
       {% for c in categories %}
       <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
       {% endfor %}
     </select>
-    {% if q or cat_id %}
-    <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary btn-sm">ລ້າງ</a>
-    {% endif %}
   </div>
 </div>
 
@@ -173,40 +181,33 @@ function bulkCategory() {
   }).then(r => r.json()).then(d => { if (d.ok) location.reload(); else alert(d.error); });
 }
 
-// ──── Auto-submit search (shows full table results) ────
+// ──── Search: Enter key or button click ────
 const searchInput = document.getElementById('liveSearch');
-let searchTimer;
 
-function buildUrl(q, cat) {
+function doSearch() {
   const params = new URLSearchParams();
+  const q = searchInput.value.trim();
+  const cat = document.getElementById('catFilter').value;
   if (q) params.set('q', q);
   if (cat) params.set('cat', cat);
-  return '/products' + (params.toString() ? '?' + params.toString() : '');
+  window.location.href = '/products' + (params.toString() ? '?' + params.toString() : '');
 }
 
-searchInput.addEventListener('input', function() {
-  clearTimeout(searchTimer);
-  const q = this.value.trim();
-  const cat = document.getElementById('catFilter').value;
-  searchTimer = setTimeout(() => {
-    window.location.href = buildUrl(q, cat);
-  }, 350);
-});
-
-searchInput.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    clearTimeout(searchTimer);
-    const q = this.value.trim();
-    const cat = document.getElementById('catFilter').value;
-    window.location.href = buildUrl(q, cat);
-  }
-});
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+document.getElementById('searchBtn')?.addEventListener('click', doSearch);
 
 document.getElementById('catFilter').addEventListener('change', function() {
-  clearTimeout(searchTimer);
+  const params = new URLSearchParams();
   const q = searchInput.value.trim();
-  window.location.href = buildUrl(q, this.value);
+  if (q) params.set('q', q);
+  if (this.value) params.set('cat', this.value);
+  window.location.href = '/products' + (params.toString() ? '?' + params.toString() : '');
 });
+
+// Focus search input on page load (cursor at end)
+searchInput.focus();
+const v = searchInput.value;
+searchInput.value = '';
+searchInput.value = v;
 </script>
 {% endblock %}
