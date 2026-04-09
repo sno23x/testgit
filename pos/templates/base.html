@@ -249,12 +249,7 @@
     ].filter(Boolean);
 
     _html5Qr.start(
-      {
-        facingMode: 'environment',
-        // Request high resolution so distant barcodes have more pixels
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-      },
+      { facingMode: 'environment' },
       {
         fps: 25,
         aspectRatio: window.innerHeight > window.innerWidth ? 1.33 : 1.7,
