@@ -173,7 +173,9 @@ def create_sale():
         si = SaleItem(sale_id=sale.id, product_id=product.id,
                       qty=qty, unit_price=price, subtotal=sub)
         db.session.add(si)
-        product.stock_qty = max(0, product.stock_qty - qty)
+        # ໂຕນ: 1 ໂຕນ = 20 ສອບ → ລົບ stock ຕາມ ສອບ
+        deduct = qty * 20 if product.unit == "ໂຕນ" else qty
+        product.stock_qty = max(0, product.stock_qty - deduct)
 
     if payment_type == "debt" and customer_id:
         cust = Customer.query.get(customer_id)
@@ -217,10 +219,11 @@ def void_sale(sale_id):
         flash("ບິນນີ້ຖືກຍົກເລີກໄປແລ້ວ", "warning")
         return redirect(request.referrer or url_for("reports.index"))
 
-    # Restore stock
+    # Restore stock (ໂຕນ: ×20 ສອບ)
     for item in sale.items:
         if item.product:
-            item.product.stock_qty += item.qty
+            restore = item.qty * 20 if item.product.unit == "ໂຕນ" else item.qty
+            item.product.stock_qty += restore
 
     # Reverse remaining customer debt (exclude already-paid portion)
     if sale.payment_type == "debt" and sale.customer_id:
