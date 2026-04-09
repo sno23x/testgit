@@ -57,6 +57,20 @@
       <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
       {% endfor %}
     </select>
+
+    <!-- Stock filter -->
+    <div class="btn-group btn-group-sm" id="stockFilter">
+      <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='') }}"
+         class="btn {{ 'btn-secondary' if not stock_filter else 'btn-outline-secondary' }}">ທຸກລາຍການ</a>
+      <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='low') }}"
+         class="btn {{ 'btn-warning' if stock_filter == 'low' else 'btn-outline-warning' }}">
+        <i class="bi bi-exclamation-triangle me-1"></i>ໃກ້ໝົດ (≤5)
+      </a>
+      <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='out') }}"
+         class="btn {{ 'btn-danger' if stock_filter == 'out' else 'btn-outline-danger' }}">
+        <i class="bi bi-x-circle me-1"></i>ໝົດແລ້ວ (0)
+      </a>
+    </div>
   </div>
 </div>
 
@@ -124,19 +138,19 @@
     <nav>
       <ul class="pagination pagination-sm mb-0">
         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
-          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.prev_num, q=q, cat=cat_id) }}">‹</a>
+          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.prev_num, q=q, cat=cat_id, stock=stock_filter) }}">‹</a>
         </li>
         {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
           {% if p %}
           <li class="page-item {{ 'active' if p == pagination.page }}">
-            <a class="page-link" href="{{ url_for('products.list_products', page=p, q=q, cat=cat_id) }}">{{ p }}</a>
+            <a class="page-link" href="{{ url_for('products.list_products', page=p, q=q, cat=cat_id, stock=stock_filter) }}">{{ p }}</a>
           </li>
           {% else %}
           <li class="page-item disabled"><span class="page-link">…</span></li>
           {% endif %}
         {% endfor %}
         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
-          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.next_num, q=q, cat=cat_id) }}">›</a>
+          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.next_num, q=q, cat=cat_id, stock=stock_filter) }}">›</a>
         </li>
       </ul>
     </nav>
