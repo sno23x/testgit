@@ -176,12 +176,31 @@
           <button type="button" class="btn-close btn-close-white" id="scanCloseBtn"></button>
         </div>
       </div>
-      <div class="modal-body p-2">
+      <div class="modal-body p-0 position-relative overflow-hidden" style="background:#000;">
         <div id="barcodeReaderBox" style="width:100%;"></div>
-        <p class="text-center text-muted small mt-2 mb-1">
-          <i class="bi bi-info-circle me-1"></i>ວາງ Barcode ໃຫ້ຢູ່ໃນກອບ · ໃຊ້ໄຟ <i class="bi bi-lightning-charge-fill"></i> ຖ້າແສງໜ້ອຍ
+        <!-- Cosmetic scan guide overlay (does NOT restrict scan area) -->
+        <div id="scanOverlay" style="
+          position:absolute;inset:0;pointer-events:none;display:flex;
+          align-items:center;justify-content:center;">
+          <div style="
+            width:88%;height:38%;border:none;position:relative;">
+            <!-- Corner markers -->
+            <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></div>
+            <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 3px 0 0;"></div>
+            <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 3px;"></div>
+            <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 3px 0;"></div>
+            <!-- Scan line animation -->
+            <div id="scanLine" style="
+              position:absolute;left:4px;right:4px;height:2px;
+              background:linear-gradient(90deg,transparent,#22c55e,transparent);
+              animation:scanMove 1.8s ease-in-out infinite;top:0;"></div>
+          </div>
+        </div>
+        <p class="text-center text-white small py-2 mb-0" style="background:rgba(0,0,0,.55);position:relative;z-index:2;">
+          <i class="bi bi-info-circle me-1"></i>ວາງ Barcode ໃນກອບ · ໃຊ້ໄຟ ⚡ ຖ້າແສງໜ້ອຍ
         </p>
-        <div id="scanLastResult" class="text-center text-success small fw-semibold" style="min-height:1.2rem;"></div>
+        <div id="scanLastResult" class="text-center text-success small fw-semibold py-1"
+             style="background:rgba(0,0,0,.55);min-height:1.6rem;position:relative;z-index:2;"></div>
       </div>
     </div>
   </div>
@@ -226,16 +245,13 @@
     _html5Qr.start(
       { facingMode: 'environment' },
       {
-        fps: 20,
-        qrbox: (w, h) => {
-          // Adaptive box: wide for barcodes, use 85% width
-          const side = Math.min(Math.floor(w * 0.85), 340);
-          return { width: side, height: Math.floor(side * 0.45) };
-        },
-        aspectRatio: 1.7,
+        fps: 25,
+        // NO qrbox → scan the full camera frame, works at any distance
+        aspectRatio: window.innerHeight > window.innerWidth ? 1.33 : 1.7,
         formatsToSupport: formats,
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         rememberLastUsedCamera: true,
+        disableFlip: false,
       },
       (decodedText) => {
         // Debounce: ignore duplicate scan within 1.5s
