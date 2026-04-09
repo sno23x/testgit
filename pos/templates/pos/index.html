@@ -433,13 +433,13 @@ function renderCart() {
           <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
             <!-- Qty -->
             <input type="number" class="form-control form-control-sm qty-input" style="width:65px;"
-                   value="${it.qty}" min="0.01" step="0.01"
+                   value="${it.qty}" min="0.01" step="1"
                    onchange="updateQty(${idx}, this.value)" title="ຈໍານວນ"/>
             <small class="text-muted">${it.unit}</small>
             <!-- Price override -->
             <div class="input-group input-group-sm" style="width:110px;" title="ລາຄາ/ໜ່ວຍ">
               <input type="number" class="form-control form-control-sm ${priceChanged ? 'border-warning' : ''}"
-                     value="${it.unit_price}" min="0" step="100"
+                     value="${it.unit_price}" min="0" step="1000"
                      onchange="updatePrice(${idx}, this.value)"/>
               <button class="btn btn-outline-secondary btn-sm px-1" title="ລາຄາເດີມ"
                       onclick="resetPrice(${idx})" ${!priceChanged ? 'disabled' : ''}>
