@@ -9,6 +9,7 @@
       <div class="card-body">
         <form method="POST" id="productForm" enctype="multipart/form-data">
           <input type="hidden" name="back_q" value="{{ back_q }}"/>
+          <input type="hidden" name="back_cat" value="{{ back_cat }}"/>
           <div class="row g-3">
 
             <!-- Product Code -->
@@ -156,7 +157,7 @@
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-save me-1"></i>ບັນທຶກ
             </button>
-            <a href="{{ url_for('products.list_products', q=back_q) if back_q else url_for('products.list_products') }}"
+            <a href="{{ url_for('products.list_products', q=back_q, cat=back_cat) }}"
                class="btn btn-outline-secondary">ຍົກເລີກ</a>
           </div>
         </form>

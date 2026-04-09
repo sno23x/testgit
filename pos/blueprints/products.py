@@ -94,10 +94,12 @@ def add_product():
         db.session.commit()
         flash("ເພີ່ມສິນຄ້າສໍາເລັດ", "success")
         back_q = request.form.get("back_q", "")
-        return redirect(url_for("products.list_products", q=back_q) if back_q else url_for("products.list_products"))
+        back_cat = request.form.get("back_cat", "")
+        return redirect(url_for("products.list_products", q=back_q or None, cat=back_cat or None))
     back_q = request.args.get("back_q", "")
+    back_cat = request.args.get("back_cat", "")
     return render_template("products/form.html", product=None, categories=categories, rate=rate,
-                           back_q=back_q, cost_thb_rate=COST_THB_RATE)
+                           back_q=back_q, back_cat=back_cat, cost_thb_rate=COST_THB_RATE)
 
 
 @products_bp.route("/<int:pid>/edit", methods=["GET", "POST"])
@@ -125,10 +127,12 @@ def edit_product(pid):
         db.session.commit()
         flash("ແກ້ໄຂສໍາເລັດ", "success")
         back_q = request.form.get("back_q", "")
-        return redirect(url_for("products.list_products", q=back_q) if back_q else url_for("products.list_products"))
+        back_cat = request.form.get("back_cat", "")
+        return redirect(url_for("products.list_products", q=back_q or None, cat=back_cat or None))
     back_q = request.args.get("back_q", "")
+    back_cat = request.args.get("back_cat", "")
     return render_template("products/form.html", product=p, categories=categories, rate=rate,
-                           back_q=back_q, cost_thb_rate=COST_THB_RATE)
+                           back_q=back_q, back_cat=back_cat, cost_thb_rate=COST_THB_RATE)
 
 
 @products_bp.route("/<int:pid>/delete", methods=["POST"])
