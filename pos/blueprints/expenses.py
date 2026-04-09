@@ -1,6 +1,6 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models import db, Expense, Sale
 
 expenses_bp = Blueprint("expenses", __name__)
@@ -11,6 +11,9 @@ EXPENSE_CATS = ["ຄ່າເຊົ່າ", "ຄ່ານໍ້າໄຟ", "ຄ�
 @expenses_bp.route("/")
 @login_required
 def list_expenses():
+    if not current_user.is_accountant():
+        flash("ສິດທິ admin ຫຼື accountant ເທົ່ານັ້ນ", "danger")
+        return redirect(url_for("pos.pos_page"))
     month = request.args.get("month", date.today().strftime("%Y-%m"))
     try:
         y, m = map(int, month.split("-"))

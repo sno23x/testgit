@@ -104,6 +104,15 @@ class Employee(db.Model, UserMixin):
     def is_admin(self):
         return self.role == "admin"
 
+    def is_accountant(self):
+        return self.role in ("admin", "accountant")
+
+    def can_sell(self):
+        return self.role in ("admin", "cashier")
+
+    def can_manage_products(self):
+        return self.role in ("admin", "cashier")
+
 
 class Sale(db.Model):
     __tablename__ = "sales"

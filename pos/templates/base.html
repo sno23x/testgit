@@ -52,11 +52,13 @@
           <i class="bi bi-cart-check"></i>ໜ້າຂາຍ (POS)
         </a>
       </li>
+      {% if current_user.can_manage_products() %}
       <li class="nav-item">
         <a href="{{ url_for('products.list_products') }}" class="nav-link {{ 'active' if 'products' in request.endpoint }}">
           <i class="bi bi-box-seam"></i>ສິນຄ້າ / Stock
         </a>
       </li>
+      {% endif %}
       <li class="nav-item">
         <a href="{{ url_for('customers.list_customers') }}" class="nav-link {{ 'active' if 'customers' in request.endpoint }}">
           <i class="bi bi-people"></i>ລູກຄ້າ
@@ -67,18 +69,23 @@
           <i class="bi bi-credit-card"></i>ໜີ້ສິນ
         </a>
       </li>
+      {% if current_user.is_accountant() %}
       <li class="nav-item">
         <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {{ 'active' if 'expenses' in request.endpoint }}">
           <i class="bi bi-cash-stack"></i>ລາຍຮັບ/ລາຍຈ່າຍ
         </a>
       </li>
+      {% endif %}
+      {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('employees.list_employees') }}" class="nav-link {{ 'active' if 'employees' in request.endpoint }}">
           <i class="bi bi-person-badge"></i>ພະນັກງານ
         </a>
       </li>
+      {% endif %}
 
       <!-- Section: ລາຍງານ & ການຈັດການ -->
+      {% if current_user.is_accountant() %}
       <li><div class="sidebar-section-label">ລາຍງານ &amp; ການຈັດການ</div></li>
 
       <li class="nav-item">
@@ -96,11 +103,14 @@
           <i class="bi bi-bar-chart-line"></i>ລາຍງານ
         </a>
       </li>
+      {% endif %}
+      {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('settings.index') }}" class="nav-link {{ 'active' if 'settings' in request.endpoint }}">
           <i class="bi bi-gear"></i>ຕັ້ງຄ່າລະບົບ
         </a>
       </li>
+      {% endif %}
     </ul>
 
     <!-- Sidebar footer: user info -->

@@ -1,6 +1,6 @@
 from datetime import date
-from flask import Blueprint, render_template, request, send_file
-from flask_login import login_required
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
+from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 from models import db, Sale, SaleItem, Product, Customer
 import io, openpyxl
@@ -11,6 +11,9 @@ reports_bp = Blueprint("reports", __name__)
 @reports_bp.route("/")
 @login_required
 def index():
+    if not current_user.is_accountant():
+        flash("ສິດທິ admin ຫຼື accountant ເທົ່ານັ້ນ", "danger")
+        return redirect(url_for("pos.pos_page"))
     view = request.args.get("view", "daily")
     today = date.today()
 
