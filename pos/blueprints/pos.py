@@ -69,10 +69,16 @@ def pos_page():
     bank_name        = Setting.get("bank_name", "")
     bank_account_name = Setting.get("bank_account_name", "")
     bank_account_no  = Setting.get("bank_account_no", "")
+    thb_qr               = Setting.get("thb_qr", "")
+    thb_bank_name        = Setting.get("thb_bank_name", "")
+    thb_bank_account_name = Setting.get("thb_bank_account_name", "")
+    thb_bank_account_no  = Setting.get("thb_bank_account_no", "")
     return render_template("pos/index.html",
         customers=customers, rate=rate,
         shop_qr=shop_qr, bank_name=bank_name,
         bank_account_name=bank_account_name, bank_account_no=bank_account_no,
+        thb_qr=thb_qr, thb_bank_name=thb_bank_name,
+        thb_bank_account_name=thb_bank_account_name, thb_bank_account_no=thb_bank_account_no,
     )
 
 
@@ -100,7 +106,8 @@ def customer_lookup():
     ).limit(10).all()
     return jsonify([{
         "id": c.id, "name": c.name,
-        "phone": c.phone, "debt": c.total_debt
+        "phone": c.phone, "debt": c.total_debt,
+        "map_url": c.map_url or ""
     } for c in customers])
 
 
