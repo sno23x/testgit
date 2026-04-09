@@ -174,12 +174,13 @@
     <div class="modal-content">
       <div class="modal-header py-2" style="background:#0dcaf0;">
         <h5 class="modal-title fw-bold text-dark"><i class="bi bi-phone me-2"></i>ໂອນເງິນ</h5>
-        <!-- ₭ / ฿ toggle -->
-        <div class="btn-group btn-group-sm ms-3" id="qrCurrencyToggle">
-          <button class="btn btn-dark active fw-bold" id="btnQrLak" onclick="setQrCurrency('LAK')">₭ ກີບ</button>
-          <button class="btn btn-outline-dark fw-bold" id="btnQrThb" onclick="setQrCurrency('THB')">฿ ບາດ</button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <div class="btn-group btn-group-sm" id="qrCurrencyToggle">
+            <button class="btn btn-dark active fw-bold" id="btnQrLak" onclick="setQrCurrency('LAK')">₭ ກີບ</button>
+            <button class="btn btn-outline-dark fw-bold" id="btnQrThb" onclick="setQrCurrency('THB')">฿ ບາດ</button>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center py-3">
 
