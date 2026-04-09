@@ -5,30 +5,42 @@
 {% block content %}
 <div class="sticky-toolbar mb-3">
   <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
-    <a href="{{ url_for('customers.add_customer') }}" class="btn btn-primary btn-sm">
+    <a href="{{ url_for('customers.add_customer') }}" class="btn btn-primary btn-sm rounded-pill px-3">
       <i class="bi bi-person-plus me-1"></i>ເພີ່ມລູກຄ້າ
     </a>
-    <a href="{{ url_for('customers.import_excel') }}" class="btn btn-outline-success btn-sm">
+    <a href="{{ url_for('customers.import_excel') }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
       <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
+    </a>
+    <a href="{{ url_for('customers.export_excel', q=q, debt=debt_filter) }}" class="btn btn-outline-info btn-sm rounded-pill px-3">
+      <i class="bi bi-download me-1"></i>Export Excel
     </a>
   </div>
 
   <form class="d-flex gap-2 flex-wrap align-items-center" method="GET">
-    <input type="text" name="q" class="form-control form-control-sm" style="max-width:220px;"
-           placeholder="ຊື່ / CID / ເບີໂທ..." value="{{ q }}" autofocus/>
-
-    <!-- Debt filter -->
-    <div class="btn-group btn-group-sm" role="group">
-      <a href="{{ url_for('customers.list_customers', q=q, debt='all') }}"
-         class="btn {{ 'btn-primary' if debt_filter=='all' else 'btn-outline-secondary' }}">ທັງໝົດ</a>
-      <a href="{{ url_for('customers.list_customers', q=q, debt='has') }}"
-         class="btn {{ 'btn-danger' if debt_filter=='has' else 'btn-outline-danger' }}">ມີໜີ້</a>
-      <a href="{{ url_for('customers.list_customers', q=q, debt='none') }}"
-         class="btn {{ 'btn-success' if debt_filter=='none' else 'btn-outline-success' }}">ບໍ່ມີໜີ້</a>
+    <div class="input-group input-group-sm" style="max-width:240px;">
+      <input type="text" name="q" class="form-control"
+             placeholder="ຊື່ / CID / ເບີໂທ..." value="{{ q }}" autofocus/>
+      <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+      {% if q %}
+      <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary" title="ລ້າງ"><i class="bi bi-x-lg"></i></a>
+      {% endif %}
     </div>
 
-    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
-    {% if q %}<a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary btn-sm">ລ້າງ</a>{% endif %}
+    <!-- Debt filter -->
+    <div class="d-flex gap-1">
+      <a href="{{ url_for('customers.list_customers', q=q, debt='all') }}"
+         class="btn btn-sm rounded-pill px-3 {% if debt_filter=='all' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">ທຸກລາຍການ</a>
+      <a href="{{ url_for('customers.list_customers', q=q, debt='has') }}"
+         class="btn btn-sm rounded-pill px-3"
+         style="{% if debt_filter=='has' %}background:#ef4444;border-color:#ef4444;color:#fff;{% else %}border-color:#ef4444;color:#ef4444;background:transparent;{% endif %}">
+        <i class="bi bi-exclamation-circle-fill me-1" style="font-size:.75rem;"></i>ມີໜີ້
+      </a>
+      <a href="{{ url_for('customers.list_customers', q=q, debt='none') }}"
+         class="btn btn-sm rounded-pill px-3"
+         style="{% if debt_filter=='none' %}background:#16a34a;border-color:#16a34a;color:#fff;{% else %}border-color:#16a34a;color:#16a34a;background:transparent;{% endif %}">
+        <i class="bi bi-check-circle-fill me-1" style="font-size:.75rem;"></i>ບໍ່ມີໜີ້
+      </a>
+    </div>
   </form>
 </div>
 

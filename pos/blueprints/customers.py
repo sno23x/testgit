@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required
 from models import db, Customer, Sale
 import openpyxl, io
+from openpyxl.styles import Font, PatternFill, Alignment
 
 customers_bp = Blueprint("customers", __name__)
 
@@ -157,6 +158,55 @@ def import_excel():
         return redirect(url_for("customers.list_customers"))
 
     return render_template("customers/import.html")
+
+
+@customers_bp.route("/export")
+@login_required
+def export_excel():
+    q = request.args.get("q", "")
+    debt_filter = request.args.get("debt", "all")
+    query = Customer.query
+    if q:
+        query = query.filter(db.or_(
+            Customer.name.ilike(f"%{q}%"),
+            Customer.phone.ilike(f"%{q}%"),
+            Customer.cust_code.ilike(f"%{q}%"),
+        ))
+    if debt_filter == "has":
+        query = query.filter(Customer.total_debt > 0)
+    elif debt_filter == "none":
+        query = query.filter(Customer.total_debt <= 0)
+    customers = query.order_by(Customer.name).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "ລູກຄ້າ"
+
+    headers = ["#", "CID", "ຊື່", "ເບີໂທ", "ທີ່ຢູ່", "ໜີ້ຄ້າງ (ກີບ)", "Google Maps"]
+    col_widths = [5, 10, 25, 15, 30, 18, 40]
+    hdr_fill = PatternFill("solid", fgColor="4F81BD")
+    hdr_font = Font(bold=True, color="FFFFFF")
+    for col, (h, w) in enumerate(zip(headers, col_widths), 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.font = hdr_font
+        cell.fill = hdr_fill
+        cell.alignment = Alignment(horizontal="center")
+        ws.column_dimensions[cell.column_letter].width = w
+
+    for i, c in enumerate(customers, 1):
+        ws.cell(row=i+1, column=1, value=i)
+        ws.cell(row=i+1, column=2, value=c.cust_code or "")
+        ws.cell(row=i+1, column=3, value=c.name)
+        ws.cell(row=i+1, column=4, value=c.phone or "")
+        ws.cell(row=i+1, column=5, value=c.address or "")
+        ws.cell(row=i+1, column=6, value=c.total_debt or 0)
+        ws.cell(row=i+1, column=7, value=c.map_url or "")
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return send_file(buf, as_attachment=True, download_name="customers.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @customers_bp.route("/<int:cid>")
