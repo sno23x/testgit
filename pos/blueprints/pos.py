@@ -38,10 +38,25 @@ def dashboard():
     total_debt_outstanding = sum(s.debt_remaining for s in debt_sales)
     low_stock = Product.query.filter(Product.stock_qty <= 5, Product.active == True).all()
 
+    # Payment breakdown this month
+    month_sales = Sale.query.filter(
+        extract("year",  Sale.created_at) == today.year,
+        extract("month", Sale.created_at) == today.month,
+        Sale.voided == False
+    ).all()
+    cash_month     = sum(s.total for s in month_sales if s.payment_type == "cash")
+    transfer_month = sum(s.total for s in month_sales if s.payment_type == "transfer")
+    debt_month     = sum(s.total for s in month_sales if s.payment_type == "debt")
+
+    # Recent sales (last 10)
+    recent_sales = Sale.query.filter_by(voided=False).order_by(Sale.created_at.desc()).limit(10).all()
+
     return render_template("dashboard.html",
         revenue_today=revenue_today, debt_today=debt_today,
         tx_count=tx_count, total_debt_outstanding=total_debt_outstanding,
-        low_stock=low_stock, monthly=monthly)
+        low_stock=low_stock, monthly=monthly,
+        cash_month=cash_month, transfer_month=transfer_month, debt_month=debt_month,
+        recent_sales=recent_sales)
 
 
 # ──────────────── POS page ────────────────
