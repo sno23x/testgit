@@ -125,9 +125,9 @@
         <button class="btn btn-sm btn-outline-secondary" id="darkToggle" title="Dark / Light mode" onclick="toggleDark()">
           <i class="bi bi-moon-stars-fill" id="darkIcon"></i>
         </button>
-        <small class="text-muted d-none d-sm-block">
-          <i class="bi bi-calendar me-1"></i><span id="clock"></span>
-        </small>
+        <span class="text-muted d-none d-sm-flex align-items-center gap-1" style="font-size:inherit;">
+          <i class="bi bi-calendar2"></i><span id="clock"></span>
+        </span>
       </div>
     </header>
 
@@ -340,8 +340,16 @@
 <script>
   function updateClock(){
     const now = new Date();
-    document.getElementById('clock').textContent =
-      now.toLocaleDateString('lo-LA') + ' ' + now.toLocaleTimeString('lo-LA');
+    const d = String(now.getDate()).padStart(2,'0');
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const y = now.getFullYear();
+    let h = now.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    const hh = String(h).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${d}/${m}/${y} ${hh}:${mm}:${ss} ${ampm}`;
   }
   setInterval(updateClock, 1000); updateClock();
 
