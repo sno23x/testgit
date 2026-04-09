@@ -34,9 +34,27 @@
             <input type="text" name="phone" class="form-control"
                    value="{{ customer.phone if customer else '' }}"/>
           </div>
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label fw-semibold">ທີ່ຢູ່</label>
             <textarea name="address" class="form-control" rows="2">{{ customer.address if customer else '' }}</textarea>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i>Google Maps Link
+            </label>
+            <div class="input-group">
+              <input type="url" name="map_url" id="mapUrlInput" class="form-control"
+                     placeholder="https://maps.app.goo.gl/..."
+                     value="{{ customer.map_url if customer else '' }}"/>
+              {% if customer and customer.map_url %}
+              <a href="{{ customer.map_url }}" target="_blank" class="btn btn-outline-danger" title="ເປີດ Maps">
+                <i class="bi bi-map"></i>
+              </a>
+              {% endif %}
+            </div>
+            <div class="form-text">
+              ວິທີໄດ້ link: ເປີດ Google Maps → ຄລິກສະຖານທີ່ → Share → Copy link
+            </div>
           </div>
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>ບັນທຶກ</button>

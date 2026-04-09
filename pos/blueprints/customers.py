@@ -61,6 +61,7 @@ def add_customer():
             name=request.form.get("name", "").strip(),
             phone=request.form.get("phone", "").strip(),
             address=request.form.get("address", "").strip(),
+            map_url=request.form.get("map_url", "").strip(),
         )
         db.session.add(c)
         db.session.commit()
@@ -79,6 +80,7 @@ def edit_customer(cid):
         c.name = request.form.get("name", c.name).strip()
         c.phone = request.form.get("phone", c.phone).strip()
         c.address = request.form.get("address", c.address).strip()
+        c.map_url = request.form.get("map_url", c.map_url or "").strip()
         db.session.commit()
         flash("ແກ້ໄຂສໍາເລັດ", "success")
         return redirect(url_for("customers.list_customers"))

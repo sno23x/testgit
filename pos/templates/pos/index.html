@@ -354,7 +354,17 @@ function renderResults(products) {
   prodFocusIdx = -1;
   const div = document.getElementById('searchResults');
   document.getElementById('resultCount').textContent = products.length ? `${products.length} ລາຍການ` : '';
-  if (!products.length) { div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>'; return; }
+  if (!products.length) {
+    const q = document.getElementById('productSearch').value.trim();
+    div.innerHTML = `<div class="text-center py-4">
+      <i class="bi bi-search text-muted" style="font-size:2rem;opacity:.3;"></i>
+      <p class="text-muted small mt-2 mb-2">ບໍ່ພົບສິນຄ້າ <strong>"${q}"</strong></p>
+      <a href="/products/add" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
+        <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າໃໝ່
+      </a>
+    </div>`;
+    return;
+  }
 
   if (viewMode === 'list') {
     div.innerHTML = `<div class="list-group list-group-flush">` +
@@ -548,13 +558,23 @@ function customerLookup() {
     fetch(`/pos/customer-lookup?q=${encodeURIComponent(q)}`)
       .then(r => r.json()).then(list => {
         const box = document.getElementById('customerSuggestions');
-        if (!list.length) { box.classList.remove('show'); return; }
+        const addLink = `<div class="dropdown-item py-1 border-top mt-1">
+          <a href="/customers/add" target="_blank" class="text-primary text-decoration-none d-flex align-items-center gap-1">
+            <i class="bi bi-person-plus-fill"></i>
+            <span class="fw-semibold">ເພີ່ມລູກຄ້າໃໝ່...</span>
+          </a>
+        </div>`;
+        if (!list.length) {
+          box.innerHTML = `<div class="px-3 py-2 text-muted small">ບໍ່ພົບລູກຄ້າ "${q}"</div>` + addLink;
+          box.classList.add('show');
+          return;
+        }
         box.innerHTML = list.map(c => `
           <a class="dropdown-item py-1" href="#" onclick="selectCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}',${c.debt});return false;">
             <span class="fw-semibold">${c.name}</span>
             ${c.phone ? `<small class="text-muted ms-1">${c.phone}</small>` : ''}
             ${c.debt > 0 ? `<span class="badge bg-danger ms-1 small">ໜີ້ ${Number(c.debt).toLocaleString()}</span>` : ''}
-          </a>`).join('');
+          </a>`).join('') + addLink;
         custFocusIdx = -1;
         box.classList.add('show');
       });

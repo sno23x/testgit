@@ -79,6 +79,7 @@ class Customer(db.Model):
     name = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(50), default="")
     address = db.Column(db.Text, default="")
+    map_url = db.Column(db.String(500), default="")
     total_debt = db.Column(db.Float, default=0)
     sales = db.relationship("Sale", backref="customer", lazy=True)
 
