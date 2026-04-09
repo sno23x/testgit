@@ -518,3 +518,10 @@ a { transition: color 0.15s ease; }
 
 [data-bs-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); }
 [data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.28); }
+
+/* Barcode scanner line animation */
+@keyframes scanMove {
+  0%   { top: 4%;  opacity: 0.6; }
+  50%  { top: 88%; opacity: 1;   }
+  100% { top: 4%;  opacity: 0.6; }
+}
