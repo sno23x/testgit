@@ -222,11 +222,11 @@ def void_sale(sale_id):
         if item.product:
             item.product.stock_qty += item.qty
 
-    # Reverse customer debt if it was a debt sale
+    # Reverse remaining customer debt (exclude already-paid portion)
     if sale.payment_type == "debt" and sale.customer_id:
         cust = Customer.query.get(sale.customer_id)
         if cust:
-            cust.total_debt = max(0, cust.total_debt - sale.total)
+            cust.total_debt = max(0, cust.total_debt - sale.debt_remaining)
 
     sale.voided = True
     sale.voided_at = datetime.now(timezone.utc)

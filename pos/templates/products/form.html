@@ -8,18 +8,28 @@
     <div class="card shadow-sm border-0">
       <div class="card-body">
         <form method="POST" id="productForm" enctype="multipart/form-data">
+          <input type="hidden" name="back_q" value="{{ back_q }}"/>
           <div class="row g-3">
+
+            <!-- Product Code -->
             <div class="col-6">
               <label class="form-label fw-semibold">ລະຫັດສິນຄ້າ</label>
-              <div class="input-group">
+              <div class="input-group position-relative">
                 <input type="text" name="code" id="productCodeInput" class="form-control"
-                       value="{{ product.code if product else '' }}" placeholder="ອັດຕະໂນມັດ"/>
+                       value="{{ product.code if product else '' }}" placeholder="ອັດຕະໂນມັດ"
+                       autocomplete="off"/>
                 <button type="button" class="btn btn-outline-primary" title="ສະແກນ Barcode"
                         onclick="openBarcodeScanner(code => { document.getElementById('productCodeInput').value = code; })">
                   <i class="bi bi-camera"></i>
                 </button>
               </div>
+              {% if not product %}
+              <div id="codeDropdown" class="position-absolute bg-body border rounded shadow-sm"
+                   style="z-index:1050;display:none;max-height:200px;overflow-y:auto;width:260px;"></div>
+              {% endif %}
             </div>
+
+            <!-- Category -->
             <div class="col-6">
               <label class="form-label fw-semibold">ໝວດໝູ່</label>
               <select name="category_id" class="form-select">
@@ -31,11 +41,15 @@
                 {% endfor %}
               </select>
             </div>
+
+            <!-- Name -->
             <div class="col-12">
               <label class="form-label fw-semibold">ຊື່ສິນຄ້າ <span class="text-danger">*</span></label>
               <input type="text" name="name" class="form-control" required
                      value="{{ product.name if product else '' }}"/>
             </div>
+
+            <!-- Unit + Stock -->
             <div class="col-6">
               <label class="form-label fw-semibold">ໜ່ວຍ</label>
               <div class="input-group">
@@ -57,18 +71,38 @@
               <input type="number" name="stock_qty" class="form-control" step="0.01" min="0"
                      value="{{ product.stock_qty if product else 0 }}"/>
             </div>
+
+            <!-- Cost price -->
+            <div class="col-12"><hr class="my-1"/><p class="small fw-semibold text-muted mb-0">ລາຄາຕົ້ນທຶນ</p></div>
             <div class="col-6">
-              <label class="form-label fw-semibold">ລາຄາຕົ້ນທຶນ (ກີບ)</label>
-              <input type="number" name="cost_price" class="form-control" step="0.01" min="0"
-                     value="{{ product.cost_price if product else 0 }}"/>
+              <label class="form-label fw-semibold">
+                ຕົ້ນທຶນ (฿) <span class="badge bg-secondary ms-1">×{{ cost_thb_rate }}</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">฿</span>
+                <input type="number" id="cost_price_thb" name="cost_price_thb"
+                       class="form-control" step="0.01" min="0"
+                       value="{{ (product.cost_price / cost_thb_rate)|round(2) if product and product.cost_price else '' }}"
+                       placeholder="0.00" oninput="calcCostKip()"/>
+              </div>
+              <div class="form-text">1 ບາດ = {{ cost_thb_rate }} ກີບ</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ຕົ້ນທຶນ (ກີບ)</label>
+              <div class="input-group">
+                <input type="number" name="cost_price" id="cost_price"
+                       class="form-control" step="1" min="0"
+                       value="{{ product.cost_price if product else 0 }}"/>
+                <span class="input-group-text">ກີບ</span>
+              </div>
+              <div class="form-text text-warning" id="costCalcResult"></div>
             </div>
 
-            <!-- ===== ລາຄາ THB ===== -->
+            <!-- Sell price -->
             <div class="col-12"><hr class="my-1"/><p class="small fw-semibold text-muted mb-0">ລາຄາຂາຍ</p></div>
             <div class="col-6">
               <label class="form-label fw-semibold">
-                ລາຄາໃນເງິນບາດ (฿)
-                <span class="badge bg-info text-dark ms-1">ໃສ່ຖ້າລາຄາເປັນບາດ</span>
+                ລາຄາ (฿) <span class="badge bg-info text-dark ms-1">×{{ rate }}</span>
               </label>
               <div class="input-group">
                 <span class="input-group-text">฿</span>
@@ -122,7 +156,8 @@
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-save me-1"></i>ບັນທຶກ
             </button>
-            <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary">ຍົກເລີກ</a>
+            <a href="{{ url_for('products.list_products', q=back_q) if back_q else url_for('products.list_products') }}"
+               class="btn btn-outline-secondary">ຍົກເລີກ</a>
           </div>
         </form>
       </div>
@@ -134,6 +169,7 @@
 {% block scripts %}
 <script>
 const rate = parseFloat("{{ rate }}") || 830;
+const costRate = {{ cost_thb_rate }};
 document.getElementById('rateDisplay').textContent = rate.toLocaleString();
 
 function roundPrice(p) {
@@ -141,6 +177,8 @@ function roundPrice(p) {
   const rem = p % 1000;
   return rem >= 500 ? p - rem + 1000 : p - rem;
 }
+
+// Sell price THB → LAK
 function calcKip() {
   const thb = parseFloat(document.getElementById('price_thb').value) || 0;
   if (thb > 0) {
@@ -152,12 +190,24 @@ function calcKip() {
     document.getElementById('calcResult').textContent = '';
   }
 }
-// Calculate on load if editing
-window.addEventListener('load', calcKip);
 
-function setUnit(u) {
-  document.getElementById('unitInput').value = u;
+// Cost price THB → LAK (× 700)
+function calcCostKip() {
+  const thb = parseFloat(document.getElementById('cost_price_thb').value) || 0;
+  if (thb > 0) {
+    const kip = Math.round(thb * costRate);
+    document.getElementById('cost_price').value = kip;
+    document.getElementById('costCalcResult').textContent =
+      `฿${thb.toLocaleString()} × ${costRate} = ${kip.toLocaleString()} ກີບ`;
+  } else {
+    document.getElementById('costCalcResult').textContent = '';
+  }
 }
+
+window.addEventListener('load', () => { calcKip(); calcCostKip(); });
+
+function setUnit(u) { document.getElementById('unitInput').value = u; }
+
 function previewImg(input) {
   if (input.files && input.files[0]) {
     const reader = new FileReader();
@@ -169,5 +219,40 @@ function previewImg(input) {
     reader.readAsDataURL(input.files[0]);
   }
 }
+
+// ──── Product code live search (add form only) ────
+{% if not product %}
+const codeInput = document.getElementById('productCodeInput');
+const codeDrop = document.getElementById('codeDropdown');
+let codeTimer;
+
+codeInput.addEventListener('input', function() {
+  clearTimeout(codeTimer);
+  const q = this.value.trim();
+  if (!q) { codeDrop.style.display = 'none'; return; }
+  codeTimer = setTimeout(() => {
+    fetch('/products/api/search?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        if (!data.length) { codeDrop.style.display = 'none'; return; }
+        codeDrop.innerHTML = data.map(p => `
+          <div class="px-3 py-2 border-bottom" style="cursor:default;">
+            <div class="d-flex justify-content-between">
+              <span class="fw-semibold text-warning small">⚠ ມີຢູ່ແລ້ວ: ${p.code}</span>
+              <small class="text-muted">${p.stock_qty} ${p.unit}</small>
+            </div>
+            <div class="small text-muted">${p.name}</div>
+          </div>`).join('');
+        codeDrop.style.display = 'block';
+      });
+  }, 250);
+});
+
+document.addEventListener('click', function(e) {
+  if (!codeInput.contains(e.target) && !codeDrop.contains(e.target)) {
+    codeDrop.style.display = 'none';
+  }
+});
+{% endif %}
 </script>
 {% endblock %}

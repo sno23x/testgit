@@ -9,7 +9,7 @@ debts_bp = Blueprint("debts", __name__)
 @debts_bp.route("/")
 @login_required
 def list_debts():
-    debt_sales = Sale.query.filter_by(payment_type="debt").order_by(Sale.created_at.desc()).all()
+    debt_sales = Sale.query.filter_by(payment_type="debt").filter(Sale.voided == False).order_by(Sale.created_at.desc()).all()
     unpaid = [s for s in debt_sales if not s.is_fully_paid]
     paid = [s for s in debt_sales if s.is_fully_paid]
     return render_template("debts/list.html", unpaid=unpaid, paid=paid)
