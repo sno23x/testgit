@@ -116,7 +116,7 @@
             <summary class="small text-muted" style="cursor:pointer;">⚙ ປັບມາດຕະຖານ</summary>
             <div class="row g-2 mt-1 p-2 bg-body-secondary rounded small">
               <div class="col-6">
-                <label class="form-label mb-0">Dry factor (ທົ່ວໄປ 1.54)</label>
+                <label class="form-label mb-0">ຖານພື້ນແຫ້ງ (ທົ່ວໄປ 1.54)</label>
                 <input type="number" id="s-dryfactor" class="form-control form-control-sm" value="1.54" step="0.01" oninput="calcSlab()"/>
               </div>
               <div class="col-6">
@@ -613,7 +613,7 @@ function calcSlab() {
   const sandN = vol * (parts[1]/tot);
   const gravelN = parts[2] ? vol * (parts[2]/tot) : null;
   const items = [
-    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')} dry×${dryFactor}`},
+    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ອັດຕາສ່ວນ ${parts.join(':')} ຖານຕອນແຫ້ງ×${dryFactor}`},
     {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ];
   if (gravelN) items.push({label:'ຫີນ (Aggregate)', value:gravelN.toFixed(2), numValue:gravelN, unit:'ມ.³'});
@@ -631,7 +631,7 @@ function calcPlaster() {
   const cem = Math.ceil(vol * (parts[0]/tot) / 0.035);
   const sandN = vol * (parts[1]/tot);
   renderResult('ສາບຜະໜັງ (Plaster)', area, 'bi bi-paint-bucket', '#0891b2', [
-    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')} waste×${waste}`},
+    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ອັດຕາສ່ວນ ${parts.join(':')} ອັດຕາສ່ວນທີ່ເສຍໄດ້ ×${waste}`},
     {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ]);
 }
