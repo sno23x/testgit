@@ -13,6 +13,7 @@
       <li class="nav-item"><button class="nav-link" onclick="showTab('tile',this)"><i class="bi bi-grid me-1"></i>ປູກະເບື້ອງ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('paint',this)"><i class="bi bi-palette me-1"></i>ທາສີ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('water',this)"><i class="bi bi-droplet me-1"></i>ນ້ຳປະປາ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('block',this)"><i class="bi bi-square me-1"></i>ດິນບັອກ</button></li>
     </ul>
     <small class="text-muted"><i class="bi bi-info-circle me-1"></i>ຄ່າໃນຊ່ອງ "ມາດຕະຖານ" ສາມາດປັບໄດ້ຕາມຄວາມເໝາະສົມ</small>
   </div>
@@ -272,6 +273,86 @@
       </div>
     </div>
 
+    <!-- ═══ BLOCK ═══ -->
+    <div id="tab-block" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#475569,#334155);color:#fff;">
+          <i class="bi bi-square me-2"></i>ກຳແພງ / ຜະໜັງດິນບັອກ
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມກວ້າງ (ມ.)</label>
+              <input type="number" id="b-width" class="form-control" value="6" min="0.1" step="0.1" oninput="calcBlock()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມສູງ (ມ.)</label>
+              <input type="number" id="b-height" class="form-control" value="3" min="0.1" step="0.1" oninput="calcBlock()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຫັກ ປະຕູ+ປ່ອງ (ມ.²)</label>
+              <input type="number" id="b-void" class="form-control" value="0" min="0" step="0.1" oninput="calcBlock()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ອັດຕາສ່ວນ Mortar</label>
+              <select id="b-ratio" class="form-select" onchange="calcBlock()">
+                <option value="1-4" selected>1:4 (ທົ່ວໄປ)</option>
+                <option value="1-5">1:5 (ປະຢັດ)</option>
+                <option value="1-3">1:3 (ແຂງ)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Block size diagram -->
+          <div class="text-center my-2">
+            <svg width="200" height="100" viewBox="0 0 200 100">
+              <!-- Block shape 3D-ish -->
+              <rect x="10" y="30" width="120" height="50" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" rx="2"/>
+              <!-- Hollow holes -->
+              <rect x="22" y="40" width="28" height="30" fill="#94a3b8" rx="2"/>
+              <rect x="60" y="40" width="28" height="30" fill="#94a3b8" rx="2"/>
+              <rect x="98" y="40" width="22" height="30" fill="#94a3b8" rx="2"/>
+              <!-- Top face -->
+              <polygon points="10,30 130,30 150,10 30,10" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+              <!-- Side face -->
+              <polygon points="130,30 150,10 150,60 130,80" fill="#b0bec5" stroke="#475569" stroke-width="1.5"/>
+              <!-- Dimension labels -->
+              <text x="70" y="95" text-anchor="middle" font-size="9" fill="#475569">40 ຊມ.</text>
+              <text x="160" y="50" text-anchor="start" font-size="9" fill="#475569">7 ຊມ.</text>
+              <text x="140" y="25" text-anchor="middle" font-size="9" fill="#475569">20 ຊມ.</text>
+            </svg>
+            <div class="small text-muted">ດິນບັອກ 40×20×7 ຊມ. (ຂະໜາດ standard)</div>
+          </div>
+
+          <details class="mt-1">
+            <summary class="small text-muted" style="cursor:pointer;">⚙ ປັບຂະໜາດດິນບັອກ</summary>
+            <div class="row g-2 mt-1 p-2 bg-body-secondary rounded small">
+              <div class="col-4">
+                <label class="form-label mb-0">ຍາວ (ຊມ.)</label>
+                <input type="number" id="b-blen" class="form-control form-control-sm" value="40" step="1" oninput="calcBlock()"/>
+              </div>
+              <div class="col-4">
+                <label class="form-label mb-0">ສູງ (ຊມ.)</label>
+                <input type="number" id="b-bhgt" class="form-control form-control-sm" value="20" step="1" oninput="calcBlock()"/>
+              </div>
+              <div class="col-4">
+                <label class="form-label mb-0">ໜາ (ຊມ.)</label>
+                <input type="number" id="b-bthk" class="form-control form-control-sm" value="7" step="1" oninput="calcBlock()"/>
+              </div>
+              <div class="col-6">
+                <label class="form-label mb-0">ຂໍ້ຕໍ່ Mortar (ຊມ.)</label>
+                <input type="number" id="b-joint" class="form-control form-control-sm" value="1" step="0.5" oninput="calcBlock()"/>
+              </div>
+              <div class="col-6">
+                <label class="form-label mb-0">% ເຜື່ອ</label>
+                <input type="number" id="b-waste" class="form-control form-control-sm" value="5" step="1" oninput="calcBlock()"/>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ WATER ═══ -->
     <div id="tab-water" class="calc-tab d-none">
       <div class="card border-0 shadow-sm">
@@ -356,7 +437,7 @@ function showTab(name, btn) {
   document.getElementById('tab-' + name).classList.remove('d-none');
   document.querySelectorAll('#calcTabs .nav-link').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint, water:calcWater};
+  const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint, water:calcWater, block:calcBlock};
   if (fns[name]) fns[name]();
 }
 
@@ -595,6 +676,48 @@ function calcWater() {
   renderResult('ລະບົບນ້ຳປະປາ',
     `${people} ຄົນ · ${bathrooms} ຫ້ອງນ້ຳ · ${floors} ຊັ້ນ`,
     'bi bi-droplet', '#0284c7', items);
+}
+
+function calcBlock() {
+  const W     = val('b-width'), H = val('b-height'), vd = val('b-void');
+  const bL    = (val('b-blen') || 40) / 100;   // block length in m
+  const bH    = (val('b-bhgt') || 20) / 100;   // block height in m
+  const bT    = (val('b-bthk') || 7)  / 100;   // block thickness in m
+  const joint = (val('b-joint')|| 1)  / 100;   // mortar joint in m
+  const waste = (val('b-waste')|| 5)  / 100;
+  const parts = (document.getElementById('b-ratio')?.value || '1-4').split('-').map(Number);
+  const tot   = parts.reduce((a,b)=>a+b, 0);
+
+  const area = Math.max(0, W * H - vd);
+  if (!area) return;
+
+  // Blocks per m² (with mortar joints)
+  const effL = bL + joint;
+  const effH = bH + joint;
+  const blocksPerM2Raw = (1 / effL) * (1 / effH);
+  const blocks = Math.ceil(area * blocksPerM2Raw * (1 + waste));
+
+  // Mortar volume = wall area × thickness × (1 - block packing fraction)
+  // Approx mortar fraction ≈ joint volume / total volume
+  // Simplified: 0.012–0.02 m³/m² for thin-joint; use formula:
+  const mortarFrac = 1 - (bL * bH) / (effL * effH);   // fraction of wall face = joints
+  const mortarVol  = area * bT * mortarFrac * 1.3;     // ×1.3 for filling
+
+  const cemBags = Math.ceil(mortarVol * (parts[0]/tot) / 0.035);
+  const sandM3  = mortarVol * (parts[1]/tot);
+
+  // Lintel support estimate (every 2m width, every floor)
+  const lintels = Math.ceil(W / 2);
+
+  renderResult('ກຳແພງດິນບັອກ', area, 'bi bi-square', '#475569', [
+    {label:'ດິນບັອກ', value:blocks.toLocaleString(), numValue:blocks, unit:'ກ້ອນ',
+     note:`${(bL*100).toFixed(0)}×${(bH*100).toFixed(0)}×${(bT*100).toFixed(0)} ຊມ. +${(waste*100).toFixed(0)}% ເຜື່ອ`},
+    {label:'ຊີມັງ', value:cemBags.toLocaleString(), numValue:cemBags, unit:'ຖົງ (50 ກກ.)',
+     note:`ratio ${parts.join(':')} · joint ${(joint*100).toFixed(0)} ຊມ.`},
+    {label:'ຊາຍ', value:sandM3.toFixed(2), numValue:sandM3, unit:'ມ.³'},
+    {label:'ຄານ Lintel (ຄ.ປ.)', value:lintels, numValue:lintels, unit:'ອັນ',
+     note:'ຕຳແໜ່ງ ປະຕູ/ປ່ອງ ຢ້ຽມ'},
+  ]);
 }
 
 // Init
