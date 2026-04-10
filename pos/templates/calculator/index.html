@@ -513,6 +513,36 @@ function hideProdList(inp) {
   }
 }
 
+function navigateProdList(inp, e) {
+  const list = _getProdList(inp);
+  if (list.classList.contains('d-none')) {
+    if (e.key === 'ArrowDown') { searchProd(inp); e.preventDefault(); }
+    return;
+  }
+  const items = list.querySelectorAll('.prod-item');
+  if (!items.length) return;
+  const active = list.querySelector('.prod-item.active');
+  let idx = active ? Array.from(items).indexOf(active) : -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (active) active.classList.remove('active', 'bg-body-secondary');
+    idx = (idx + 1) % items.length;
+    items[idx].classList.add('active', 'bg-body-secondary');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (active) active.classList.remove('active', 'bg-body-secondary');
+    idx = (idx - 1 + items.length) % items.length;
+    items[idx].classList.add('active', 'bg-body-secondary');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (active) active.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  } else if (e.key === 'Escape') {
+    hideProdList(inp);
+  }
+}
+
 // items = [{label, value, numValue, unit, note}]
 // area: number (m²) or string subtitle
 function renderResult(title, area, icon, color, items) {
@@ -529,6 +559,7 @@ function renderResult(title, area, icon, color, items) {
                      placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off"
                      data-qty="${it.numValue}" data-price="0"
                      oninput="searchProd(this)" onfocus="searchProd(this)"
+                     onkeydown="navigateProdList(this,event)"
                      onblur="setTimeout(()=>hideProdList(this),200)"
                      style="font-size:0.78rem;"/>
               <button class="btn btn-outline-secondary toggle-btn" type="button"

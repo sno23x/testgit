@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}ສ້າງໃບສະເໜີລາຄາ{% endblock %}
-{% block page_title %}ສ້າງໃບສະເໜີລາຄາ{% endblock %}
+{% block title %}{% if edit_qt %}ແກ້ໄຂ {{ edit_qt.quote_no }}{% else %}ສ້າງໃບສະເໜີລາຄາ{% endif %}{% endblock %}
+{% block page_title %}{% if edit_qt %}ແກ້ໄຂໃບສະເໜີ {{ edit_qt.quote_no }}{% else %}ສ້າງໃບສະເໜີລາຄາ{% endif %}{% endblock %}
 
 {% block content %}
 <div class="row g-3">
@@ -47,8 +47,18 @@
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center py-2"
            style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
-        <span class="fw-bold"><i class="bi bi-file-earmark-text me-2"></i>ໃບສະເໜີລາຄາ</span>
-        <button class="btn btn-sm btn-outline-light" onclick="clearAll()"><i class="bi bi-trash"></i></button>
+        <span class="fw-bold">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          {% if edit_qt %}ແກ້ໄຂ {{ edit_qt.quote_no }}{% else %}ໃບສະເໜີລາຄາ{% endif %}
+        </span>
+        <div class="d-flex gap-2">
+          {% if edit_qt %}
+          <a href="{{ url_for('quotations.view_quotation', qid=edit_qt.id) }}" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-arrow-left"></i> ກັບຄືນ
+          </a>
+          {% endif %}
+          <button class="btn btn-sm btn-outline-light" onclick="clearAll()"><i class="bi bi-trash"></i></button>
+        </div>
       </div>
 
       <!-- Customer + Info -->
@@ -59,21 +69,27 @@
             <select id="customerSelect" class="form-select form-select-sm" onchange="onCustomerChange()">
               <option value="">— ລູກຄ້າທົ່ວໄປ —</option>
               {% for c in customers %}
-              <option value="{{ c.id }}">{{ c.name }}</option>
+              <option value="{{ c.id }}"
+                {% if edit_qt and edit_qt.customer_id == c.id %}selected{% endif %}>
+                {{ c.name }}
+              </option>
               {% endfor %}
             </select>
           </div>
           <div class="col-6">
             <label class="form-label small fw-semibold mb-0">ຊື່ (ຖ້າບໍ່ເລືອກ)</label>
-            <input type="text" id="customerName" class="form-control form-control-sm" placeholder="ຊື່ລູກຄ້າ..."/>
+            <input type="text" id="customerName" class="form-control form-control-sm" placeholder="ຊື່ລູກຄ້າ..."
+                   value="{{ edit_qt.customer_name if edit_qt and not edit_qt.customer_id else '' }}"/>
           </div>
           <div class="col-6">
             <label class="form-label small fw-semibold mb-0">ໃຊ້ໄດ້ (ວັນ)</label>
-            <input type="number" id="validDays" class="form-control form-control-sm" value="30" min="1"/>
+            <input type="number" id="validDays" class="form-control form-control-sm"
+                   value="{{ edit_qt.valid_days if edit_qt else 30 }}" min="1"/>
           </div>
           <div class="col-12">
             <label class="form-label small fw-semibold mb-0">ໝາຍເຫດ</label>
-            <input type="text" id="noteInput" class="form-control form-control-sm" placeholder="ໝາຍເຫດ..."/>
+            <input type="text" id="noteInput" class="form-control form-control-sm" placeholder="ໝາຍເຫດ..."
+                   value="{{ edit_qt.note or '' if edit_qt else '' }}"/>
           </div>
         </div>
       </div>
@@ -89,7 +105,8 @@
         </div>
         <div class="d-flex gap-2 align-items-center mb-2">
           <label class="form-label small fw-semibold mb-0 text-nowrap">ສ່ວນຫຼຸດ:</label>
-          <input type="number" id="discountInput" class="form-control form-control-sm" value="0" min="0" step="1000" oninput="renderItems()"/>
+          <input type="number" id="discountInput" class="form-control form-control-sm"
+                 value="{{ edit_qt.discount|int if edit_qt else 0 }}" min="0" step="1000" oninput="renderItems()"/>
           <span class="small text-muted">ກີບ</span>
         </div>
         <div class="d-flex justify-content-between mb-3">
@@ -112,7 +129,22 @@
 
 {% block scripts %}
 <script>
-let items = [];
+const EDIT_ID = {{ edit_qt.id if edit_qt else 'null' }};
+
+let items = {{ edit_qt.items | map(attribute='__dict__') | list | tojson if false else '[]' }};
+{% if edit_qt %}
+items = [
+  {% for it in edit_qt.items %}
+  { product_id: {{ it.product_id or 'null' }},
+    description: {{ it.description | tojson }},
+    unit: {{ it.unit | tojson }},
+    qty: {{ it.qty }},
+    unit_price: {{ it.unit_price }},
+    subtotal: {{ it.subtotal }} }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+{% endif %}
+
 let searchTimer;
 const THB_RATE = parseFloat('{{ rate }}') || 830;
 
@@ -230,6 +262,7 @@ function submitQuotation(status) {
   const discount = parseFloat(document.getElementById('discountInput').value)||0;
   const total = Math.max(0, subtotal-discount);
   const payload = {
+    id: EDIT_ID,
     items: items,
     customer_id: document.getElementById('customerSelect').value || null,
     customer_name: document.getElementById('customerName').value.trim(),
