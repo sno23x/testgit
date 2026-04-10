@@ -9,7 +9,7 @@
     <ul class="nav nav-pills gap-2 mb-3 flex-wrap" id="calcTabs">
       <li class="nav-item"><button class="nav-link active" onclick="showTab('wall')"><i class="bi bi-bricks me-1"></i>ຝາດິນຈີ່</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('slab')"><i class="bi bi-layout-wtf me-1"></i>ພື້ນ/ຫລັງຄາຄອນກີດ</button></li>
-      <li class="nav-item"><button class="nav-link" onclick="showTab('plaster')"><i class="bi bi-paint-bucket me-1"></i>ສ oi ດ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('plaster')"><i class="bi bi-paint-bucket me-1"></i>ດ oi ດ ຝາ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('tile')"><i class="bi bi-grid me-1"></i>ປູກະເບື້ອງ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('paint')"><i class="bi bi-palette me-1"></i>ທາສີ</button></li>
     </ul>
@@ -117,7 +117,7 @@
     <div id="tab-plaster" class="calc-tab d-none">
       <div class="card border-0 shadow-sm">
         <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;">
-          <i class="bi bi-paint-bucket me-2"></i>ຄຳນວນ ສ oi ດ
+          <i class="bi bi-paint-bucket me-2"></i>ຄຳນວນ ດ oi ດ ຝາ
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -368,7 +368,7 @@ function calcPlaster() {
   const cementBags = Math.ceil(cementM3 / 0.035);
   const sandM3 = (vol * (parts[1]/total)).toFixed(2);
 
-  renderResult('ສ oi ດ (Plaster)', area, 'bi bi-paint-bucket', [
+  renderResult('ດ oi ດ ຝາ (Plaster)', area, 'bi bi-paint-bucket', [
     {label:'ຊີມັງ', value:cementBags.toLocaleString(), unit:'ຖົງ (50ກກ)'},
     {label:'ຊາຍ', value:sandM3, unit:'ມ.³'},
   ], '#0891b2');

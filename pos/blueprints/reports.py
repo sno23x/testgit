@@ -84,7 +84,22 @@ def index():
      .filter(Sale.voided == False)\
      .group_by(Product.id).order_by(func.sum(SaleItem.subtotal).desc()).limit(10).all()
 
+    # Profit per sale: (unit_price - cost_price) * qty using current cost_price
+    active_sale_ids = [s.id for s in sales if not s.voided]
+    profit_map = {}
+    if active_sale_ids:
+        profit_rows = db.session.query(
+            SaleItem.sale_id,
+            func.sum((SaleItem.unit_price - func.coalesce(Product.cost_price, 0)) * SaleItem.qty).label("profit")
+        ).join(Product, Product.id == SaleItem.product_id)\
+         .filter(SaleItem.sale_id.in_(active_sale_ids))\
+         .group_by(SaleItem.sale_id).all()
+        profit_map = {r[0]: float(r[1] or 0) for r in profit_rows}
+    total_profit = sum(profit_map.values())
+
     context["top_products"] = top_products
+    context["profit_map"] = profit_map
+    context["total_profit"] = total_profit
     return render_template("reports/index.html", **context)
 
 

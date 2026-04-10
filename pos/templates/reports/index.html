@@ -46,32 +46,60 @@
 
 <div class="row g-3">
   <div class="col-lg-8">
-    <div class="card shadow-sm border-0">
-      <div class="card-header fw-semibold d-flex justify-content-between">
-        <span>{{ label }}</span>
-        <span class="text-primary fw-bold">{{ "{:,.0f}".format(total) }} ກີບ</span>
+    <!-- Summary stats -->
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <div class="card border-0 shadow-sm text-center py-2">
+          <div class="small text-muted">ຍອດຂາຍລວມ</div>
+          <div class="fw-bold text-primary">{{ "{:,.0f}".format(total) }} ກີບ</div>
+        </div>
       </div>
+      <div class="col-6">
+        <div class="card border-0 shadow-sm text-center py-2">
+          <div class="small text-muted">ກຳໄລລວມ (ຄ.ປ.)</div>
+          <div class="fw-bold {{ 'text-success' if total_profit >= 0 else 'text-danger' }}">
+            {{ "{:,.0f}".format(total_profit) }} ກີບ
+            {% if total and total_profit %}
+            <small class="fs-6">({{ "{:.1f}".format(total_profit/total*100) }}%)</small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold">{{ label }}</div>
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
           <thead class="table-light">
-            <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th>ປະເພດ</th><th class="text-end">ລວມ</th><th></th></tr>
+            <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th>ປະເພດ</th><th class="text-end">ລວມ</th><th class="text-end">ກຳໄລ</th><th></th></tr>
           </thead>
           <tbody>
             {% for s in sales %}
+            {% set profit = profit_map.get(s.id) %}
             <tr class="{{ 'table-danger opacity-75' if s.voided else '' }}">
               <td>
                 <a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank"
                    class="{{ 'text-decoration-line-through text-muted' if s.voided else '' }}">{{ s.sale_no }}</a>
                 {% if s.voided %}<span class="badge bg-danger ms-1">ຍົກເລີກ</span>{% endif %}
               </td>
-              <td>{{ s.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-              <td>{{ s.customer.name if s.customer else '-' }}</td>
+              <td class="small text-muted">{{ s.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td class="small">{{ s.customer.name if s.customer else '-' }}</td>
               <td>
                 <span class="badge {% if s.payment_type == 'cash' %}bg-success{% elif s.payment_type == 'transfer' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
                   {% if s.payment_type == 'cash' %}ເງິນສົດ{% elif s.payment_type == 'transfer' %}ໂອນເງິນ{% else %}ຄ້າງຊຳລະ{% endif %}
                 </span>
               </td>
               <td class="text-end fw-semibold {{ 'text-decoration-line-through text-muted' if s.voided else '' }}">{{ "{:,.0f}".format(s.total) }}</td>
+              <td class="text-end small">
+                {% if not s.voided and profit is not none %}
+                  <span class="{{ 'text-success' if profit >= 0 else 'text-danger' }} fw-semibold">
+                    {{ "{:,.0f}".format(profit) }}
+                  </span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
               <td class="text-end">
                 {% if not s.voided %}
                 <form method="POST" action="/pos/void/{{ s.id }}" style="display:inline;"
@@ -84,7 +112,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="6" class="text-center text-muted py-3">ບໍ່ມີຂໍ້ມູນ</td></tr>
+            <tr><td colspan="7" class="text-center text-muted py-3">ບໍ່ມີຂໍ້ມູນ</td></tr>
             {% endfor %}
           </tbody>
         </table>
