@@ -36,7 +36,11 @@ def list_quotations():
 def create_form():
     customers = Customer.query.order_by(Customer.name).all()
     rate = Setting.get("thb_to_lak", "830")
-    return render_template("quotations/form.html", customers=customers, rate=rate)
+    edit_qt = None
+    edit_id = request.args.get("edit")
+    if edit_id:
+        edit_qt = Quotation.query.get(edit_id)
+    return render_template("quotations/form.html", customers=customers, rate=rate, edit_qt=edit_qt)
 
 
 @quotations_bp.route("/save", methods=["POST"])
