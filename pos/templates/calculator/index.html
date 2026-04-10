@@ -12,6 +12,7 @@
       <li class="nav-item"><button class="nav-link" onclick="showTab('plaster',this)"><i class="bi bi-paint-bucket me-1"></i>ທາດ ຝາ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('tile',this)"><i class="bi bi-grid me-1"></i>ປູກະເບື້ອງ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('paint',this)"><i class="bi bi-palette me-1"></i>ທາສີ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('water',this)"><i class="bi bi-droplet me-1"></i>ນ້ຳປະປາ</button></li>
     </ul>
     <small class="text-muted"><i class="bi bi-info-circle me-1"></i>ຄ່າໃນຊ່ອງ "ມາດຕະຖານ" ສາມາດປັບໄດ້ຕາມຄວາມເໝາະສົມ</small>
   </div>
@@ -270,6 +271,56 @@
         </div>
       </div>
     </div>
+
+    <!-- ═══ WATER ═══ -->
+    <div id="tab-water" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;">
+          <i class="bi bi-droplet me-2"></i>ລະບົບນ້ຳປະປາ
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຈຳນວນຄົນ</label>
+              <input type="number" id="w2-people" class="form-control" value="6" min="1" oninput="calcWater()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຈຳນວນຫ້ອງນ້ຳ</label>
+              <input type="number" id="w2-bathrooms" class="form-control" value="2" min="1" oninput="calcWater()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມຍາວທໍ່ຕົ້ນ (ມ.)</label>
+              <input type="number" id="w2-main" class="form-control" value="20" min="0" step="1" oninput="calcWater()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມຍາວທໍ່ຍ່ອຍ (ມ.)</label>
+              <input type="number" id="w2-branch" class="form-control" value="30" min="0" step="1" oninput="calcWater()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຈຳນວນຊັ້ນ</label>
+              <input type="number" id="w2-floors" class="form-control" value="1" min="1" max="10" oninput="calcWater()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ສຳຮອງນ້ຳ (ວັນ)</label>
+              <select id="w2-reserve" class="form-select" onchange="calcWater()">
+                <option value="1">1 ວັນ</option>
+                <option value="2" selected>2 ວັນ</option>
+                <option value="3">3 ວັນ</option>
+              </select>
+            </div>
+          </div>
+          <details class="mt-2">
+            <summary class="small text-muted" style="cursor:pointer;">⚙ ປັບມາດຕະຖານ</summary>
+            <div class="p-2 bg-body-secondary rounded small">
+              <label class="form-label mb-0">ນ້ຳໃຊ້/ຄົນ/ວັນ (ລ., ທົ່ວໄປ 150)</label>
+              <input type="number" id="w2-lpd" class="form-control form-control-sm" value="150" step="10" oninput="calcWater()"/>
+              <label class="form-label mb-0 mt-1">ຄວາມຍາວທໍ່/ທໍ່ (ມ., Lao: 4ມ.)</label>
+              <input type="number" id="w2-pipelen" class="form-control form-control-sm" value="4" step="1" oninput="calcWater()"/>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
   </div><!-- /col-lg-5 -->
 
   <!-- ═══ RESULTS PANEL ═══ -->
@@ -292,28 +343,6 @@
       </div>
     </div>
 
-    <!-- Price reference -->
-    {% if products %}
-    <div class="card border-0 shadow-sm mt-3">
-      <div class="card-header fw-bold py-2"><i class="bi bi-tags me-2"></i>ລາຄາສິນຄ້າ (ອ້າງອີງ)</div>
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead class="table-light">
-            <tr><th>ສິນຄ້າ</th><th>ຫົວໜ່ວຍ</th><th class="text-end">ລາຄາ (ກີບ)</th></tr>
-          </thead>
-          <tbody>
-            {% for p in products %}
-            <tr>
-              <td class="small fw-semibold">{{ p.name }}</td>
-              <td class="small text-muted">{{ p.unit }}</td>
-              <td class="text-end small">{{ "{:,.0f}".format(p.sell_price) if p.sell_price else '-' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -331,14 +360,16 @@ function showTab(name, btn) {
   document.getElementById('tab-' + name).classList.remove('d-none');
   document.querySelectorAll('#calcTabs .nav-link').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint};
+  const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint, water:calcWater};
   if (fns[name]) fns[name]();
 }
 
 function val(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
 // items = [{label, value, numValue, unit, note}]
+// area: number (m²) or string subtitle
 function renderResult(title, area, icon, color, items) {
+  const subtitle = typeof area === 'string' ? area : `ເນື້ອທີ່: <strong>${area.toFixed(2)} ມ.²</strong>`;
   const rows = items.map((it, i) => `
     <div class="py-2 border-bottom">
       <div class="d-flex justify-content-between align-items-start">
@@ -363,7 +394,7 @@ function renderResult(title, area, icon, color, items) {
       <i class="${icon} fs-4" style="color:${color}"></i>
       <div>
         <div class="fw-bold">${title}</div>
-        <div class="text-muted" style="font-size:0.8rem;">ເນື້ອທີ່: <strong>${area.toFixed(2)} ມ.²</strong></div>
+        <div class="text-muted" style="font-size:0.8rem;">${subtitle}</div>
       </div>
     </div>
     ${rows}
@@ -475,6 +506,56 @@ function calcPaint() {
     {label:'ສີທີ່ຕ້ອງການ', value:liters.toLocaleString(), numValue:liters, unit:'ລິດ', note:`${coats} ຊັ້ນ / ${coverage} ມ.²/ລ.`},
     {label:'ກ້ອນ 18 ລິດ', value:cans18.toLocaleString(), numValue:cans18, unit:'ກ້ອນ'},
   ]);
+}
+
+function calcWater() {
+  const people = val('w2-people') || 1;
+  const bathrooms = val('w2-bathrooms') || 1;
+  const mainLen = val('w2-main') || 0;
+  const branchLen = val('w2-branch') || 0;
+  const floors = val('w2-floors') || 1;
+  const reserve = parseInt(document.getElementById('w2-reserve')?.value) || 2;
+  const lpd = val('w2-lpd') || 150;
+  const pipeL = val('w2-pipelen') || 4;
+
+  const dailyUse = people * lpd;
+  const tankL = dailyUse * reserve * floors;
+
+  // Main pipe size by bathrooms
+  const mainSize = bathrooms <= 2 ? '¾"' : bathrooms <= 4 ? '1"' : '1½"';
+
+  // Pipes (sold per pipeL meters)
+  const mainPipes = mainLen > 0 ? Math.ceil(mainLen / pipeL) : 0;
+  const branchPipes = branchLen > 0 ? Math.ceil(branchLen / pipeL) : 0;
+
+  // Fittings estimate
+  const totalLen = mainLen + branchLen;
+  const elbows = Math.ceil(totalLen / 3) + floors * 2;
+  const tees = bathrooms * 2 + Math.ceil(totalLen / 5);
+  const unions = bathrooms + Math.ceil(totalLen / 10);
+
+  // Pump needed if floors > 1 or tank is overhead
+  const needPump = floors > 1;
+
+  const items = [
+    {label:`ຖັງນ້ຳ`, value:tankL.toLocaleString(), numValue:tankL, unit:'ລິດ',
+     note:`${people} ຄົນ × ${lpd} ລ/ວັນ × ${reserve} ວັນ × ${floors} ຊັ້ນ`},
+    {label:`ທໍ່ PVC ${mainSize} (ທໍ່ຕົ້ນ)`, value:mainPipes, numValue:mainPipes, unit:`ທໍ່ (${pipeL} ມ.)`,
+     note:`ລວມ ${mainLen} ມ.`},
+    {label:`ທໍ່ PVC ½" (ທໍ່ຍ່ອຍ)`, value:branchPipes, numValue:branchPipes, unit:`ທໍ່ (${pipeL} ມ.)`,
+     note:`ລວມ ${branchLen} ມ.`},
+    {label:'ຂໍ້ຕໍ່ Elbow 90°', value:elbows, numValue:elbows, unit:'ອັນ'},
+    {label:'ຂໍ້ຕໍ່ Tee', value:tees, numValue:tees, unit:'ອັນ'},
+    {label:'Union / Coupling', value:unions, numValue:unions, unit:'ອັນ'},
+  ];
+  if (needPump) {
+    items.push({label:'ປັ໊ມນ້ຳ (ຫຼາຍຊັ້ນ)', value:'1', numValue:1, unit:'ຕົວ',
+      note:`ຈຳເປັນສຳຫຼັບ ${floors} ຊັ້ນ`});
+  }
+
+  renderResult('ລະບົບນ້ຳປະປາ',
+    `${people} ຄົນ · ${bathrooms} ຫ້ອງນ້ຳ · ${floors} ຊັ້ນ`,
+    'bi bi-droplet', '#0284c7', items);
 }
 
 // Init
