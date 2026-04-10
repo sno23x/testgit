@@ -49,7 +49,7 @@
             {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
             {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
             {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>
-            {% else %}<span class="badge bg-light text-dark">{{ qt.status }}</span>{% endif %}
+            {% else %}<span class="badge bg-secondary">{{ qt.status }}</span>{% endif %}
           </td>
           <td class="small">{{ qt.creator.name if qt.creator else '-' }}</td>
           <td>
