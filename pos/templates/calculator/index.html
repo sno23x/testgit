@@ -444,13 +444,11 @@ function showTab(name, btn) {
 function val(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
 // Typeahead search for product
-function searchProd(inp) {
-  const q = inp.value.trim().toLowerCase();
-  const list = inp.nextElementSibling;
-  const matches = q
-    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 40)
-    : PRODUCTS.slice(0, 40);
-  if (!matches.length) { list.classList.add('d-none'); return; }
+function _getProdList(inp) {
+  return inp.closest('.position-relative').querySelector('.prod-list');
+}
+
+function _showMatches(list, matches) {
   list.innerHTML = matches.map(p => `
     <div class="d-flex justify-content-between align-items-center px-2 py-1 prod-item"
          style="cursor:pointer;"
@@ -465,19 +463,54 @@ function searchProd(inp) {
   });
 }
 
+function searchProd(inp) {
+  const q = inp.value.trim().toLowerCase();
+  const list = _getProdList(inp);
+  const matches = q
+    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 40)
+    : PRODUCTS.slice(0, 40);
+  if (!matches.length) { list.classList.add('d-none'); return; }
+  _showMatches(list, matches);
+}
+
+function toggleProdList(btn) {
+  const wrap = btn.closest('.position-relative');
+  const list = wrap.querySelector('.prod-list');
+  const inp  = wrap.querySelector('.cost-input');
+  if (!list.classList.contains('d-none')) {
+    list.classList.add('d-none');
+    btn.querySelector('i').className = 'bi bi-chevron-down';
+    return;
+  }
+  const q = inp.value.trim().toLowerCase();
+  const matches = q
+    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 40)
+    : PRODUCTS.slice(0, 40);
+  _showMatches(list, matches);
+  btn.querySelector('i').className = 'bi bi-chevron-up';
+  inp.focus();
+}
+
 function selectProd(e, item, name, price) {
   e.preventDefault();
   const list = item.closest('.prod-list');
-  const inp = list.previousElementSibling;
+  const wrap = list.closest('.position-relative');
+  const inp  = wrap.querySelector('.cost-input');
+  const btn  = wrap.querySelector('.toggle-btn i');
   inp.value = name;
   inp.dataset.price = price;
   list.classList.add('d-none');
+  if (btn) btn.className = 'bi bi-chevron-down';
   updateCost();
 }
 
 function hideProdList(inp) {
-  const list = inp.nextElementSibling;
-  if (list) list.classList.add('d-none');
+  const list = _getProdList(inp);
+  if (list) {
+    list.classList.add('d-none');
+    const btn = inp.closest('.position-relative')?.querySelector('.toggle-btn i');
+    if (btn) btn.className = 'bi bi-chevron-down';
+  }
 }
 
 // items = [{label, value, numValue, unit, note}]
@@ -491,14 +524,21 @@ function renderResult(title, area, icon, color, items) {
           <div class="fw-semibold small">${it.label}</div>
           ${it.note ? `<div class="text-muted" style="font-size:0.75rem;">${it.note}</div>` : ''}
           <div class="position-relative mt-1">
-            <input type="text" class="form-control form-control-sm cost-input"
-                   placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off"
-                   data-qty="${it.numValue}" data-price="0"
-                   oninput="searchProd(this)" onfocus="searchProd(this)"
-                   onblur="setTimeout(()=>hideProdList(this),200)"
-                   style="font-size:0.78rem;"/>
-            <div class="prod-list position-absolute w-100 border rounded shadow d-none"
-                 style="z-index:1050;max-height:200px;overflow-y:auto;top:100%;left:0;background:var(--bs-body-bg);"></div>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control cost-input"
+                     placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off"
+                     data-qty="${it.numValue}" data-price="0"
+                     oninput="searchProd(this)" onfocus="searchProd(this)"
+                     onblur="setTimeout(()=>hideProdList(this),200)"
+                     style="font-size:0.78rem;"/>
+              <button class="btn btn-outline-secondary toggle-btn" type="button"
+                      onclick="toggleProdList(this)" tabindex="-1"
+                      style="padding:0 6px;">
+                <i class="bi bi-chevron-down" style="font-size:0.7rem;"></i>
+              </button>
+            </div>
+            <div class="prod-list position-absolute border rounded shadow d-none"
+                 style="z-index:1050;max-height:200px;overflow-y:auto;top:100%;left:0;right:0;background:var(--bs-body-bg);"></div>
           </div>
         </div>
         <div class="text-end flex-shrink-0">
