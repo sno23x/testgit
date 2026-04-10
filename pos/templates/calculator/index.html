@@ -7,13 +7,13 @@
   <!-- Tabs -->
   <div class="col-12">
     <ul class="nav nav-pills gap-2 mb-1 flex-wrap" id="calcTabs">
-      <li class="nav-item"><button class="nav-link active" onclick="showTab('wall',this)"><i class="bi bi-bricks me-1"></i>ຝາດິນຈີ່</button></li>
+      <li class="nav-item"><button class="nav-link active" onclick="showTab('wall',this)"><i class="bi bi-bricks me-1"></i>ຜະໜັງດິນຈີ່</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('slab',this)"><i class="bi bi-layout-wtf me-1"></i>ພື້ນ/ຫລັງຄາ</button></li>
-      <li class="nav-item"><button class="nav-link" onclick="showTab('plaster',this)"><i class="bi bi-paint-bucket me-1"></i>ທາດ ຝາ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('plaster',this)"><i class="bi bi-paint-bucket me-1"></i>ສາບຜະໜັງ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('tile',this)"><i class="bi bi-grid me-1"></i>ປູກະເບື້ອງ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('paint',this)"><i class="bi bi-palette me-1"></i>ທາສີ</button></li>
       <li class="nav-item"><button class="nav-link" onclick="showTab('water',this)"><i class="bi bi-droplet me-1"></i>ນ້ຳປະປາ</button></li>
-      <li class="nav-item"><button class="nav-link" onclick="showTab('block',this)"><i class="bi bi-square me-1"></i>ດິນບັອກ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('block',this)"><i class="bi bi-square me-1"></i>ກຳແພງດິນບັອກ</button></li>
     </ul>
     <small class="text-muted"><i class="bi bi-info-circle me-1"></i>ຄ່າໃນຊ່ອງ "ມາດຕະຖານ" ສາມາດປັບໄດ້ຕາມຄວາມເໝາະສົມ</small>
   </div>
@@ -24,7 +24,7 @@
     <div id="tab-wall" class="calc-tab">
       <div class="card border-0 shadow-sm">
         <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#92400e,#b45309);color:#fff;">
-          <i class="bi bi-bricks me-2"></i>ຝາດິນຈີ່
+          <i class="bi bi-bricks me-2"></i>ດິນຈີ່
         </div>
         <div class="card-body">
           <div class="row g-2">
@@ -141,7 +141,7 @@
     <div id="tab-plaster" class="calc-tab d-none">
       <div class="card border-0 shadow-sm">
         <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;">
-          <i class="bi bi-paint-bucket me-2"></i>ທາດ ຝາ (Plaster)
+          <i class="bi bi-paint-bucket me-2"></i>ສາບຜະໜັງ (Plaster)
         </div>
         <div class="card-body">
           <div class="row g-2">
@@ -173,7 +173,7 @@
           <details class="mt-2">
             <summary class="small text-muted" style="cursor:pointer;">⚙ ປັບມາດຕະຖານ</summary>
             <div class="p-2 bg-body-secondary rounded small">
-              <label class="form-label mb-0">ຕົວຄູນ (waste factor, ທົ່ວໄປ 1.3)</label>
+              <label class="form-label mb-0">ຕົວຄູນ (ອັດຕາທີ່ເສຍໄດ້, ທົ່ວໄປ 1.3)</label>
               <input type="number" id="p-waste" class="form-control form-control-sm" value="1.3" step="0.05" oninput="calcPlaster()"/>
             </div>
           </details>
@@ -224,7 +224,7 @@
                 <input type="number" id="t-cemkg" class="form-control form-control-sm" value="1.2" step="0.1" oninput="calcTile()"/>
               </div>
               <div class="col-6">
-                <label class="form-label mb-0">ໄລ Grout (ກກ/ມ.²)</label>
+                <label class="form-label mb-0">ໄລ່ຢາແນວ (ກກ/ມ.²)</label>
                 <input type="number" id="t-grout" class="form-control form-control-sm" value="0.3" step="0.05" oninput="calcTile()"/>
               </div>
             </div>
@@ -418,8 +418,8 @@
       <div class="card-footer">
         <small class="text-muted">
           <i class="bi bi-info-circle me-1"></i>
-          <strong>ທີ່ມາ:</strong> ອ້າງອີງ Thai/Lao standard construction ratios (ກົດ ⚙ ເພື່ອປັບ) ·
-          ຄ່າທັງໝົດ +10–15% ສຳຫລັບ waste ໄດ້
+          <strong>ທີ່ມາ:</strong> ອ້າງອີງ Thai/Lao ອັດຕາສ່ວນມາດຕະຖານງານກໍ່ສ້າງ (ກົດ ⚙ ເພື່ອປັບ) ·
+          ຄ່າທັງໝົດ +5–10% ສຳຫລັບອັດຕາສ່່ວນທີ່ເສຍໄດ້
         </small>
       </div>
     </div>
@@ -630,7 +630,7 @@ function calcPlaster() {
   const vol = area * T * waste;
   const cem = Math.ceil(vol * (parts[0]/tot) / 0.035);
   const sandN = vol * (parts[1]/tot);
-  renderResult('ທາດ ຝາ (Plaster)', area, 'bi bi-paint-bucket', '#0891b2', [
+  renderResult('ສາບຜະໜັງ (Plaster)', area, 'bi bi-paint-bucket', '#0891b2', [
     {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')} waste×${waste}`},
     {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ]);
@@ -650,7 +650,7 @@ function calcTile() {
   renderResult(`ກະເບື້ອງ ${(sz*100).toFixed(0)}×${(sz*100).toFixed(0)} ຊມ.`, area, 'bi bi-grid', '#0d9488', [
     {label:'ກະເບື້ອງ', value:tiles.toLocaleString(), numValue:tiles, unit:'ແຜ່ນ', note:`+${(waste*100).toFixed(0)}% ສຳຮອງ`},
     {label:'ຊີມັງທີ ຕໍ່', value:cemN.toLocaleString(), numValue:cemN, unit:'ກກ.'},
-    {label:'ໄລ (Grout)', value:groutN.toLocaleString(), numValue:groutN, unit:'ກກ.'},
+    {label:'ໄລ່ (ຢາແນວ)', value:groutN.toLocaleString(), numValue:groutN, unit:'ກກ.'},
   ]);
 }
 
@@ -664,7 +664,7 @@ function calcPaint() {
   const cans18 = Math.ceil(liters / 18);
   renderResult('ທາສີ', area, 'bi bi-palette', '#7c3aed', [
     {label:'ສີທີ່ຕ້ອງການ', value:liters.toLocaleString(), numValue:liters, unit:'ລິດ', note:`${coats} ຊັ້ນ / ${coverage} ມ.²/ລ.`},
-    {label:'ກ້ອນ 18 ລິດ', value:cans18.toLocaleString(), numValue:cans18, unit:'ກ້ອນ'},
+    {label:'ຖັງ 18 ລິດ', value:cans18.toLocaleString(), numValue:cans18, unit:'ຖັງ'},
   ]);
 }
 
@@ -699,14 +699,14 @@ function calcWater() {
 
   const items = [
     {label:`ຖັງນ້ຳ`, value:tankL.toLocaleString(), numValue:tankL, unit:'ລິດ',
-     note:`${people} ຄົນ × ${lpd} ລ/ວັນ × ${reserve} ວັນ × ${floors} ຊັ້ນ`},
+     note:`${people} ຄົນ × ${lpd} ລິດ/ວັນ × ${reserve} ວັນ × ${floors} ຊັ້ນ`},
     {label:`ທໍ່ PVC ${mainSize} (ທໍ່ຕົ້ນ)`, value:mainPipes, numValue:mainPipes, unit:`ທໍ່ (${pipeL} ມ.)`,
      note:`ລວມ ${mainLen} ມ.`},
     {label:`ທໍ່ PVC ½" (ທໍ່ຍ່ອຍ)`, value:branchPipes, numValue:branchPipes, unit:`ທໍ່ (${pipeL} ມ.)`,
      note:`ລວມ ${branchLen} ມ.`},
-    {label:'ຂໍ້ຕໍ່ Elbow 90°', value:elbows, numValue:elbows, unit:'ອັນ'},
-    {label:'ຂໍ້ຕໍ່ Tee', value:tees, numValue:tees, unit:'ອັນ'},
-    {label:'Union / Coupling', value:unions, numValue:unions, unit:'ອັນ'},
+    {label:'ຂໍ້ງໍ 90°', value:elbows, numValue:elbows, unit:'ອັນ'},
+    {label:'ຂໍ້ຕໍ່ 3ທາງ', value:tees, numValue:tees, unit:'ອັນ'},
+    {label:'ກຽວໃນ', value:unions, numValue:unions, unit:'ອັນ'},
   ];
   if (needPump) {
     items.push({label:'ປັ໊ມນ້ຳ (ຫຼາຍຊັ້ນ)', value:'1', numValue:1, unit:'ຕົວ',
@@ -753,7 +753,7 @@ function calcBlock() {
     {label:'ດິນບັອກ', value:blocks.toLocaleString(), numValue:blocks, unit:'ກ້ອນ',
      note:`${(bL*100).toFixed(0)}×${(bH*100).toFixed(0)}×${(bT*100).toFixed(0)} ຊມ. +${(waste*100).toFixed(0)}% ເຜື່ອ`},
     {label:'ຊີມັງ', value:cemBags.toLocaleString(), numValue:cemBags, unit:'ຖົງ (50 ກກ.)',
-     note:`ratio ${parts.join(':')} · joint ${(joint*100).toFixed(0)} ຊມ.`},
+     note:`ອັດຕາສ່ວນ ${parts.join(':')} · ຈຸດເຊື່ອມ ${(joint*100).toFixed(0)} ຊມ.`},
     {label:'ຊາຍ', value:sandM3.toFixed(2), numValue:sandM3, unit:'ມ.³'},
     {label:'ຄານ Lintel (ຄ.ປ.)', value:lintels, numValue:lintels, unit:'ອັນ',
      note:'ຕຳແໜ່ງ ປະຕູ/ປ່ອງ ຢ້ຽມ'},
