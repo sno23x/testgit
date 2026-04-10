@@ -320,40 +320,76 @@
 
 {% block scripts %}
 <script>
-let _activeTab = 'wall';
+const PRODUCTS = {{ products_json | tojson }};
+
+// Build dropdown options HTML (cached)
+const PROD_OPTS = '<option value="">— ເລືອກ —</option>' +
+  PRODUCTS.map(p => `<option value="${p.sell_price}" data-unit="${p.unit}">${p.name} (${p.unit}) ${p.sell_price.toLocaleString()}₭</option>`).join('');
 
 function showTab(name, btn) {
   document.querySelectorAll('.calc-tab').forEach(t => t.classList.add('d-none'));
   document.getElementById('tab-' + name).classList.remove('d-none');
   document.querySelectorAll('#calcTabs .nav-link').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  _activeTab = name;
   const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint};
   if (fns[name]) fns[name]();
 }
 
 function val(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
+// items = [{label, value, numValue, unit, note}]
 function renderResult(title, area, icon, color, items) {
-  let rows = items.map(it => `
-    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-      <div>
-        <div class="fw-semibold small">${it.label}</div>
-        ${it.note ? `<div class="text-muted" style="font-size:0.78rem;">${it.note}</div>` : ''}
-      </div>
-      <div class="text-end ms-3">
-        <span class="badge rounded-pill fs-6 px-3" style="background:${color};">${it.value}</span>
-        <div class="text-muted" style="font-size:0.78rem;">${it.unit}</div>
+  const rows = items.map((it, i) => `
+    <div class="py-2 border-bottom">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1 me-2">
+          <div class="fw-semibold small">${it.label}</div>
+          ${it.note ? `<div class="text-muted" style="font-size:0.75rem;">${it.note}</div>` : ''}
+          <select class="form-select form-select-sm mt-1 cost-sel" data-qty="${it.numValue}"
+                  onchange="updateCost()" style="font-size:0.78rem;">
+            ${PROD_OPTS}
+          </select>
+        </div>
+        <div class="text-end flex-shrink-0">
+          <span class="badge rounded-pill fs-6 px-3" style="background:${color};">${it.value}</span>
+          <div class="text-muted" style="font-size:0.75rem;">${it.unit}</div>
+          <div class="small fw-semibold text-warning mt-1 item-cost" id="ic${i}"></div>
+        </div>
       </div>
     </div>`).join('');
+
   document.getElementById('resultPanel').innerHTML = `
-    <div class="d-flex align-items-center gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2 mb-2">
       <i class="${icon} fs-4" style="color:${color}"></i>
       <div>
         <div class="fw-bold">${title}</div>
         <div class="text-muted" style="font-size:0.8rem;">ເນື້ອທີ່: <strong>${area.toFixed(2)} ມ.²</strong></div>
       </div>
-    </div>${rows}`;
+    </div>
+    ${rows}
+    <div class="mt-3 p-3 rounded-3" style="background:linear-gradient(135deg,rgba(22,163,74,.15),rgba(21,128,61,.15));border:1px solid #16a34a;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-bold">ຄ່າໃຊ້ຈ່າຍລວມ</div>
+          <div class="text-muted" style="font-size:0.75rem;">ເລືອກສິນຄ້າຈາກ dropdown ດ້ານເທິງ</div>
+        </div>
+        <span class="fw-bold fs-5 text-success" id="totalCostDisplay">0 ກີບ</span>
+      </div>
+    </div>`;
+}
+
+function updateCost() {
+  let total = 0;
+  document.querySelectorAll('.cost-sel').forEach((sel, i) => {
+    const price = parseFloat(sel.value) || 0;
+    const qty = parseFloat(sel.dataset.qty) || 0;
+    const cost = price * qty;
+    total += cost;
+    const el = document.getElementById('ic' + i);
+    if (el) el.textContent = cost > 0 ? Math.round(cost).toLocaleString() + ' ກີບ' : '';
+  });
+  const disp = document.getElementById('totalCostDisplay');
+  if (disp) disp.textContent = Math.round(total).toLocaleString() + ' ກີບ';
 }
 
 function calcWall() {
@@ -365,11 +401,11 @@ function calcWall() {
   const cemRate = full ? val('w-cem-full') : val('w-cem-full') / 2;
   const sandRate = full ? val('w-sand-full') : val('w-sand-full') / 2;
   const cem = Math.ceil(area * cemRate * 1.1);
-  const sand = (area * sandRate).toFixed(2);
+  const sandN = area * sandRate;
   renderResult('ຝາດິນຈີ່', area, 'bi bi-bricks', '#92400e', [
-    {label:'ດິນຈີ່', value:bricks.toLocaleString(), unit:'ກ້ອນ', note:'+5% ສຳຮອງ'},
-    {label:'ຊີມັງ', value:cem.toLocaleString(), unit:'ຖົງ (50 ກກ.)'},
-    {label:'ຊາຍ', value:sand, unit:'ມ.³'},
+    {label:'ດິນຈີ່', value:bricks.toLocaleString(), numValue:bricks, unit:'ກ້ອນ', note:'+5% ສຳຮອງ'},
+    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)'},
+    {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ]);
 }
 
@@ -383,13 +419,13 @@ function calcSlab() {
   if (!area) return;
   const vol = area * T * dryFactor;
   const cem = Math.ceil(vol * (parts[0]/tot) / cemVol);
-  const sand = (vol * (parts[1]/tot)).toFixed(2);
-  const gravel = parts[2] ? (vol * (parts[2]/tot)).toFixed(2) : null;
+  const sandN = vol * (parts[1]/tot);
+  const gravelN = parts[2] ? vol * (parts[2]/tot) : null;
   const items = [
-    {label:'ຊີມັງ', value:cem.toLocaleString(), unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')}  dry×${dryFactor}`},
-    {label:'ຊາຍ', value:sand, unit:'ມ.³'},
+    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')} dry×${dryFactor}`},
+    {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ];
-  if (gravel) items.push({label:'ຫີນ (Aggregate)', value:gravel, unit:'ມ.³'});
+  if (gravelN) items.push({label:'ຫີນ (Aggregate)', value:gravelN.toFixed(2), numValue:gravelN, unit:'ມ.³'});
   renderResult('ພື້ນ/ຫລັງຄາຄອນກຣີດ', area, 'bi bi-layout-wtf', '#374151', items);
 }
 
@@ -402,10 +438,10 @@ function calcPlaster() {
   if (!area) return;
   const vol = area * T * waste;
   const cem = Math.ceil(vol * (parts[0]/tot) / 0.035);
-  const sand = (vol * (parts[1]/tot)).toFixed(2);
+  const sandN = vol * (parts[1]/tot);
   renderResult('ທາດ ຝາ (Plaster)', area, 'bi bi-paint-bucket', '#0891b2', [
-    {label:'ຊີມັງ', value:cem.toLocaleString(), unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')}, waste×${waste}`},
-    {label:'ຊາຍ', value:sand, unit:'ມ.³'},
+    {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)', note:`ratio ${parts.join(':')} waste×${waste}`},
+    {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ]);
 }
 
@@ -414,14 +450,16 @@ function calcTile() {
   const sz = val('t-size') || 0.4;
   const waste = (parseInt(document.getElementById('t-waste').value)||10) / 100;
   const cemKg = val('t-cemkg') || 1.2;
-  const grout = val('t-grout') || 0.3;
+  const groutKg = val('t-grout') || 0.3;
   const area = L * W;
   if (!area) return;
   const tiles = Math.ceil(area / (sz * sz) * (1 + waste));
+  const cemN = Math.ceil(area * cemKg);
+  const groutN = Math.ceil(area * groutKg);
   renderResult(`ກະເບື້ອງ ${(sz*100).toFixed(0)}×${(sz*100).toFixed(0)} ຊມ.`, area, 'bi bi-grid', '#0d9488', [
-    {label:'ກະເບື້ອງ', value:tiles.toLocaleString(), unit:'ແຜ່ນ', note:`+${(waste*100).toFixed(0)}% ສຳຮອງ`},
-    {label:'ຊີມັງທີ ຕໍ່', value:Math.ceil(area * cemKg).toLocaleString(), unit:'ກກ.'},
-    {label:'ໄລ (Grout)', value:Math.ceil(area * grout).toLocaleString(), unit:'ກກ.'},
+    {label:'ກະເບື້ອງ', value:tiles.toLocaleString(), numValue:tiles, unit:'ແຜ່ນ', note:`+${(waste*100).toFixed(0)}% ສຳຮອງ`},
+    {label:'ຊີມັງທີ ຕໍ່', value:cemN.toLocaleString(), numValue:cemN, unit:'ກກ.'},
+    {label:'ໄລ (Grout)', value:groutN.toLocaleString(), numValue:groutN, unit:'ກກ.'},
   ]);
 }
 
@@ -434,8 +472,8 @@ function calcPaint() {
   const liters = Math.ceil(area * coats / coverage);
   const cans18 = Math.ceil(liters / 18);
   renderResult('ທາສີ', area, 'bi bi-palette', '#7c3aed', [
-    {label:'ສີທີ່ຕ້ອງການ', value:liters.toLocaleString(), unit:'ລິດ', note:`${coats} ຊັ້ນ / ${coverage} ມ.²/ລ.`},
-    {label:'ກ້ອນ 18 ລິດ', value:cans18.toLocaleString(), unit:'ກ້ອນ'},
+    {label:'ສີທີ່ຕ້ອງການ', value:liters.toLocaleString(), numValue:liters, unit:'ລິດ', note:`${coats} ຊັ້ນ / ${coverage} ມ.²/ລ.`},
+    {label:'ກ້ອນ 18 ລິດ', value:cans18.toLocaleString(), numValue:cans18, unit:'ກ້ອນ'},
   ]);
 }
 

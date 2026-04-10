@@ -8,6 +8,8 @@ calculator_bp = Blueprint("calculator", __name__)
 @calculator_bp.route("/")
 @login_required
 def index():
-    # Load products for price lookup (keywords: ຊີມັງ, ຊາຍ, ຫີນ, ດິນຈີ່, ດິນບັອກ)
     products = Product.query.filter_by(active=True).order_by(Product.name).all()
-    return render_template("calculator/index.html", products=products)
+    products_json = [{"id": p.id, "name": p.name, "unit": p.unit,
+                      "sell_price": p.sell_price or 0} for p in products]
+    return render_template("calculator/index.html", products=products,
+                           products_json=products_json)
