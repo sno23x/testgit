@@ -1,0 +1,135 @@
+{
+  "name": "POS — 01 Sale Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pos-sale",
+        "responseMode": "onReceived",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook — POS Sale",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "pos-sale-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format data for Google Sheets & WhatsApp\nconst d = $input.first().json;\n\n// Build items string for Sheets\nconst itemsStr = (d.items || []).map(i =>\n  `${i.name} x${i.qty} = ${Number(i.subtotal).toLocaleString()}₭`\n).join(' | ');\n\n// Date/time\nconst now = new Date();\nconst dateStr = d.date || `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;\n\nreturn [{\n  json: {\n    ...d,\n    items_str: itemsStr,\n    sheet_row: {\n      'ເລກບິນ':        d.sale_no || '',\n      'ວັນທີ':         dateStr,\n      'ເວລາ':         d.time || '',\n      'ລູກຄ້າ':       d.customer || 'ທົ່ວໄປ',\n      'ລາຍການ':       itemsStr,\n      'ລວມ (ກີບ)':    d.total || 0,\n      'ຊຳລະດ້ວຍ':     d.payment_label || '',\n      'ສະຖານະ':       d.status_label || '',\n    }\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sales",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ເລກບິນ":     "={{ $json.sheet_row['ເລກບິນ'] }}",
+            "ວັນທີ":      "={{ $json.sheet_row['ວັນທີ'] }}",
+            "ເວລາ":      "={{ $json.sheet_row['ເວລາ'] }}",
+            "ລູກຄ້າ":    "={{ $json.sheet_row['ລູກຄ້າ'] }}",
+            "ລາຍການ":    "={{ $json.sheet_row['ລາຍການ'] }}",
+            "ລວມ (ກີບ)": "={{ $json.sheet_row['ລວມ (ກີບ)'] }}",
+            "ຊຳລະດ້ວຍ":  "={{ $json.sheet_row['ຊຳລະດ້ວຍ'] }}",
+            "ສະຖານະ":    "={{ $json.sheet_row['ສະຖານະ'] }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Google Sheets — Append",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [680, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.callmebot.com/whatsapp.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "YOUR_WHATSAPP_PHONE_+856XXXXXXXXXX"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.whatsapp_msg }}"
+            },
+            {
+              "name": "apikey",
+              "value": "YOUR_CALLMEBOT_APIKEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "WhatsApp — CallMeBot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Webhook — POS Sale": {
+      "main": [
+        [{"node": "Format Data", "type": "main", "index": 0}]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {"node": "Google Sheets — Append", "type": "main", "index": 0},
+          {"node": "WhatsApp — CallMeBot", "type": "main", "index": 0}
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "_readme": [
+    "=== POS Workflow 1: Sale Notification ===",
+    "SETUP STEPS:",
+    "1. Import this file into n8n (Menu > Import workflow)",
+    "2. Click 'Webhook — POS Sale' node → copy the Webhook URL",
+    "3. Paste that URL into POS Settings > n8n Webhook URL",
+    "4. In 'Google Sheets — Append': connect your Google account + set Sheet ID",
+    "   (Sheet ID is in the URL: docs.google.com/spreadsheets/d/SHEET_ID/edit)",
+    "   Create columns: ເລກບິນ | ວັນທີ | ເວລາ | ລູກຄ້າ | ລາຍການ | ລວມ (ກີບ) | ຊຳລະດ້ວຍ | ສະຖານະ",
+    "5. In 'WhatsApp — CallMeBot': replace phone + apikey",
+    "   Get free apikey at: https://www.callmebot.com/blog/free-api-whatsapp-messages/",
+    "6. Activate the workflow (toggle top-right)"
+  ]
+}

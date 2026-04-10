@@ -20,6 +20,10 @@ DEFAULT_SETTINGS = {
     "receipt_rows": "15",
     "receipt_auto_print": "1",
     "receipt_footer": "",
+    "n8n_webhook_url": "",
+    "n8n_api_key": "",
+    "callmebot_phone": "",
+    "callmebot_apikey": "",
 }
 
 

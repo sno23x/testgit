@@ -198,6 +198,85 @@
     </div>
   </div>
 </div>
+
+<!-- n8n Integration -->
+<div class="row g-4 mt-0">
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold" style="background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;">
+        <i class="bi bi-diagram-3 me-1"></i>n8n Integration — WhatsApp + Google Sheets
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <div class="alert alert-info py-2 mb-0 small">
+                <strong>ວິທີໃຊ້:</strong>
+                1. ຕິດຕັ້ງ n8n → import <code>n8n_workflows/</code> ທັງ 2 ໄຟລ໌ →
+                2. ໃສ່ Webhook URL ໃນຊ່ອງລຸ່ມ →
+                3. ຕັ້ງຄ່າ Google Sheets &amp; WhatsApp ໃນ n8n ໂດຍກົງ.
+                <a href="/static/n8n_workflows/" target="_blank" class="ms-1">📥 Download workflows</a>
+              </div>
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">n8n Webhook URL <small class="text-muted">(Workflow 1 — ແຈ້ງທຸກບິນ)</small></label>
+              <div class="input-group">
+                <input type="url" name="n8n_webhook_url" class="form-control font-monospace"
+                       placeholder="https://your-n8n.com/webhook/pos-sale"
+                       value="{{ s.n8n_webhook_url }}"/>
+                <button class="btn btn-outline-secondary" type="button" onclick="testWebhook()">
+                  <i class="bi bi-send me-1"></i>ທົດສອບ
+                </button>
+              </div>
+              <div id="webhookResult" class="small mt-1"></div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">API Key <small class="text-muted">(ປ້ອງກັນ daily-summary)</small></label>
+              <input type="text" name="n8n_api_key" class="form-control font-monospace"
+                     placeholder="ໃສ່ລະຫັດລັບ (ຕົວໃດກໍ່ໄດ້)"
+                     value="{{ s.n8n_api_key }}"/>
+            </div>
+
+            <div class="col-12"><hr class="my-1"/><div class="fw-semibold small text-muted mb-2">WhatsApp via CallMeBot (ຟຣີ)</div></div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">ເບີ WhatsApp <small class="text-muted">(+856XXXXXXXXXX)</small></label>
+              <input type="text" name="callmebot_phone" class="form-control"
+                     placeholder="+85620XXXXXXXX"
+                     value="{{ s.callmebot_phone }}"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">CallMeBot API Key</label>
+              <div class="input-group">
+                <input type="text" name="callmebot_apikey" class="form-control font-monospace"
+                       placeholder="ຂໍ apikey ໄດ້ຈາກ callmebot.com"
+                       value="{{ s.callmebot_apikey }}"/>
+                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank"
+                   class="btn btn-outline-info btn-sm">ຂໍ Key</a>
+              </div>
+            </div>
+
+            <div class="col-12 mt-1">
+              <div class="p-3 rounded small" style="background:rgba(0,0,0,.05);">
+                <div class="fw-semibold mb-1">🔗 Daily Summary URL (ໃສ່ໃນ n8n Workflow 2):</div>
+                <code id="summaryUrl">{{ request.host_url }}pos/api/daily-summary{% if s.n8n_api_key %}?key={{ s.n8n_api_key }}{% endif %}</code>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button type="submit" class="btn btn-warning fw-bold">
+                <i class="bi bi-save me-1"></i>ບັນທຶກການຕັ້ງຄ່າ n8n
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -211,5 +290,23 @@ function previewCalc() {
   }
 }
 previewCalc();
+
+function testWebhook() {
+  const url = document.querySelector('[name=n8n_webhook_url]').value.trim();
+  const res = document.getElementById('webhookResult');
+  if (!url) { res.innerHTML = '<span class="text-danger">ໃສ່ URL ກ່ອນ</span>'; return; }
+  res.innerHTML = '<span class="text-muted">ກຳລັງສົ່ງ...</span>';
+  fetch('/pos/api/test-webhook', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({url: url})
+  }).then(r => r.json()).then(d => {
+    res.innerHTML = d.ok
+      ? '<span class="text-success"><i class="bi bi-check-circle me-1"></i>ສົ່ງສຳເລັດ! ກວດດູ n8n</span>'
+      : `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>ຜິດພາດ: ${d.error}</span>`;
+  }).catch(() => {
+    res.innerHTML = '<span class="text-danger">ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້</span>';
+  });
+}
 </script>
 {% endblock %}

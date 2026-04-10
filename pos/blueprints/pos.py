@@ -1,10 +1,74 @@
 from datetime import datetime, timezone, date
+import threading
+import requests as _req
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 from models import db, Product, Customer, Sale, SaleItem, Employee, Setting, round_price
 
 pos_bp = Blueprint("pos", __name__)
+
+
+# ──────────────── n8n Webhook helper ────────────────
+def _post_webhook(url, payload):
+    try:
+        _req.post(url, json=payload, timeout=5)
+    except Exception:
+        pass
+
+
+def notify_n8n(sale):
+    """ສ້າງ payload ແລ້ວ ສົ່ງໄປ n8n webhook (background thread)"""
+    url = Setting.get("n8n_webhook_url", "").strip()
+    if not url:
+        return
+    payment_lao = {"cash": "ເງິນສົດ", "debt": "ຄ້າງຊຳລະ", "transfer": "ໂອນເງິນ"}
+    pay_label = payment_lao.get(sale.payment_type, sale.payment_type)
+    is_debt = sale.payment_type == "debt"
+    status_label = "⚠️ ຄ້າງຊຳລະ" if is_debt else "✅ ຊຳລະແລ້ວ"
+    customer_name = sale.customer.name if sale.customer else "ລູກຄ້າທົ່ວໄປ"
+
+    items_lines = "\n".join(
+        f"  • {si.product.name if si.product else '?'} ×{si.qty:g}  {si.subtotal:,.0f}₭"
+        for si in sale.items
+    )
+    items_summary = " | ".join(
+        f"{si.product.name if si.product else '?'} ×{si.qty:g}"
+        for si in sale.items
+    )
+    msg = (
+        f"🧾 *ບິນໃໝ່ #{sale.sale_no}*\n"
+        f"📅 {sale.created_at.strftime('%d/%m/%Y %H:%M')}\n"
+        f"👤 {customer_name}\n\n"
+        f"{items_lines}\n\n"
+        f"💰 ລວມ: *{sale.total:,.0f} ກີບ*\n"
+        f"💳 {pay_label}  |  {status_label}"
+    )
+    payload = {
+        "event": "sale_created",
+        "sale_no": sale.sale_no,
+        "date": sale.created_at.strftime("%d/%m/%Y"),
+        "time": sale.created_at.strftime("%H:%M"),
+        "customer": customer_name,
+        "items": [
+            {"name": si.product.name if si.product else "?",
+             "unit": si.product.unit if si.product else "",
+             "qty": si.qty,
+             "unit_price": si.unit_price,
+             "subtotal": si.subtotal}
+            for si in sale.items
+        ],
+        "items_summary": items_summary,
+        "subtotal": sale.subtotal,
+        "discount": sale.discount,
+        "total": sale.total,
+        "payment_type": sale.payment_type,
+        "payment_label": pay_label,
+        "status": "debt" if is_debt else "paid",
+        "status_label": status_label,
+        "whatsapp_msg": msg,
+    }
+    threading.Thread(target=_post_webhook, args=(url, payload), daemon=True).start()
 
 
 def next_sale_no():
@@ -205,6 +269,7 @@ def create_sale():
             cust.total_debt += total_kip
 
     db.session.commit()
+    notify_n8n(sale)
     return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})
 
 
@@ -260,3 +325,81 @@ def void_sale(sale_id):
 
     flash(f"ຍົກເລີກບິນ {sale.sale_no} ສໍາເລັດ — ສິນຄ້າກັບຄືນ stock ແລ້ວ", "success")
     return redirect(request.referrer or url_for("reports.index"))
+
+
+# ──────────────── Webhook test (from settings page) ────────────────
+@pos_bp.route("/api/test-webhook", methods=["POST"])
+@login_required
+def api_test_webhook():
+    url = (request.get_json() or {}).get("url", "").strip()
+    if not url:
+        return jsonify({"ok": False, "error": "ບໍ່ມີ URL"})
+    payload = {
+        "event": "test",
+        "message": "ທົດສອບຈາກ POS ສຳເລັດ! 🎉",
+        "shop": Setting.get("shop_name", "ຮ້ານ"),
+        "whatsapp_msg": "✅ ທົດສອບ n8n ສຳເລັດ!\nPOS ເຊື່ອມຕໍ່ n8n ໄດ້ແລ້ວ 🎉",
+    }
+    try:
+        r = _req.post(url, json=payload, timeout=8)
+        return jsonify({"ok": True, "status": r.status_code})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+# ──────────────── Daily Summary API (for n8n cron) ────────────────
+@pos_bp.route("/api/daily-summary")
+def api_daily_summary():
+    """n8n ເອີ້ນ endpoint ນີ້ທຸກ 18:30 ເພື່ອດຶງຍອດປະຈຳວັນ"""
+    api_key = Setting.get("n8n_api_key", "")
+    if api_key and request.args.get("key") != api_key:
+        return jsonify({"error": "unauthorized"}), 401
+
+    sel_date = request.args.get("date") or date.today().isoformat()
+    try:
+        d = date.fromisoformat(sel_date)
+    except ValueError:
+        d = date.today()
+
+    sales = Sale.query.filter(
+        func.date(Sale.created_at) == d,
+        Sale.voided == False
+    ).all()
+
+    total_revenue = sum(s.total for s in sales)
+    cash_total    = sum(s.total for s in sales if s.payment_type == "cash")
+    transfer_total = sum(s.total for s in sales if s.payment_type == "transfer")
+    debt_total    = sum(s.total for s in sales if s.payment_type == "debt")
+    debt_count    = sum(1 for s in sales if s.payment_type == "debt")
+
+    msg = (
+        f"📊 *ສະຫຼຸບຍອດ {d.strftime('%d/%m/%Y')}*\n"
+        f"{'─'*24}\n"
+        f"🧾 ບິນທັງໝົດ:   *{len(sales)} ບິນ*\n"
+        f"💰 ລາຍຮັບລວມ: *{total_revenue:,.0f} ₭*\n"
+        f"{'─'*24}\n"
+        f"  💵 ເງິນສົດ:     {cash_total:,.0f} ₭\n"
+        f"  📲 ໂອນເງິນ:    {transfer_total:,.0f} ₭\n"
+        f"  ⚠️  ຄ້າງຊຳລະ:  {debt_total:,.0f} ₭  ({debt_count} ບິນ)\n"
+        f"{'─'*24}"
+    )
+
+    return jsonify({
+        "event": "daily_summary",
+        "date": d.isoformat(),
+        "date_lao": d.strftime("%d/%m/%Y"),
+        "total_sales": len(sales),
+        "total_revenue": total_revenue,
+        "cash_total": cash_total,
+        "transfer_total": transfer_total,
+        "debt_total": debt_total,
+        "debt_count": debt_count,
+        "whatsapp_msg": msg,
+        "sales": [
+            {"sale_no": s.sale_no,
+             "total": s.total,
+             "payment_type": s.payment_type,
+             "customer": s.customer.name if s.customer else ""}
+            for s in sales
+        ]
+    })
