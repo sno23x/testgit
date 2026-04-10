@@ -24,7 +24,7 @@
     <div id="tab-wall" class="calc-tab">
       <div class="card border-0 shadow-sm">
         <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#92400e,#b45309);color:#fff;">
-          <i class="bi bi-bricks me-2"></i>ດິນຈີ່
+          <i class="bi bi-bricks me-2"></i>ຝາດິນຈີ່
         </div>
         <div class="card-body">
           <div class="row g-2">
@@ -43,8 +43,8 @@
             <div class="col-6">
               <label class="form-label small fw-semibold">ຄວາມໜາ ດິນຈີ່</label>
               <select id="w-thick" class="form-select" onchange="calcWall()">
-                <option value="half">ເຄິ່ງກ້ອນ (10 ຊມ.)</option>
-                <option value="full" selected>ໜຶ່ງກ້ອນ (20 ຊມ.)</option>
+                <option value="half">ເຄິ່ງກ້ອນ (8 ຊມ.)</option>
+                <option value="full" selected>ໜຶ່ງກ້ອນ (17 ຊມ.)</option>
               </select>
             </div>
           </div>
@@ -54,22 +54,22 @@
             <div class="row g-2 mt-1 p-2 bg-body-secondary rounded small">
               <div class="col-6">
                 <label class="form-label mb-0">ດິນຈີ່/ມ.² (ໜຶ່ງກ້ອນ)</label>
-                <input type="number" id="w-bricks-full" class="form-control form-control-sm" value="100" oninput="calcWall()"/>
+                <input type="number" id="w-bricks-full" class="form-control form-control-sm" value="60" oninput="calcWall()"/>
                 <label class="form-label mb-0 mt-1">ດິນຈີ່/ມ.² (ເຄິ່ງກ້ອນ)</label>
-                <input type="number" id="w-bricks-half" class="form-control form-control-sm" value="50" oninput="calcWall()"/>
+                <input type="number" id="w-bricks-half" class="form-control form-control-sm" value="120" oninput="calcWall()"/>
               </div>
               <div class="col-6">
-                <label class="form-label mb-0">ຊີມັງ (ຖົງ/ມ.²) ໜຶ່ງກ້ອນ</label>
-                <input type="number" id="w-cem-full" class="form-control form-control-sm" value="0.30" step="0.01" oninput="calcWall()"/>
-                <label class="form-label mb-0 mt-1">ຊາຍ (ມ.³/ມ.²) ໜຶ່ງກ້ອນ</label>
-                <input type="number" id="w-sand-full" class="form-control form-control-sm" value="0.06" step="0.01" oninput="calcWall()"/>
+                <label class="form-label mb-0">ຊີມັງ (ຖົງ/ມ.²) 1 ຖົງ</label>
+                <input type="number" id="w-cem-full" class="form-control form-control-sm" value="0.12" step="0.01" oninput="calcWall()"/>
+                <label class="form-label mb-0 mt-1">ຊາຍ (ມ.³/ມ.²) 1 ມ.³</label>
+                <input type="number" id="w-sand-full" class="form-control form-control-sm" value="0.017" step="0.01" oninput="calcWall()"/>
               </div>
             </div>
           </details>
           <!-- Diagram -->
           <div class="text-center mt-2">
             <svg width="180" height="110" viewBox="0 0 180 110">
-              <rect x="5" y="5" width="170" height="100" fill="#fef3c7" stroke="#92400e" stroke-width="2" rx="3"/>
+              <rect x="5" y="5" width="170" height="100" fill="#e66e49" stroke="#92400e" stroke-width="2" rx="3"/>
               <g stroke="#b45309" stroke-width="0.5" fill="none" opacity="0.5">
                 <rect x="8" y="8" width="40" height="14"/><rect x="51" y="8" width="40" height="14"/><rect x="94" y="8" width="40" height="14"/><rect x="137" y="8" width="38" height="14"/>
                 <rect x="8" y="25" width="20" height="14"/><rect x="31" y="25" width="40" height="14"/><rect x="74" y="25" width="40" height="14"/><rect x="117" y="25" width="40" height="14"/><rect x="160" y="25" width="15" height="14"/>
@@ -277,7 +277,7 @@
     <div id="tab-block" class="calc-tab d-none">
       <div class="card border-0 shadow-sm">
         <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#475569,#334155);color:#fff;">
-          <i class="bi bi-square me-2"></i>ກຳແພງ / ຜະໜັງດິນບັອກ
+          <i class="bi bi-square me-2"></i>ກຳແພງ / ຝາດິນບັອກ
         </div>
         <div class="card-body">
           <div class="row g-2">
@@ -594,7 +594,7 @@ function calcWall() {
   const cem = Math.ceil(area * cemRate * 1.1);
   const sandN = area * sandRate;
   renderResult('ຝາດິນຈີ່', area, 'bi bi-bricks', '#92400e', [
-    {label:'ດິນຈີ່', value:bricks.toLocaleString(), numValue:bricks, unit:'ກ້ອນ', note:'+5% ສຳຮອງ'},
+    {label:'ຜະໜັງດິນຈີ່', value:bricks.toLocaleString(), numValue:bricks, unit:'ກ້ອນ', note:'+5% ສຳຮອງ'},
     {label:'ຊີມັງ', value:cem.toLocaleString(), numValue:cem, unit:'ຖົງ (50 ກກ.)'},
     {label:'ຊາຍ', value:sandN.toFixed(2), numValue:sandN, unit:'ມ.³'},
   ]);
