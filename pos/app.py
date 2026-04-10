@@ -118,6 +118,7 @@ def run_migrations(app):
                 unit_price FLOAT DEFAULT 0,
                 subtotal FLOAT DEFAULT 0
             )""",
+            "ALTER TABLE quotations ADD COLUMN sale_id INTEGER REFERENCES sales(id)",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:

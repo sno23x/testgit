@@ -24,6 +24,15 @@
     </button>
   </form>
   {% endif %}
+  {% if qt.status != 'cancelled' %}
+  <form action="{{ url_for('quotations.cancel_quotation', qid=qt.id) }}" method="POST" class="d-inline"
+        onsubmit="return confirm('ຢືນຢັນຍົກເລີກໃບສະເໜີ {{ qt.quote_no }}?{% if qt.sale_id %}\n⚠ ບິນທີ່ສ້າງຈາກໃບສະເໜີນີ້ຈະຖືກຍົກເລີກ ແລະ ສິນຄ້າຈະກັບຄືນ stock ທັນທີ{% endif %}')">
+    <button type="submit" class="btn btn-danger rounded-pill">
+      <i class="bi bi-x-circle me-1"></i>ຍົກເລີກ
+    </button>
+  </form>
+  {% endif %}
+  {% if qt.status != 'cancelled' %}
   <form action="{{ url_for('quotations.update_status', qid=qt.id) }}" method="POST" class="d-flex gap-2">
     <select name="status" class="form-select form-select-sm" style="width:auto;">
       <option value="draft" {{ 'selected' if qt.status=='draft' }}>ຮ່າງ</option>
@@ -33,6 +42,7 @@
     </select>
     <button type="submit" class="btn btn-sm btn-primary rounded-pill">ອັບເດດສະຖານະ</button>
   </form>
+  {% endif %}
 </div>
 
 <!-- Printable quotation -->
@@ -54,7 +64,8 @@
           {% if qt.status == 'draft' %}<span class="badge bg-secondary">ຮ່າງ</span>
           {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
           {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
-          {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>{% endif %}
+          {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>
+          {% elif qt.status == 'cancelled' %}<span class="badge bg-dark">ຍົກເລີກ</span>{% endif %}
         </div>
       </div>
     </div>
