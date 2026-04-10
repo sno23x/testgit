@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date as date_type
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -202,6 +202,56 @@ class SalaryAdvance(db.Model):
     repaid_at = db.Column(db.DateTime, nullable=True)
     note = db.Column(db.Text, default="")
     employee = db.relationship("Employee")
+
+
+class StockIn(db.Model):
+    """ປະຫວັດການຮັບສິນຄ້າເຂົ້າ stock"""
+    __tablename__ = "stock_ins"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    qty = db.Column(db.Float, nullable=False)
+    cost_price = db.Column(db.Float, default=0)
+    supplier = db.Column(db.String(200), default="")
+    note = db.Column(db.Text, default="")
+    date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    product = db.relationship("Product", backref="stock_ins")
+    creator = db.relationship("Employee", foreign_keys=[created_by])
+
+
+class Quotation(db.Model):
+    """ໃບສະເໜີລາຄາ"""
+    __tablename__ = "quotations"
+    id = db.Column(db.Integer, primary_key=True)
+    quote_no = db.Column(db.String(30), unique=True, nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
+    customer_name = db.Column(db.String(200), default="")
+    date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    valid_days = db.Column(db.Integer, default=30)
+    status = db.Column(db.String(20), default="draft")  # draft/sent/accepted/rejected
+    subtotal = db.Column(db.Float, default=0)
+    discount = db.Column(db.Float, default=0)
+    total = db.Column(db.Float, default=0)
+    note = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    items = db.relationship("QuotationItem", backref="quotation", lazy=True, cascade="all, delete-orphan")
+    customer = db.relationship("Customer")
+    creator = db.relationship("Employee", foreign_keys=[created_by])
+
+
+class QuotationItem(db.Model):
+    __tablename__ = "quotation_items"
+    id = db.Column(db.Integer, primary_key=True)
+    quotation_id = db.Column(db.Integer, db.ForeignKey("quotations.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    description = db.Column(db.String(300), default="")
+    unit = db.Column(db.String(50), default="")
+    qty = db.Column(db.Float, default=1)
+    unit_price = db.Column(db.Float, default=0)
+    subtotal = db.Column(db.Float, default=0)
+    product = db.relationship("Product")
 
 
 class PayrollRecord(db.Model):

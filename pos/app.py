@@ -16,6 +16,9 @@ from blueprints.settings import settings_bp
 from blueprints.import_data import import_bp
 from blueprints.payroll import payroll_bp
 from blueprints.salary_advance import salary_advance_bp
+from blueprints.stock_in import stock_in_bp
+from blueprints.quotations import quotations_bp
+from blueprints.calculator import calculator_bp
 
 login_manager = LoginManager()
 
@@ -46,6 +49,9 @@ def create_app():
     app.register_blueprint(import_bp, url_prefix="/import")
     app.register_blueprint(payroll_bp, url_prefix="/payroll")
     app.register_blueprint(salary_advance_bp, url_prefix="/salary-advance")
+    app.register_blueprint(stock_in_bp, url_prefix="/stock-in")
+    app.register_blueprint(quotations_bp, url_prefix="/quotations")
+    app.register_blueprint(calculator_bp, url_prefix="/calculator")
 
     @app.route("/")
     def index():
@@ -72,6 +78,43 @@ def run_migrations(app):
             "ALTER TABLE sales ADD COLUMN voided INTEGER DEFAULT 0",
             "ALTER TABLE sales ADD COLUMN voided_at DATETIME",
             "ALTER TABLE sales ADD COLUMN voided_by INTEGER",
+            "ALTER TABLE customers ADD COLUMN map_url VARCHAR(500) DEFAULT ''",
+            """CREATE TABLE IF NOT EXISTS stock_ins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER NOT NULL REFERENCES products(id),
+                qty FLOAT NOT NULL,
+                cost_price FLOAT DEFAULT 0,
+                supplier VARCHAR(200) DEFAULT '',
+                note TEXT DEFAULT '',
+                date DATE,
+                created_at DATETIME,
+                created_by INTEGER REFERENCES employees(id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS quotations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                quote_no VARCHAR(30) UNIQUE NOT NULL,
+                customer_id INTEGER REFERENCES customers(id),
+                customer_name VARCHAR(200) DEFAULT '',
+                date DATE,
+                valid_days INTEGER DEFAULT 30,
+                status VARCHAR(20) DEFAULT 'draft',
+                subtotal FLOAT DEFAULT 0,
+                discount FLOAT DEFAULT 0,
+                total FLOAT DEFAULT 0,
+                note TEXT DEFAULT '',
+                created_at DATETIME,
+                created_by INTEGER REFERENCES employees(id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS quotation_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                quotation_id INTEGER NOT NULL REFERENCES quotations(id),
+                product_id INTEGER REFERENCES products(id),
+                description VARCHAR(300) DEFAULT '',
+                unit VARCHAR(50) DEFAULT '',
+                qty FLOAT DEFAULT 1,
+                unit_price FLOAT DEFAULT 0,
+                subtotal FLOAT DEFAULT 0
+            )""",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:

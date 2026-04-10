@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
-from models import db, Sale, SaleItem, Product, Customer
+from models import db, Sale, SaleItem, Product, Customer, Category
 import io, openpyxl
 
 reports_bp = Blueprint("reports", __name__)
@@ -129,3 +129,84 @@ def export_excel():
     buf.seek(0)
     return send_file(buf, as_attachment=True, download_name=filename,
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+@reports_bp.route("/margin")
+@login_required
+def margin_report():
+    if not current_user.is_accountant():
+        flash("ສິດທິ admin ຫຼື accountant ເທົ່ານັ້ນ", "danger")
+        return redirect(url_for("pos.pos_page"))
+
+    cat_id = request.args.get("cat", "")
+    q = request.args.get("q", "")
+
+    # Average sale price per product from actual sales (non-voided)
+    avg_prices = db.session.query(
+        SaleItem.product_id,
+        func.avg(SaleItem.unit_price).label("avg_price"),
+        func.sum(SaleItem.qty).label("total_qty"),
+        func.sum(SaleItem.subtotal).label("total_revenue"),
+    ).join(Sale, Sale.id == SaleItem.sale_id)\
+     .filter(Sale.voided == False)\
+     .group_by(SaleItem.product_id).all()
+
+    avg_map = {r.product_id: r for r in avg_prices}
+
+    pq = Product.query.filter_by(active=True)
+    if cat_id:
+        pq = pq.filter_by(category_id=int(cat_id))
+    if q:
+        pq = pq.filter(Product.name.ilike(f"%{q}%"))
+    products = pq.order_by(Product.name).all()
+    categories = Category.query.order_by(Category.name).all()
+
+    rows = []
+    for p in products:
+        rec = avg_map.get(p.id)
+        avg_sale = rec.avg_price if rec else None
+        total_rev = rec.total_revenue if rec else 0
+        total_qty = rec.total_qty if rec else 0
+        cost = p.cost_price or 0
+        if avg_sale and avg_sale > 0:
+            margin_pct = (avg_sale - cost) / avg_sale * 100
+            margin_lak = avg_sale - cost
+        else:
+            margin_pct = None
+            margin_lak = None
+        rows.append({
+            "product": p,
+            "cost_price": cost,
+            "avg_sale_price": avg_sale,
+            "margin_pct": margin_pct,
+            "margin_lak": margin_lak,
+            "total_qty": total_qty,
+            "total_revenue": total_rev,
+        })
+
+    # Sort by margin_pct descending (None last)
+    rows.sort(key=lambda r: (r["margin_pct"] is None, -(r["margin_pct"] or 0)))
+
+    if request.args.get("export") == "1":
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Margin Report"
+        ws.append(["ສິນຄ້າ", "ຫົວໜ່ວຍ", "ຕ້ນທຶນ (ກີບ)", "ລາຄາຂາຍ (ສ.ລ.)", "ກຳໄລ/ຫົວໜ່ວຍ", "Margin %", "ຍອດຂາຍ"])
+        for r in rows:
+            ws.append([
+                r["product"].name,
+                r["product"].unit,
+                r["cost_price"],
+                round(r["avg_sale_price"], 0) if r["avg_sale_price"] else "",
+                round(r["margin_lak"], 0) if r["margin_lak"] is not None else "",
+                round(r["margin_pct"], 2) if r["margin_pct"] is not None else "",
+                round(r["total_revenue"], 0) if r["total_revenue"] else "",
+            ])
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return send_file(buf, as_attachment=True, download_name="margin_report.xlsx",
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    return render_template("reports/margin.html", rows=rows, categories=categories,
+                           cat_id=cat_id, q=q)

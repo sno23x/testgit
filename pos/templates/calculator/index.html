@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+{% block title %}ຄຳນວນວັດສະດຸ{% endblock %}
+{% block page_title %}ຄຳນວນວັດສະດຸກໍ່ສ້າງ (2D){% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- Calculator tabs -->
+  <div class="col-12">
+    <ul class="nav nav-pills gap-2 mb-3 flex-wrap" id="calcTabs">
+      <li class="nav-item"><button class="nav-link active" onclick="showTab('wall')"><i class="bi bi-bricks me-1"></i>ຝາດິນຈີ່</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('slab')"><i class="bi bi-layout-wtf me-1"></i>ພື້ນ/ຫລັງຄາຄອນກີດ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('plaster')"><i class="bi bi-paint-bucket me-1"></i>ສ oi ດ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('tile')"><i class="bi bi-grid me-1"></i>ປູກະເບື້ອງ</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="showTab('paint')"><i class="bi bi-palette me-1"></i>ທາສີ</button></li>
+    </ul>
+  </div>
+
+  <div class="col-lg-5">
+    <!-- Brick Wall Tab -->
+    <div id="tab-wall" class="calc-tab">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#92400e,#b45309);color:#fff;">
+          <i class="bi bi-bricks me-2"></i>ຄຳນວນຝາດິນຈີ່
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມກວ້າງ (ມ.)</label>
+              <input type="number" id="w-width" class="form-control" value="5" min="0.1" step="0.1" oninput="calcWall()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມສູງ (ມ.)</label>
+              <input type="number" id="w-height" class="form-control" value="3" min="0.1" step="0.1" oninput="calcWall()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຮາຍລ້ອມຊ່ອງ (ໃນ ມ.²)</label>
+              <input type="number" id="w-void" class="form-control" value="0" min="0" step="0.1" placeholder="ປະຕູ+ປ່ອງຢ້ຽມ" oninput="calcWall()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມຫນາ ດິນຈີ່</label>
+              <select id="w-thick" class="form-select" onchange="calcWall()">
+                <option value="0.1">ເຄິ່ງກ້ອນ (10 ຊມ.)</option>
+                <option value="0.2" selected>ໜຶ່ງກ້ອນ (20 ຊມ.)</option>
+              </select>
+            </div>
+          </div>
+          <!-- Diagram -->
+          <div class="text-center my-3">
+            <svg width="200" height="130" viewBox="0 0 200 130">
+              <rect x="10" y="10" width="180" height="110" fill="#fef3c7" stroke="#92400e" stroke-width="2" rx="3"/>
+              <line x1="10" y1="65" x2="190" y2="65" stroke="#92400e" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <line x1="100" y1="10" x2="100" y2="120" stroke="#92400e" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <!-- Dimension arrows -->
+              <text x="100" y="8" text-anchor="middle" font-size="10" fill="#92400e">ກວ້າງ (W)</text>
+              <text x="5" y="65" text-anchor="end" font-size="10" fill="#92400e" transform="rotate(-90,5,65)">ສູງ (H)</text>
+              <!-- Brick pattern -->
+              <g stroke="#b45309" stroke-width="0.5" fill="none" opacity="0.4">
+                <rect x="15" y="15" width="40" height="15"/><rect x="58" y="15" width="40" height="15"/>
+                <rect x="101" y="15" width="40" height="15"/><rect x="144" y="15" width="42" height="15"/>
+                <rect x="15" y="33" width="20" height="15"/><rect x="38" y="33" width="40" height="15"/>
+                <rect x="81" y="33" width="40" height="15"/><rect x="124" y="33" width="40" height="15"/>
+                <rect x="167" y="33" width="20" height="15"/>
+              </g>
+              <text x="100" y="88" text-anchor="middle" font-size="11" fill="#92400e" font-weight="bold">W × H</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concrete Slab Tab -->
+    <div id="tab-slab" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#374151,#1f2937);color:#fff;">
+          <i class="bi bi-layout-wtf me-2"></i>ຄຳນວນພື້ນ/ຫລັງຄາ
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມຍາວ (ມ.)</label>
+              <input type="number" id="s-length" class="form-control" value="6" min="0.1" step="0.1" oninput="calcSlab()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມກວ້າງ (ມ.)</label>
+              <input type="number" id="s-width" class="form-control" value="4" min="0.1" step="0.1" oninput="calcSlab()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມໜາ (ຊມ.)</label>
+              <input type="number" id="s-thick" class="form-control" value="12" min="5" step="1" oninput="calcSlab()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ອັດຕາສ່ວນ (Ratio)</label>
+              <select id="s-ratio" class="form-select" onchange="calcSlab()">
+                <option value="1-2-3">1:2:3 (ທົ່ວໄປ)</option>
+                <option value="1-2-4" selected>1:2:4 (ມາດຕະຖານ)</option>
+                <option value="1-3-6">1:3:6 (ເນື້ອທີ່ໜ້ອຍ)</option>
+              </select>
+            </div>
+          </div>
+          <div class="text-center my-3">
+            <svg width="200" height="120" viewBox="0 0 200 120">
+              <rect x="10" y="10" width="180" height="80" fill="#e5e7eb" stroke="#374151" stroke-width="2" rx="3"/>
+              <rect x="10" y="80" width="180" height="20" fill="#9ca3af" stroke="#374151" stroke-width="2"/>
+              <line x1="10" y1="5" x2="190" y2="5" stroke="#374151" stroke-width="1"/>
+              <line x1="10" y1="4" x2="10" y2="10" stroke="#374151" stroke-width="1"/>
+              <line x1="190" y1="4" x2="190" y2="10" stroke="#374151" stroke-width="1"/>
+              <text x="100" y="4" text-anchor="middle" font-size="10" fill="#374151">ຄວາມຍາວ (L)</text>
+              <text x="100" y="50" text-anchor="middle" font-size="11" fill="#374151" font-weight="bold">L × W × T</text>
+              <text x="100" y="95" text-anchor="middle" font-size="10" fill="#fff">ຄວາມໜາ (T)</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plaster Tab -->
+    <div id="tab-plaster" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;">
+          <i class="bi bi-paint-bucket me-2"></i>ຄຳນວນ ສ oi ດ
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມກວ້າງ (ມ.)</label>
+              <input type="number" id="p-width" class="form-control" value="5" min="0.1" step="0.1" oninput="calcPlaster()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມສູງ (ມ.)</label>
+              <input type="number" id="p-height" class="form-control" value="3" min="0.1" step="0.1" oninput="calcPlaster()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມໜາ (ຊມ.)</label>
+              <select id="p-thick" class="form-select" onchange="calcPlaster()">
+                <option value="1">1 ຊມ. (ບາງ)</option>
+                <option value="1.5" selected>1.5 ຊມ. (ມາດຕະຖານ)</option>
+                <option value="2">2 ຊມ. (ໜາ)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ອັດຕາສ່ວນ</label>
+              <select id="p-ratio" class="form-select" onchange="calcPlaster()">
+                <option value="1-3">1:3 (ທົ່ວໄປ)</option>
+                <option value="1-4" selected>1:4 (ໜ້ອຍ)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tile Tab -->
+    <div id="tab-tile" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;">
+          <i class="bi bi-grid me-2"></i>ຄຳນວນປູກະເບື້ອງ
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມຍາວຫ້ອງ (ມ.)</label>
+              <input type="number" id="t-length" class="form-control" value="5" min="0.1" step="0.1" oninput="calcTile()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຄວາມກວ້າງຫ້ອງ (ມ.)</label>
+              <input type="number" id="t-width" class="form-control" value="4" min="0.1" step="0.1" oninput="calcTile()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຂະໜາດກະເບື້ອງ (ຊມ.)</label>
+              <select id="t-size" class="form-select" onchange="calcTile()">
+                <option value="0.30">30×30</option>
+                <option value="0.40" selected>40×40</option>
+                <option value="0.60">60×60</option>
+                <option value="0.80">80×80</option>
+                <option value="1.00">100×100</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຕົວ % ເຜື່ອ</label>
+              <select id="t-waste" class="form-select" onchange="calcTile()">
+                <option value="5">5%</option>
+                <option value="10" selected>10%</option>
+                <option value="15">15%</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paint Tab -->
+    <div id="tab-paint" class="calc-tab d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;">
+          <i class="bi bi-palette me-2"></i>ຄຳນວນທາສີ
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ເນື້ອທີ່ທາ (ມ.²)</label>
+              <input type="number" id="pt-area" class="form-control" value="50" min="1" step="1" oninput="calcPaint()"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ຈຳນວນຊັ້ນທາ</label>
+              <select id="pt-coats" class="form-select" onchange="calcPaint()">
+                <option value="1">1 ຊັ້ນ</option>
+                <option value="2" selected>2 ຊັ້ນ</option>
+                <option value="3">3 ຊັ້ນ</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ປະເພດສີ</label>
+              <select id="pt-type" class="form-select" onchange="calcPaint()">
+                <option value="10">ສີນ້ຳ (10 ມ.²/ລ.)</option>
+                <option value="8">ສີນ້ຳມັນ (8 ມ.²/ລ.)</option>
+                <option value="12">ສີທາດ/Primer (12 ມ.²/ລ.)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results panel -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header fw-bold py-2" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;">
+        <i class="bi bi-clipboard-data me-2"></i>ຜົນການຄຳນວນ
+      </div>
+      <div class="card-body" id="resultPanel">
+        <p class="text-center text-muted mt-4"><i class="bi bi-calculator fs-1 d-block mb-2 opacity-25"></i>ຂໍ້ມູນຈະສະແດງທີ່ນີ້</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Price estimate section (optional) -->
+{% if products %}
+<div class="card border-0 shadow-sm mt-3">
+  <div class="card-header fw-bold py-2">
+    <i class="bi bi-tags me-2"></i>ລາຄາສິນຄ້າ (ອ້າງອີງ)
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>ສິນຄ້າ</th><th>ຫົວໜ່ວຍ</th><th class="text-end">ລາຄາ (ກີບ)</th></tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td class="small fw-semibold">{{ p.name }}</td>
+          <td class="small text-muted">{{ p.unit }}</td>
+          <td class="text-end small">{{ "{:,.0f}".format(p.price) if p.price else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(name) {
+  document.querySelectorAll('.calc-tab').forEach(t => t.classList.add('d-none'));
+  document.getElementById('tab-' + name).classList.remove('d-none');
+  document.querySelectorAll('#calcTabs .nav-link').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  // auto-calc
+  const fns = {wall:calcWall, slab:calcSlab, plaster:calcPlaster, tile:calcTile, paint:calcPaint};
+  if (fns[name]) fns[name]();
+}
+
+function renderResult(title, area, icon, items, color) {
+  color = color || '#16a34a';
+  let rows = items.map(it => `
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div>
+        <div class="fw-semibold">${it.label}</div>
+        ${it.note ? `<div class="small text-muted">${it.note}</div>` : ''}
+      </div>
+      <div class="text-end">
+        <span class="badge rounded-pill fs-6" style="background:${color};">${it.value}</span>
+        <div class="small text-muted">${it.unit}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="${icon} fs-4" style="color:${color}"></i>
+      <div>
+        <div class="fw-bold">${title}</div>
+        <div class="small text-muted">ເນື້ອທີ່: <strong>${area.toFixed(2)} ມ.²</strong></div>
+      </div>
+    </div>
+    ${rows}
+    <div class="alert alert-warning small mt-3 mb-0 py-2">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      ຕົວເລກດ້ານເທິງເປັນຄ່າໂດຍປະມານ. ຄວນເພີ່ມ 10–15% ສຳຫຼັບຂ້ອຍ/ສູນຫາຍ.
+    </div>`;
+}
+
+function calcWall() {
+  const W = parseFloat(document.getElementById('w-width').value)||0;
+  const H = parseFloat(document.getElementById('w-height').value)||0;
+  const vd = parseFloat(document.getElementById('w-void').value)||0;
+  const thick = parseFloat(document.getElementById('w-thick').value)||0.2;
+  const area = Math.max(0, W * H - vd);
+  if (!area) return;
+
+  // per m², 1 brick = 10×20×5 cm → 50 bricks/m² (half brick) or 100 (full)
+  const bricksPerM2 = thick < 0.15 ? 50 : 100;
+  const bricks = Math.ceil(area * bricksPerM2 * 1.05); // +5% waste
+  // Mortar: ~0.03 m³ sand, 0.15 bag cement per m² (half) or 0.3 bag (full)
+  const cementBags = Math.ceil(area * (thick < 0.15 ? 0.15 : 0.3) * 1.1);
+  const sandM3 = (area * (thick < 0.15 ? 0.03 : 0.06)).toFixed(2);
+  const waterL = Math.ceil(cementBags * 25);
+
+  renderResult('ຝາດິນຈີ່', area, 'bi bi-bricks', [
+    {label:'ດິນຈີ່', value:bricks.toLocaleString(), unit:'ກ້ອນ', note:`(+5% ສຳຮອງ)`},
+    {label:'ຊີມັງ', value:cementBags.toLocaleString(), unit:'ຖົງ (50ກກ)', note:'ໃສ່ຮ່ວມດ້ວຍ mortar'},
+    {label:'ຊາຍ', value:sandM3, unit:'ມ.³'},
+    {label:'ນ້ຳ (ໂດຍປະມານ)', value:waterL.toLocaleString(), unit:'ລິດ'},
+  ], '#92400e');
+}
+
+function calcSlab() {
+  const L = parseFloat(document.getElementById('s-length').value)||0;
+  const W = parseFloat(document.getElementById('s-width').value)||0;
+  const T = (parseFloat(document.getElementById('s-thick').value)||12) / 100;
+  const ratioStr = document.getElementById('s-ratio').value; // e.g. "1-2-4"
+  const parts = ratioStr.split('-').map(Number);
+  const total = parts.reduce((a,b) => a+b, 0);
+
+  const vol = L * W * T * 1.54; // dry factor 1.54
+  const area = L * W;
+  if (!area) return;
+
+  const cementM3 = vol * (parts[0]/total);
+  const cementBags = Math.ceil(cementM3 / 0.035); // 1 bag = 0.035 m³
+  const sandM3 = (vol * (parts[1]/total)).toFixed(2);
+  const gravelM3 = parts[2] ? (vol * (parts[2]/total)).toFixed(2) : null;
+  const waterL = Math.ceil(cementBags * 28);
+
+  const items = [
+    {label:'ຊີມັງ', value:cementBags.toLocaleString(), unit:'ຖົງ (50ກກ)'},
+    {label:'ຊາຍ', value:sandM3, unit:'ມ.³'},
+  ];
+  if (gravelM3) items.push({label:'ຫີນ', value:gravelM3, unit:'ມ.³'});
+  items.push({label:'ນ້ຳ (ໂດຍປະມານ)', value:waterL.toLocaleString(), unit:'ລິດ'});
+
+  renderResult(`ພື້ນ/ຫລັງຄາ (${ratioStr.replace(/-/g,':')})`, area, 'bi bi-layout-wtf', items, '#374151');
+}
+
+function calcPlaster() {
+  const W = parseFloat(document.getElementById('p-width').value)||0;
+  const H = parseFloat(document.getElementById('p-height').value)||0;
+  const T = (parseFloat(document.getElementById('p-thick').value)||1.5) / 100;
+  const ratioStr = document.getElementById('p-ratio').value;
+  const parts = ratioStr.split('-').map(Number);
+  const total = parts.reduce((a,b) => a+b, 0);
+
+  const area = W * H;
+  if (!area) return;
+  const vol = area * T * 1.3;
+  const cementM3 = vol * (parts[0]/total);
+  const cementBags = Math.ceil(cementM3 / 0.035);
+  const sandM3 = (vol * (parts[1]/total)).toFixed(2);
+
+  renderResult('ສ oi ດ (Plaster)', area, 'bi bi-paint-bucket', [
+    {label:'ຊີມັງ', value:cementBags.toLocaleString(), unit:'ຖົງ (50ກກ)'},
+    {label:'ຊາຍ', value:sandM3, unit:'ມ.³'},
+  ], '#0891b2');
+}
+
+function calcTile() {
+  const L = parseFloat(document.getElementById('t-length').value)||0;
+  const W = parseFloat(document.getElementById('t-width').value)||0;
+  const sz = parseFloat(document.getElementById('t-size').value)||0.4;
+  const waste = (parseInt(document.getElementById('t-waste').value)||10) / 100;
+
+  const area = L * W;
+  if (!area) return;
+  const tileArea = sz * sz;
+  const tiles = Math.ceil(area / tileArea * (1 + waste));
+  const boxes = Math.ceil(tiles / Math.floor(1 / tileArea)); // ~tiles per box varies
+
+  renderResult(`ກະເບື້ອງ ${(sz*100).toFixed(0)}×${(sz*100).toFixed(0)} ຊມ.`, area, 'bi bi-grid', [
+    {label:'ກະເບື້ອງ', value:tiles.toLocaleString(), unit:'ແຜ່ນ', note:`(+${(waste*100).toFixed(0)}% ເຜື່ອ)`},
+    {label:'ຊີມັງ ທີ ຕໍ່ (ຕ.ກ.)', value:Math.ceil(area * 1.2).toLocaleString(), unit:'ກ.ກ.'},
+    {label:'ຊາຍ', value:(area * 0.02).toFixed(2), unit:'ມ.³'},
+    {label:'ໄລ (Grout)', value:Math.ceil(area * 0.3).toLocaleString(), unit:'ກ.ກ.'},
+  ], '#0d9488');
+}
+
+function calcPaint() {
+  const area = parseFloat(document.getElementById('pt-area').value)||0;
+  const coats = parseInt(document.getElementById('pt-coats').value)||2;
+  const coverage = parseInt(document.getElementById('pt-type').value)||10;
+
+  if (!area) return;
+  const totalArea = area * coats;
+  const liters = Math.ceil(totalArea / coverage);
+  const gallons = (liters / 3.785).toFixed(1);
+  const cans18 = Math.ceil(liters / 18);
+  const cans1 = Math.ceil((liters % 18) / 1);
+
+  renderResult('ທາສີ', area, 'bi bi-palette', [
+    {label:'ປະລິມານສີ', value:liters.toLocaleString(), unit:'ລິດ', note:`${coats} ຊັ້ນ / ${coverage} ມ.²/ລ.`},
+    {label:'ກ້ອນ 18 ລິດ', value:cans18.toLocaleString(), unit:'ກ້ອນ'},
+    {label:'ຈຳນວນ (ກ.ລ.ອ.)', value:gallons, unit:'ແກ້ລ.ລ.ອ.'},
+  ], '#7c3aed');
+}
+
+// Initial calc
+calcWall();
+</script>
+{% endblock %}

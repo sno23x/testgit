@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}ຮັບສິນຄ້າເຂົ້າ{% endblock %}
+{% block page_title %}ຮັບສິນຄ້າເຂົ້າ Stock{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- Left: Product search -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body pb-2">
+        <div class="input-group mb-3">
+          <span class="input-group-text" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:0;">
+            <i class="bi bi-box-seam"></i>
+          </span>
+          <input type="text" id="productSearch" class="form-control form-control-lg fw-semibold"
+                 placeholder="ຄົ້ນຫາສິນຄ້າທີ່ຈະຮັບເຂົ້າ..." autocomplete="off" autofocus
+                 style="font-size:1rem;"/>
+        </div>
+        <div id="searchResults" style="max-height:55vh;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Receive list -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center py-2"
+           style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;">
+        <span class="fw-bold"><i class="bi bi-clipboard-plus me-2"></i>ລາຍການຮັບເຂົ້າ</span>
+        <button class="btn btn-sm btn-outline-light" onclick="clearAll()"><i class="bi bi-trash"></i></button>
+      </div>
+      <div class="flex-grow-1 overflow-auto p-2" id="receiveItems" style="min-height:200px;max-height:40vh;"></div>
+      <div class="card-footer p-3">
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">ຜູ້ສະໜອງ</label>
+            <input type="text" id="supplierInput" class="form-control form-control-sm" placeholder="ຊື່ຜູ້ຂາຍ..."/>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">ໝາຍເຫດ</label>
+            <input type="text" id="noteInput" class="form-control form-control-sm" placeholder="ໝາຍເຫດ..."/>
+          </div>
+        </div>
+        <button class="btn btn-success w-100 fw-bold" onclick="submitReceive()">
+          <i class="bi bi-check-circle me-2"></i>ຢືນຢັນຮັບສິນຄ້າເຂົ້າ Stock
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let items = [];
+let searchTimer;
+
+document.getElementById('productSearch').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (!q) { document.getElementById('searchResults').innerHTML = ''; return; }
+  searchTimer = setTimeout(() => searchProducts(q), 280);
+});
+
+function searchProducts(q) {
+  fetch(`/pos/search?q=${encodeURIComponent(q)}`)
+    .then(r => r.json()).then(products => {
+      const div = document.getElementById('searchResults');
+      if (!products.length) { div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>'; return; }
+      div.innerHTML = products.map(p => `
+        <div class="d-flex align-items-center gap-3 p-2 rounded mb-1 border"
+             style="cursor:pointer;" onclick='addItem(${JSON.stringify(p)})'>
+          <div class="flex-grow-1">
+            <div class="fw-semibold small">${p.name}</div>
+            <small class="text-muted">Stock ປັດຈຸບັນ: ${p.stock_qty} ${p.unit}</small>
+          </div>
+          <i class="bi bi-plus-circle text-success fs-5"></i>
+        </div>`).join('');
+    });
+}
+
+function addItem(p) {
+  const existing = items.find(i => i.product_id === p.id);
+  if (existing) { existing.qty += 1; }
+  else {
+    items.push({ product_id: p.id, name: p.name, unit: p.unit, qty: 1, cost_price: 0 });
+  }
+  renderItems();
+  document.getElementById('productSearch').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('productSearch').focus();
+}
+
+function renderItems() {
+  const div = document.getElementById('receiveItems');
+  if (!items.length) {
+    div.innerHTML = '<p class="text-center text-muted small mt-4"><i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>ຍັງບໍ່ມີລາຍການ</p>';
+    return;
+  }
+  div.innerHTML = items.map((it, i) => `
+    <div class="border rounded p-2 mb-2">
+      <div class="d-flex justify-content-between align-items-start mb-1">
+        <span class="fw-semibold small">${it.name}</span>
+        <button class="btn btn-sm text-danger p-0" onclick="removeItem(${i})"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="row g-1">
+        <div class="col-6">
+          <label class="form-label small mb-0">ຈຳນວນ (${it.unit})</label>
+          <input type="number" class="form-control form-control-sm" value="${it.qty}" min="0.01" step="1"
+                 oninput="updateQty(${i}, this.value)"/>
+        </div>
+        <div class="col-6">
+          <label class="form-label small mb-0">ລາຄາຕົ້ນທຶນ (ກີບ)</label>
+          <input type="number" class="form-control form-control-sm" value="${it.cost_price}" min="0" step="100"
+                 oninput="updateCost(${i}, this.value)"/>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function updateQty(i, v) { items[i].qty = parseFloat(v) || 0; }
+function updateCost(i, v) { items[i].cost_price = parseFloat(v) || 0; }
+function removeItem(i) { items.splice(i, 1); renderItems(); }
+function clearAll() { items = []; renderItems(); }
+
+function submitReceive() {
+  if (!items.length) { alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
+  const hasQty = items.every(i => i.qty > 0);
+  if (!hasQty) { alert('ກະລຸນາໃສ່ຈຳນວນໃຫ້ຄົບ'); return; }
+  fetch('/stock-in/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items,
+      supplier: document.getElementById('supplierInput').value,
+      note: document.getElementById('noteInput').value,
+    }),
+  }).then(r => r.json()).then(d => {
+    if (d.ok) { alert('ຮັບສິນຄ້າເຂົ້າ Stock ສຳເລັດ!'); window.location.href = '/stock-in/'; }
+    else { alert(d.error || 'ເກີດຂໍ້ຜິດພາດ'); }
+  });
+}
+
+renderItems();
+</script>
+{% endblock %}

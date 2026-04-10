@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}ສ້າງໃບສະເໜີລາຄາ{% endblock %}
+{% block page_title %}ສ້າງໃບສະເໜີລາຄາ{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- Left: product search -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body pb-2">
+        <div class="input-group mb-3">
+          <span class="input-group-text" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:0;">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" id="productSearch" class="form-control form-control-lg fw-semibold"
+                 placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off" autofocus style="font-size:1rem;"/>
+        </div>
+        <div id="searchResults" style="max-height:50vh;overflow-y:auto;"></div>
+
+        <!-- Manual item -->
+        <div class="border rounded p-2 mt-2 bg-light">
+          <div class="small fw-semibold text-muted mb-2"><i class="bi bi-pencil-square me-1"></i>ເພີ່ມລາຍການດ້ວຍມື</div>
+          <div class="row g-1">
+            <div class="col-12 col-sm-5">
+              <input type="text" id="manualDesc" class="form-control form-control-sm" placeholder="ລາຍລະອຽດ..."/>
+            </div>
+            <div class="col-4 col-sm-2">
+              <input type="text" id="manualUnit" class="form-control form-control-sm" placeholder="ຫົວໜ່ວຍ"/>
+            </div>
+            <div class="col-4 col-sm-2">
+              <input type="number" id="manualQty" class="form-control form-control-sm" placeholder="ຈຳນວນ" value="1" min="0.01"/>
+            </div>
+            <div class="col-4 col-sm-2">
+              <input type="number" id="manualPrice" class="form-control form-control-sm" placeholder="ລາຄາ" min="0"/>
+            </div>
+            <div class="col-12 col-sm-1">
+              <button class="btn btn-outline-primary btn-sm w-100" onclick="addManual()"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: quotation items -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center py-2"
+           style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
+        <span class="fw-bold"><i class="bi bi-file-earmark-text me-2"></i>ໃບສະເໜີລາຄາ</span>
+        <button class="btn btn-sm btn-outline-light" onclick="clearAll()"><i class="bi bi-trash"></i></button>
+      </div>
+
+      <!-- Customer + Info -->
+      <div class="p-2 border-bottom">
+        <div class="row g-2">
+          <div class="col-12">
+            <label class="form-label small fw-semibold mb-0">ລູກຄ້າ</label>
+            <select id="customerSelect" class="form-select form-select-sm" onchange="onCustomerChange()">
+              <option value="">— ລູກຄ້າທົ່ວໄປ —</option>
+              {% for c in customers %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold mb-0">ຊື່ (ຖ້າບໍ່ເລືອກ)</label>
+            <input type="text" id="customerName" class="form-control form-control-sm" placeholder="ຊື່ລູກຄ້າ..."/>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold mb-0">ໃຊ້ໄດ້ (ວັນ)</label>
+            <input type="number" id="validDays" class="form-control form-control-sm" value="30" min="1"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold mb-0">ໝາຍເຫດ</label>
+            <input type="text" id="noteInput" class="form-control form-control-sm" placeholder="ໝາຍເຫດ..."/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items list -->
+      <div class="flex-grow-1 overflow-auto p-2" id="qtItems" style="min-height:200px;max-height:35vh;"></div>
+
+      <!-- Totals + submit -->
+      <div class="card-footer p-3">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="small text-muted">ລວມກ່ອນຫຼຸດ:</span>
+          <span id="subtotalDisplay" class="fw-semibold">0 ກີບ</span>
+        </div>
+        <div class="d-flex gap-2 align-items-center mb-2">
+          <label class="form-label small fw-semibold mb-0 text-nowrap">ສ່ວນຫຼຸດ:</label>
+          <input type="number" id="discountInput" class="form-control form-control-sm" value="0" min="0" step="1000" oninput="renderItems()"/>
+          <span class="small text-muted">ກີບ</span>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span class="fw-bold">ລວມທັງໝົດ:</span>
+          <span id="totalDisplay" class="fw-bold text-primary fs-5">0 ກີບ</span>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary flex-fill fw-bold" onclick="submitQuotation('draft')">
+            <i class="bi bi-file-earmark me-1"></i>ບັນທຶກຮ່າງ
+          </button>
+          <button class="btn btn-primary flex-fill fw-bold" onclick="submitQuotation('sent')">
+            <i class="bi bi-send me-1"></i>ສົ່ງໃຫ້ລູກຄ້າ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let items = [];
+let searchTimer;
+const THB_RATE = parseFloat('{{ rate }}') || 830;
+
+document.getElementById('productSearch').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (!q) { document.getElementById('searchResults').innerHTML = ''; return; }
+  searchTimer = setTimeout(() => searchProducts(q), 280);
+});
+
+function searchProducts(q) {
+  fetch(`/pos/search?q=${encodeURIComponent(q)}`)
+    .then(r => r.json()).then(products => {
+      const div = document.getElementById('searchResults');
+      if (!products.length) {
+        div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>';
+        return;
+      }
+      div.innerHTML = products.map(p => `
+        <div class="d-flex align-items-center gap-3 p-2 rounded mb-1 border"
+             style="cursor:pointer;" onclick='addProduct(${JSON.stringify(p)})'>
+          <div class="flex-grow-1">
+            <div class="fw-semibold small">${p.name}</div>
+            <small class="text-muted">${p.unit} – ${Number(p.price||0).toLocaleString()} ກີບ</small>
+          </div>
+          <i class="bi bi-plus-circle text-primary fs-5"></i>
+        </div>`).join('');
+    });
+}
+
+function addProduct(p) {
+  const existing = items.find(i => i.product_id === p.id);
+  if (existing) { existing.qty += 1; existing.subtotal = existing.qty * existing.unit_price; }
+  else {
+    items.push({ product_id: p.id, description: p.name, unit: p.unit,
+                 qty: 1, unit_price: parseFloat(p.price) || 0,
+                 subtotal: parseFloat(p.price) || 0 });
+  }
+  renderItems();
+  document.getElementById('productSearch').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('productSearch').focus();
+}
+
+function addManual() {
+  const desc = document.getElementById('manualDesc').value.trim();
+  if (!desc) { alert('ກະລຸນາໃສ່ລາຍລະອຽດ'); return; }
+  const unit = document.getElementById('manualUnit').value.trim();
+  const qty = parseFloat(document.getElementById('manualQty').value) || 1;
+  const price = parseFloat(document.getElementById('manualPrice').value) || 0;
+  items.push({ product_id: null, description: desc, unit: unit,
+               qty: qty, unit_price: price, subtotal: qty * price });
+  renderItems();
+  document.getElementById('manualDesc').value = '';
+  document.getElementById('manualUnit').value = '';
+  document.getElementById('manualQty').value = '1';
+  document.getElementById('manualPrice').value = '';
+}
+
+function renderItems() {
+  const div = document.getElementById('qtItems');
+  if (!items.length) {
+    div.innerHTML = '<p class="text-center text-muted small mt-4"><i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>ຍັງບໍ່ມີລາຍການ</p>';
+    updateTotals();
+    return;
+  }
+  div.innerHTML = `<table class="table table-sm mb-0"><thead><tr>
+    <th class="small">ລາຍການ</th><th class="text-center small">ຈຳນວນ</th>
+    <th class="text-end small">ລາຄາ</th><th class="text-end small">ລວມ</th><th></th>
+  </tr></thead><tbody>` +
+  items.map((it, i) => `<tr>
+    <td>
+      <div class="small fw-semibold">${it.description}</div>
+      <div class="d-flex gap-1 mt-1">
+        <input type="text" class="form-control form-control-sm" style="max-width:70px;" value="${it.unit}"
+               oninput="updateUnit(${i},this.value)" placeholder="ຫົວໜ່ວຍ"/>
+      </div>
+    </td>
+    <td style="min-width:70px;">
+      <input type="number" class="form-control form-control-sm text-center" value="${it.qty}" min="0.01" step="1"
+             oninput="updateQty(${i},this.value)"/>
+    </td>
+    <td style="min-width:90px;">
+      <input type="number" class="form-control form-control-sm text-end" value="${it.unit_price}" min="0" step="1000"
+             oninput="updatePrice(${i},this.value)"/>
+    </td>
+    <td class="text-end small fw-semibold text-nowrap">${Number(it.subtotal).toLocaleString()}</td>
+    <td><button class="btn btn-sm text-danger p-0" onclick="removeItem(${i})"><i class="bi bi-x-lg"></i></button></td>
+  </tr>`).join('') + '</tbody></table>';
+  updateTotals();
+}
+
+function updateUnit(i, v) { items[i].unit = v; }
+function updateQty(i, v) { items[i].qty = parseFloat(v)||0; items[i].subtotal = items[i].qty*items[i].unit_price; updateTotals(); }
+function updatePrice(i, v) { items[i].unit_price = parseFloat(v)||0; items[i].subtotal = items[i].qty*items[i].unit_price; updateTotals(); }
+function removeItem(i) { items.splice(i,1); renderItems(); }
+function clearAll() { items=[]; renderItems(); }
+
+function updateTotals() {
+  const subtotal = items.reduce((s,i) => s+i.subtotal, 0);
+  const discount = parseFloat(document.getElementById('discountInput').value)||0;
+  const total = Math.max(0, subtotal-discount);
+  document.getElementById('subtotalDisplay').textContent = subtotal.toLocaleString() + ' ກີບ';
+  document.getElementById('totalDisplay').textContent = total.toLocaleString() + ' ກີບ';
+}
+
+function onCustomerChange() {
+  const sel = document.getElementById('customerSelect');
+  if (sel.value) document.getElementById('customerName').value = '';
+}
+
+function submitQuotation(status) {
+  if (!items.length) { alert('ກະລຸນາເພີ່ມລາຍການກ່ອນ'); return; }
+  const subtotal = items.reduce((s,i) => s+i.subtotal, 0);
+  const discount = parseFloat(document.getElementById('discountInput').value)||0;
+  const total = Math.max(0, subtotal-discount);
+  const payload = {
+    items: items,
+    customer_id: document.getElementById('customerSelect').value || null,
+    customer_name: document.getElementById('customerName').value.trim(),
+    discount: discount,
+    note: document.getElementById('noteInput').value.trim(),
+    valid_days: parseInt(document.getElementById('validDays').value)||30,
+    status: status,
+  };
+  fetch('/quotations/save', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload),
+  }).then(r=>r.json()).then(d => {
+    if (d.ok) { window.location.href = '/quotations/' + d.id; }
+    else { alert(d.error || 'ເກີດຂໍ້ຜິດພາດ'); }
+  });
+}
+
+renderItems();
+</script>
+{% endblock %}

@@ -58,6 +58,11 @@
           <i class="bi bi-box-seam"></i>ສິນຄ້າ / Stock
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{{ url_for('stock_in.list_stock_ins') }}" class="nav-link {{ 'active' if 'stock_in' in request.endpoint }}">
+          <i class="bi bi-box-arrow-in-down"></i>ຮັບສິນຄ້າເຂົ້າ
+        </a>
+      </li>
       {% endif %}
       <li class="nav-item">
         <a href="{{ url_for('customers.list_customers') }}" class="nav-link {{ 'active' if 'customers' in request.endpoint }}">
@@ -67,6 +72,16 @@
       <li class="nav-item">
         <a href="{{ url_for('debts.list_debts') }}" class="nav-link {{ 'active' if 'debts' in request.endpoint }}">
           <i class="bi bi-credit-card"></i>ໜີ້ສິນ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('quotations.list_quotations') }}" class="nav-link {{ 'active' if 'quotations' in request.endpoint }}">
+          <i class="bi bi-file-earmark-text"></i>ໃບສະເໜີລາຄາ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('calculator.index') }}" class="nav-link {{ 'active' if 'calculator' in request.endpoint }}">
+          <i class="bi bi-calculator"></i>ຄຳນວນວັດສະດຸ
         </a>
       </li>
       {% if current_user.is_accountant() %}
@@ -99,8 +114,13 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if 'reports' in request.endpoint }}">
-          <i class="bi bi-bar-chart-line"></i>ລາຍງານ
+        <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.index' }}">
+          <i class="bi bi-bar-chart-line"></i>ລາຍງານຍອດຂາຍ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('reports.margin_report') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.margin_report' }}">
+          <i class="bi bi-graph-up-arrow"></i>ລາຍງານກຳໄລ
         </a>
       </li>
       {% endif %}
