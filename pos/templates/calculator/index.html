@@ -351,10 +351,6 @@
 <script>
 const PRODUCTS = {{ products_json | tojson }};
 
-// Build dropdown options HTML (cached)
-const PROD_OPTS = '<option value="">— ເລືອກ —</option>' +
-  PRODUCTS.map(p => `<option value="${p.sell_price}" data-unit="${p.unit}">${p.name} (${p.unit}) ${p.sell_price.toLocaleString()}₭</option>`).join('');
-
 function showTab(name, btn) {
   document.querySelectorAll('.calc-tab').forEach(t => t.classList.add('d-none'));
   document.getElementById('tab-' + name).classList.remove('d-none');
@@ -366,6 +362,43 @@ function showTab(name, btn) {
 
 function val(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
+// Typeahead search for product
+function searchProd(inp) {
+  const q = inp.value.trim().toLowerCase();
+  const list = inp.nextElementSibling;
+  const matches = q
+    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 40)
+    : PRODUCTS.slice(0, 40);
+  if (!matches.length) { list.classList.add('d-none'); return; }
+  list.innerHTML = matches.map(p => `
+    <div class="d-flex justify-content-between align-items-center px-2 py-1 prod-item"
+         style="cursor:pointer;"
+         onmousedown="selectProd(event,this,'${p.name.replace(/'/g,"\\'")}',${p.sell_price})">
+      <span class="small">${p.name} <small class="text-muted">${p.unit}</small></span>
+      <span class="small fw-semibold ms-3 text-nowrap">${p.sell_price.toLocaleString()} ₭</span>
+    </div>`).join('');
+  list.classList.remove('d-none');
+  list.querySelectorAll('.prod-item').forEach(el => {
+    el.addEventListener('mouseenter', () => el.classList.add('bg-body-secondary'));
+    el.addEventListener('mouseleave', () => el.classList.remove('bg-body-secondary'));
+  });
+}
+
+function selectProd(e, item, name, price) {
+  e.preventDefault();
+  const list = item.closest('.prod-list');
+  const inp = list.previousElementSibling;
+  inp.value = name;
+  inp.dataset.price = price;
+  list.classList.add('d-none');
+  updateCost();
+}
+
+function hideProdList(inp) {
+  const list = inp.nextElementSibling;
+  if (list) list.classList.add('d-none');
+}
+
 // items = [{label, value, numValue, unit, note}]
 // area: number (m²) or string subtitle
 function renderResult(title, area, icon, color, items) {
@@ -376,15 +409,21 @@ function renderResult(title, area, icon, color, items) {
         <div class="flex-grow-1 me-2">
           <div class="fw-semibold small">${it.label}</div>
           ${it.note ? `<div class="text-muted" style="font-size:0.75rem;">${it.note}</div>` : ''}
-          <select class="form-select form-select-sm mt-1 cost-sel" data-qty="${it.numValue}"
-                  onchange="updateCost()" style="font-size:0.78rem;">
-            ${PROD_OPTS}
-          </select>
+          <div class="position-relative mt-1">
+            <input type="text" class="form-control form-control-sm cost-input"
+                   placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off"
+                   data-qty="${it.numValue}" data-price="0"
+                   oninput="searchProd(this)" onfocus="searchProd(this)"
+                   onblur="setTimeout(()=>hideProdList(this),200)"
+                   style="font-size:0.78rem;"/>
+            <div class="prod-list position-absolute w-100 border rounded shadow d-none"
+                 style="z-index:1050;max-height:200px;overflow-y:auto;top:100%;left:0;background:var(--bs-body-bg);"></div>
+          </div>
         </div>
         <div class="text-end flex-shrink-0">
           <span class="badge rounded-pill fs-6 px-3" style="background:${color};">${it.value}</span>
           <div class="text-muted" style="font-size:0.75rem;">${it.unit}</div>
-          <div class="small fw-semibold text-warning mt-1 item-cost" id="ic${i}"></div>
+          <div class="small fw-semibold text-warning mt-1" id="ic${i}"></div>
         </div>
       </div>
     </div>`).join('');
@@ -402,7 +441,7 @@ function renderResult(title, area, icon, color, items) {
       <div class="d-flex justify-content-between align-items-center">
         <div>
           <div class="fw-bold">ຄ່າໃຊ້ຈ່າຍລວມ</div>
-          <div class="text-muted" style="font-size:0.75rem;">ເລືອກສິນຄ້າຈາກ dropdown ດ້ານເທິງ</div>
+          <div class="text-muted" style="font-size:0.75rem;">ພິມຊື່ສິນຄ້າຢູ່ຊ່ອງດ້ານເທິງ</div>
         </div>
         <span class="fw-bold fs-5 text-success" id="totalCostDisplay">0 ກີບ</span>
       </div>
@@ -411,10 +450,10 @@ function renderResult(title, area, icon, color, items) {
 
 function updateCost() {
   let total = 0;
-  document.querySelectorAll('.cost-sel').forEach((sel, i) => {
-    const price = parseFloat(sel.value) || 0;
-    const qty = parseFloat(sel.dataset.qty) || 0;
-    const cost = price * qty;
+  document.querySelectorAll('.cost-input').forEach((inp, i) => {
+    const price = parseFloat(inp.dataset.price) || 0;
+    const qty   = parseFloat(inp.dataset.qty)   || 0;
+    const cost  = price * qty;
     total += cost;
     const el = document.getElementById('ic' + i);
     if (el) el.textContent = cost > 0 ? Math.round(cost).toLocaleString() + ' ກີບ' : '';
