@@ -136,7 +136,7 @@ function searchProducts(q) {
              style="cursor:pointer;" onclick='addProduct(${JSON.stringify(p)})'>
           <div class="flex-grow-1">
             <div class="fw-semibold small">${p.name}</div>
-            <small class="text-muted">${p.unit} – ${Number(p.price||0).toLocaleString()} ກີບ</small>
+            <small class="text-muted">${p.unit} – ${Number(p.sell_price||0).toLocaleString()} ກີບ</small>
           </div>
           <i class="bi bi-plus-circle text-primary fs-5"></i>
         </div>`).join('');
@@ -148,8 +148,8 @@ function addProduct(p) {
   if (existing) { existing.qty += 1; existing.subtotal = existing.qty * existing.unit_price; }
   else {
     items.push({ product_id: p.id, description: p.name, unit: p.unit,
-                 qty: 1, unit_price: parseFloat(p.price) || 0,
-                 subtotal: parseFloat(p.price) || 0 });
+                 qty: 1, unit_price: parseFloat(p.sell_price) || 0,
+                 subtotal: parseFloat(p.sell_price) || 0 });
   }
   renderItems();
   document.getElementById('productSearch').value = '';
