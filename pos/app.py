@@ -53,6 +53,9 @@ def create_app():
     app.register_blueprint(quotations_bp, url_prefix="/quotations")
     app.register_blueprint(calculator_bp, url_prefix="/calculator")
 
+    # Run DB migrations on every startup (safe with gunicorn too)
+    run_migrations(app)
+
     @app.route("/")
     def index():
         return redirect(url_for("pos.dashboard"))
