@@ -229,16 +229,18 @@ class Quotation(db.Model):
     customer_name = db.Column(db.String(200), default="")
     date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
     valid_days = db.Column(db.Integer, default=30)
-    status = db.Column(db.String(20), default="draft")  # draft/sent/accepted/rejected
+    status = db.Column(db.String(20), default="draft")  # draft/sent/accepted/rejected/cancelled
     subtotal = db.Column(db.Float, default=0)
     discount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=True)
     items = db.relationship("QuotationItem", backref="quotation", lazy=True, cascade="all, delete-orphan")
     customer = db.relationship("Customer")
     creator = db.relationship("Employee", foreign_keys=[created_by])
+    sale = db.relationship("Sale", foreign_keys=[sale_id])
 
 
 class QuotationItem(db.Model):

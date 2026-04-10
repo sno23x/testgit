@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import db, Quotation, QuotationItem, Product, Customer, Sale, SaleItem, Setting
@@ -154,6 +154,39 @@ def convert_to_sale(qid):
         db.session.add(si)
 
     qt.status = "accepted"
+    qt.sale_id = sale.id
     db.session.commit()
     flash(f"ສ້າງບິນ {sale.sale_no} ສຳເລັດ", "success")
     return redirect(url_for("pos.receipt", sale_id=sale.id))
+
+
+@quotations_bp.route("/<int:qid>/cancel", methods=["POST"])
+@login_required
+def cancel_quotation(qid):
+    qt = Quotation.query.get_or_404(qid)
+    if qt.status == "cancelled":
+        flash("ໃບສະເໜີນີ້ຖືກຍົກເລີກໄປແລ້ວ", "warning")
+        return redirect(url_for("quotations.view_quotation", qid=qid))
+
+    # Void the linked sale and restore stock
+    voided_sale_no = None
+    if qt.sale_id:
+        sale = Sale.query.get(qt.sale_id)
+        if sale and not sale.voided:
+            for item in sale.items:
+                if item.product:
+                    restore = item.qty * 20 if item.product.unit == "ໂຕນ" else item.qty
+                    item.product.stock_qty += restore
+            sale.voided = True
+            sale.voided_at = datetime.now(timezone.utc)
+            sale.voided_by = current_user.id
+            voided_sale_no = sale.sale_no
+
+    qt.status = "cancelled"
+    db.session.commit()
+
+    if voided_sale_no:
+        flash(f"ຍົກເລີກໃບສະເໜີ ແລະ ບິນ {voided_sale_no} ແລ້ວ — ສິນຄ້າກັບຄືນ stock", "success")
+    else:
+        flash("ຍົກເລີກໃບສະເໜີສຳເລັດ", "success")
+    return redirect(url_for("quotations.view_quotation", qid=qid))

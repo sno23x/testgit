@@ -19,6 +19,7 @@
       <option value="sent" {{ 'selected' if status=='sent' }}>ສົ່ງແລ້ວ</option>
       <option value="accepted" {{ 'selected' if status=='accepted' }}>ອະນຸມັດ</option>
       <option value="rejected" {{ 'selected' if status=='rejected' }}>ປະຕິເສດ</option>
+      <option value="cancelled" {{ 'selected' if status=='cancelled' }}>ຍົກເລີກ</option>
     </select>
   </form>
 </div>
@@ -49,6 +50,7 @@
             {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
             {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
             {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>
+            {% elif qt.status == 'cancelled' %}<span class="badge bg-dark">ຍົກເລີກ</span>
             {% else %}<span class="badge bg-secondary">{{ qt.status }}</span>{% endif %}
           </td>
           <td class="small">{{ qt.creator.name if qt.creator else '-' }}</td>
