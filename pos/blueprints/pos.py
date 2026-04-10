@@ -38,10 +38,25 @@ def dashboard():
     total_debt_outstanding = sum(s.debt_remaining for s in debt_sales)
     low_stock = Product.query.filter(Product.stock_qty <= 5, Product.active == True).all()
 
+    # Payment breakdown this month
+    month_sales = Sale.query.filter(
+        extract("year",  Sale.created_at) == today.year,
+        extract("month", Sale.created_at) == today.month,
+        Sale.voided == False
+    ).all()
+    cash_month     = sum(s.total for s in month_sales if s.payment_type == "cash")
+    transfer_month = sum(s.total for s in month_sales if s.payment_type == "transfer")
+    debt_month     = sum(s.total for s in month_sales if s.payment_type == "debt")
+
+    # Recent sales (last 10)
+    recent_sales = Sale.query.filter_by(voided=False).order_by(Sale.created_at.desc()).limit(10).all()
+
     return render_template("dashboard.html",
         revenue_today=revenue_today, debt_today=debt_today,
         tx_count=tx_count, total_debt_outstanding=total_debt_outstanding,
-        low_stock=low_stock, monthly=monthly)
+        low_stock=low_stock, monthly=monthly,
+        cash_month=cash_month, transfer_month=transfer_month, debt_month=debt_month,
+        recent_sales=recent_sales)
 
 
 # ──────────────── POS page ────────────────
@@ -54,10 +69,16 @@ def pos_page():
     bank_name        = Setting.get("bank_name", "")
     bank_account_name = Setting.get("bank_account_name", "")
     bank_account_no  = Setting.get("bank_account_no", "")
+    thb_qr               = Setting.get("thb_qr", "")
+    thb_bank_name        = Setting.get("thb_bank_name", "")
+    thb_bank_account_name = Setting.get("thb_bank_account_name", "")
+    thb_bank_account_no  = Setting.get("thb_bank_account_no", "")
     return render_template("pos/index.html",
         customers=customers, rate=rate,
         shop_qr=shop_qr, bank_name=bank_name,
         bank_account_name=bank_account_name, bank_account_no=bank_account_no,
+        thb_qr=thb_qr, thb_bank_name=thb_bank_name,
+        thb_bank_account_name=thb_bank_account_name, thb_bank_account_no=thb_bank_account_no,
     )
 
 
@@ -85,7 +106,8 @@ def customer_lookup():
     ).limit(10).all()
     return jsonify([{
         "id": c.id, "name": c.name,
-        "phone": c.phone, "debt": c.total_debt
+        "phone": c.phone, "debt": c.total_debt,
+        "map_url": c.map_url or ""
     } for c in customers])
 
 

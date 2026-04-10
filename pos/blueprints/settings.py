@@ -9,6 +9,10 @@ DEFAULT_SETTINGS = {
     "shop_address": "ທີ່ຢູ່ຮ້ານ",
     "shop_phone": "020-XXXXXXXX",
     "shop_qr": "",
+    "thb_qr": "",               # QR ເງິນບາດ (Thai bank PromptPay)
+    "thb_bank_name": "",        # ທະນາຄານໄທ
+    "thb_bank_account_name": "",
+    "thb_bank_account_no": "",
     "bank_name": "",           # ຊື່ທະນາຄານ / ຊື່ Mobile Banking
     "bank_account_name": "",   # ຊື່ບັນຊີ
     "bank_account_no": "",     # ເລກບັນຊີ

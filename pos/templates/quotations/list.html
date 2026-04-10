@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}ໃບສະເໜີລາຄາ{% endblock %}
+{% block page_title %}ໃບສະເໜີລາຄາ{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+  <a href="{{ url_for('quotations.create_form') }}" class="btn btn-primary rounded-pill px-3">
+    <i class="bi bi-plus-circle me-1"></i>ສ້າງໃບສະເໜີໃໝ່
+  </a>
+  <form class="d-flex gap-2" method="GET">
+    <div class="input-group input-group-sm" style="max-width:260px;">
+      <input type="text" name="q" class="form-control" placeholder="ຄົ້ນຫາເລກ/ລູກຄ້າ..." value="{{ q }}"/>
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
+      {% if q %}<a href="{{ url_for('quotations.list_quotations') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>{% endif %}
+    </div>
+    <select name="status" class="form-select form-select-sm" style="max-width:140px;" onchange="this.form.submit()">
+      <option value="" {{ 'selected' if not status }}>ທຸກສະຖານະ</option>
+      <option value="draft" {{ 'selected' if status=='draft' }}>ຮ່າງ</option>
+      <option value="sent" {{ 'selected' if status=='sent' }}>ສົ່ງແລ້ວ</option>
+      <option value="accepted" {{ 'selected' if status=='accepted' }}>ອະນຸມັດ</option>
+      <option value="rejected" {{ 'selected' if status=='rejected' }}>ປະຕິເສດ</option>
+    </select>
+  </form>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ເລກໃບສະເໜີ</th>
+          <th>ວັນທີ</th>
+          <th>ລູກຄ້າ</th>
+          <th class="text-end">ລວມ (ກີບ)</th>
+          <th>ສະຖານະ</th>
+          <th>ຜູ້ສ້າງ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for qt in quotations %}
+        <tr>
+          <td><a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}" class="fw-semibold text-decoration-none">{{ qt.quote_no }}</a></td>
+          <td class="text-muted small">{{ qt.date.strftime('%d/%m/%Y') if qt.date else '-' }}</td>
+          <td>{{ qt.customer_name or '-' }}</td>
+          <td class="text-end fw-semibold">{{ "{:,.0f}".format(qt.total) }}</td>
+          <td>
+            {% if qt.status == 'draft' %}<span class="badge bg-secondary">ຮ່າງ</span>
+            {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
+            {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
+            {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>
+            {% else %}<span class="badge bg-secondary">{{ qt.status }}</span>{% endif %}
+          </td>
+          <td class="small">{{ qt.creator.name if qt.creator else '-' }}</td>
+          <td>
+            <a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center py-4 text-muted">ຍັງບໍ່ມີໃບສະເໜີ</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <small class="text-muted">ທັງໝົດ {{ pagination.total }} ລາຍການ</small>
+    {% if pagination.pages > 1 %}
+    <nav><ul class="pagination pagination-sm mb-0">
+      {% for p in pagination.iter_pages() %}
+        {% if p %}
+          <li class="page-item {{ 'active' if p == pagination.page }}">
+            <a class="page-link" href="?page={{ p }}&q={{ q }}&status={{ status }}">{{ p }}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+    </ul></nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

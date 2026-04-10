@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ qt.quote_no }}{% endblock %}
+{% block page_title %}ໃບສະເໜີລາຄາ {{ qt.quote_no }}{% endblock %}
+
+{% block content %}
+<!-- Action buttons (no-print) -->
+<div class="d-flex gap-2 mb-3 flex-wrap no-print">
+  <a href="{{ url_for('quotations.list_quotations') }}" class="btn btn-outline-secondary rounded-pill">
+    <i class="bi bi-arrow-left me-1"></i>ກັບຄືນ
+  </a>
+  <button onclick="window.print()" class="btn btn-outline-dark rounded-pill">
+    <i class="bi bi-printer me-1"></i>ພິມ / PDF
+  </button>
+  {% if qt.status in ['draft', 'sent'] %}
+  <a href="{{ url_for('quotations.create_form') }}?edit={{ qt.id }}" class="btn btn-outline-primary rounded-pill">
+    <i class="bi bi-pencil me-1"></i>ແກ້ໄຂ
+  </a>
+  {% endif %}
+  {% if qt.status in ['draft', 'sent', 'accepted'] %}
+  <form action="{{ url_for('quotations.convert_to_sale', qid=qt.id) }}" method="POST" class="d-inline"
+        onsubmit="return confirm('ຢືນຢັນສ້າງບິນຂາຍຈາກໃບສະເໜີນີ້?')">
+    <button type="submit" class="btn btn-success rounded-pill">
+      <i class="bi bi-cart-check me-1"></i>ສ້າງບິນຂາຍ
+    </button>
+  </form>
+  {% endif %}
+  <form action="{{ url_for('quotations.update_status', qid=qt.id) }}" method="POST" class="d-flex gap-2">
+    <select name="status" class="form-select form-select-sm" style="width:auto;">
+      <option value="draft" {{ 'selected' if qt.status=='draft' }}>ຮ່າງ</option>
+      <option value="sent" {{ 'selected' if qt.status=='sent' }}>ສົ່ງແລ້ວ</option>
+      <option value="accepted" {{ 'selected' if qt.status=='accepted' }}>ອະນຸມັດ</option>
+      <option value="rejected" {{ 'selected' if qt.status=='rejected' }}>ປະຕິເສດ</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-primary rounded-pill">ອັບເດດສະຖານະ</button>
+  </form>
+</div>
+
+<!-- Printable quotation -->
+<div class="card border-0 shadow-sm" id="printArea">
+  <div class="card-body p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-7">
+        <h4 class="fw-bold text-primary mb-1">{{ shop_name }}</h4>
+        {% if shop_address %}<div class="small text-muted">{{ shop_address }}</div>{% endif %}
+        {% if shop_phone %}<div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ shop_phone }}</div>{% endif %}
+      </div>
+      <div class="col-5 text-end">
+        <h5 class="fw-bold mb-1">ໃບສະເໜີລາຄາ</h5>
+        <div class="fw-bold text-primary">{{ qt.quote_no }}</div>
+        <div class="small text-muted">ວັນທີ: {{ qt.date.strftime('%d/%m/%Y') if qt.date else '-' }}</div>
+        <div class="small text-muted">ໃຊ້ໄດ້: {{ qt.valid_days }} ວັນ</div>
+        <div class="mt-1">
+          {% if qt.status == 'draft' %}<span class="badge bg-secondary">ຮ່າງ</span>
+          {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
+          {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
+          {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer info -->
+    <div class="bg-body-secondary rounded p-3 mb-4">
+      <div class="small fw-semibold text-muted mb-1">ເຖິງ:</div>
+      <div class="fw-bold">{{ qt.customer_name or '—' }}</div>
+    </div>
+
+    <!-- Items table -->
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered align-middle">
+        <thead style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>ລາຍລະອຽດ</th>
+            <th style="width:80px;">ຫົວໜ່ວຍ</th>
+            <th class="text-center" style="width:90px;">ຈຳນວນ</th>
+            <th class="text-end" style="width:130px;">ລາຄາຕໍ່ຫົວໜ່ວຍ</th>
+            <th class="text-end" style="width:140px;">ລວມ (ກີບ)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in qt.items %}
+          <tr>
+            <td class="text-center text-muted">{{ loop.index }}</td>
+            <td class="fw-semibold">{{ it.description }}</td>
+            <td class="text-center small">{{ it.unit }}</td>
+            <td class="text-center">{{ "{:,.2f}".format(it.qty) }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(it.unit_price) }}</td>
+            <td class="text-end fw-semibold">{{ "{:,.0f}".format(it.subtotal) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="table-light">
+            <td colspan="5" class="text-end fw-semibold">ລວມກ່ອນຫຼຸດ:</td>
+            <td class="text-end fw-semibold">{{ "{:,.0f}".format(qt.subtotal) }}</td>
+          </tr>
+          {% if qt.discount %}
+          <tr class="table-light">
+            <td colspan="5" class="text-end fw-semibold">ສ່ວນຫຼຸດ:</td>
+            <td class="text-end text-danger fw-semibold">- {{ "{:,.0f}".format(qt.discount) }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td colspan="5" class="text-end fw-bold fs-5">ລວມທັງໝົດ (ກີບ):</td>
+            <td class="text-end fw-bold fs-5 text-primary">{{ "{:,.0f}".format(qt.total) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    {% if qt.note %}
+    <div class="mb-4">
+      <div class="small fw-semibold text-muted">ໝາຍເຫດ:</div>
+      <div>{{ qt.note }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Signature area -->
+    <div class="row mt-5 pt-3">
+      <div class="col-6 text-center">
+        <div class="border-top pt-2 mx-4">
+          <div class="small text-muted">ຜູ້ສະເໜີລາຄາ</div>
+          <div class="small text-muted mt-4">.........................................</div>
+        </div>
+      </div>
+      <div class="col-6 text-center">
+        <div class="border-top pt-2 mx-4">
+          <div class="small text-muted">ລູກຄ້າ / ຜູ້ຮັບ</div>
+          <div class="small text-muted mt-4">.........................................</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .no-print { display: none !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  body { background: white !important; }
+  #sidebar, header, .flash-area { display: none !important; }
+  #main-content { margin: 0 !important; padding: 0 !important; }
+}
+</style>
+{% endblock %}

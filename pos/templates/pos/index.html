@@ -120,7 +120,13 @@
           <div id="customerSuggestions" class="dropdown-menu w-100 shadow small"
                style="max-height:160px;overflow-y:auto;border-radius:10px;margin-top:2px;"></div>
           <input type="hidden" id="customerId" value=""/>
-          <div id="selectedCustomer" class="small text-success mt-1 d-none fw-semibold"></div>
+          <input type="hidden" id="customerMapUrl" value=""/>
+          <div id="selectedCustomer" class="small text-success mt-1 d-none fw-semibold d-flex align-items-center gap-2">
+            <span id="selectedCustomerName"></span>
+            <a id="customerMapBtn" href="#" target="_blank" class="d-none text-danger" title="ເປີດ Google Maps">
+              <i class="bi bi-geo-alt-fill fs-6"></i>
+            </a>
+          </div>
         </div>
 
         <!-- Total display -->
@@ -168,38 +174,57 @@
     <div class="modal-content">
       <div class="modal-header py-2" style="background:#0dcaf0;">
         <h5 class="modal-title fw-bold text-dark"><i class="bi bi-phone me-2"></i>ໂອນເງິນ</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <div class="btn-group btn-group-sm" id="qrCurrencyToggle">
+            <button class="btn btn-dark active fw-bold" id="btnQrLak" onclick="setQrCurrency('LAK')">₭ ກີບ</button>
+            <button class="btn btn-outline-dark fw-bold" id="btnQrThb" onclick="setQrCurrency('THB')">฿ ບາດ</button>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
       </div>
       <div class="modal-body text-center py-3">
 
         <!-- Amount -->
         <div class="mb-3">
           <p class="text-muted small mb-1">ຍອດທີ່ຕ້ອງໂອນ</p>
-          <h2 class="fw-bold text-primary" id="transferAmountDisplay"></h2>
+          <h2 class="fw-bold" id="transferAmountDisplay"></h2>
         </div>
 
-        <!-- QR -->
-        {% if shop_qr %}
-        <img src="{{ shop_qr }}" alt="QR" class="img-fluid mb-2 rounded border"
-             style="max-width:200px; max-height:200px;"/>
-        {% else %}
-        <div class="border rounded d-inline-flex align-items-center justify-content-center mb-2
-                    text-muted small" style="width:160px;height:160px;">
-          <div><i class="bi bi-qr-code fs-1 d-block mb-1"></i>ຍັງບໍ່ມີ QR<br/>
-            <a href="/settings/" class="small">ຕັ້ງຄ່າ</a>
+        <!-- LAK QR -->
+        <div id="qrLakSection">
+          {% if shop_qr %}
+          <img src="{{ shop_qr }}" alt="QR ກີບ" class="img-fluid mb-2 rounded border" style="max-width:200px;max-height:200px;"/>
+          {% else %}
+          <div class="border rounded d-inline-flex align-items-center justify-content-center mb-2 text-muted small" style="width:160px;height:160px;">
+            <div><i class="bi bi-qr-code fs-1 d-block mb-1"></i>ຍັງບໍ່ມີ QR<br/><a href="/settings/" class="small">ຕັ້ງຄ່າ</a></div>
           </div>
+          {% endif %}
+          {% if bank_name or bank_account_no %}
+          <div class="rounded p-2 text-start small mx-auto mb-2" style="max-width:260px;background:var(--bs-secondary-bg);border:1px solid var(--bs-border-color);">
+            {% if bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong class="text-body">{{ bank_name }}</strong></div>{% endif %}
+            {% if bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong class="text-body">{{ bank_account_name }}</strong></div>{% endif %}
+            {% if bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong class="text-body">{{ bank_account_no }}</strong></div>{% endif %}
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
 
-        <!-- Bank info -->
-        {% if bank_name or bank_account_no %}
-        <div class="rounded p-2 text-start small mx-auto mb-2"
-             style="max-width:260px;background:var(--bs-secondary-bg);border:1px solid var(--bs-border-color);">
-          {% if bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong class="text-body">{{ bank_name }}</strong></div>{% endif %}
-          {% if bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong class="text-body">{{ bank_account_name }}</strong></div>{% endif %}
-          {% if bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong class="text-body">{{ bank_account_no }}</strong></div>{% endif %}
+        <!-- THB QR -->
+        <div id="qrThbSection" class="d-none">
+          {% if thb_qr %}
+          <img src="{{ thb_qr }}" alt="QR ບາດ" class="img-fluid mb-2 rounded border" style="max-width:200px;max-height:200px;"/>
+          {% else %}
+          <div class="border rounded d-inline-flex align-items-center justify-content-center mb-2 text-muted small" style="width:160px;height:160px;">
+            <div><i class="bi bi-qr-code fs-1 d-block mb-1"></i>ຍັງບໍ່ມີ QR ບາດ<br/><a href="/settings/" class="small">ຕັ້ງຄ່າ</a></div>
+          </div>
+          {% endif %}
+          {% if thb_bank_name or thb_bank_account_no %}
+          <div class="rounded p-2 text-start small mx-auto mb-2" style="max-width:260px;background:var(--bs-secondary-bg);border:1px solid var(--bs-border-color);">
+            {% if thb_bank_name %}<div><span class="text-muted">ທະນາຄານ:</span> <strong class="text-body">{{ thb_bank_name }}</strong></div>{% endif %}
+            {% if thb_bank_account_name %}<div><span class="text-muted">ຊື່ບັນຊີ:</span> <strong class="text-body">{{ thb_bank_account_name }}</strong></div>{% endif %}
+            {% if thb_bank_account_no %}<div><span class="text-muted">ເລກບັນຊີ:</span> <strong class="text-body">{{ thb_bank_account_no }}</strong></div>{% endif %}
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
 
         <p class="text-muted small">ໃຫ້ລູກຄ້າສະແກນ QR ແລ້ວໂອນ ຫຼັງຈາກນັ້ນກົດຢືນຢັນ</p>
       </div>
@@ -354,7 +379,17 @@ function renderResults(products) {
   prodFocusIdx = -1;
   const div = document.getElementById('searchResults');
   document.getElementById('resultCount').textContent = products.length ? `${products.length} ລາຍການ` : '';
-  if (!products.length) { div.innerHTML = '<p class="text-muted small px-2">ບໍ່ພົບສິນຄ້າ</p>'; return; }
+  if (!products.length) {
+    const q = document.getElementById('productSearch').value.trim();
+    div.innerHTML = `<div class="text-center py-4">
+      <i class="bi bi-search text-muted" style="font-size:2rem;opacity:.3;"></i>
+      <p class="text-muted small mt-2 mb-2">ບໍ່ພົບສິນຄ້າ <strong>"${q}"</strong></p>
+      <a href="/products/add" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
+        <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າໃໝ່
+      </a>
+    </div>`;
+    return;
+  }
 
   if (viewMode === 'list') {
     div.innerHTML = `<div class="list-group list-group-flush">` +
@@ -548,33 +583,57 @@ function customerLookup() {
     fetch(`/pos/customer-lookup?q=${encodeURIComponent(q)}`)
       .then(r => r.json()).then(list => {
         const box = document.getElementById('customerSuggestions');
-        if (!list.length) { box.classList.remove('show'); return; }
+        const addLink = `<div class="dropdown-item py-1 border-top mt-1">
+          <a href="/customers/add" target="_blank" class="text-primary text-decoration-none d-flex align-items-center gap-1">
+            <i class="bi bi-person-plus-fill"></i>
+            <span class="fw-semibold">ເພີ່ມລູກຄ້າໃໝ່...</span>
+          </a>
+        </div>`;
+        if (!list.length) {
+          box.innerHTML = `<div class="px-3 py-2 text-muted small">ບໍ່ພົບລູກຄ້າ "${q}"</div>` + addLink;
+          box.classList.add('show');
+          return;
+        }
         box.innerHTML = list.map(c => `
-          <a class="dropdown-item py-1" href="#" onclick="selectCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}',${c.debt});return false;">
+          <a class="dropdown-item py-1" href="#" onclick="selectCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}',${c.debt},'${(c.map_url||'').replace(/'/g,"\\'")}');return false;">
             <span class="fw-semibold">${c.name}</span>
             ${c.phone ? `<small class="text-muted ms-1">${c.phone}</small>` : ''}
             ${c.debt > 0 ? `<span class="badge bg-danger ms-1 small">ໜີ້ ${Number(c.debt).toLocaleString()}</span>` : ''}
-          </a>`).join('');
+            ${c.map_url ? `<i class="bi bi-geo-alt-fill text-danger ms-1" title="ມີຕຳແໜ່ງ Maps"></i>` : ''}
+          </a>`).join('') + addLink;
         custFocusIdx = -1;
         box.classList.add('show');
       });
   }, 250);
 }
 
-function selectCustomer(id, name, phone, debt) {
+function selectCustomer(id, name, phone, debt, mapUrl) {
   document.getElementById('customerId').value = id;
+  document.getElementById('customerMapUrl').value = mapUrl || '';
   document.getElementById('customerSearch').value = name + (phone ? ` (${phone})` : '');
   const info = document.getElementById('selectedCustomer');
   info.classList.remove('d-none');
-  info.innerHTML = `<i class="bi bi-person-check me-1"></i>${name}` +
+  // name + debt badge
+  const nameEl = document.getElementById('selectedCustomerName');
+  nameEl.innerHTML = `<i class="bi bi-person-check me-1"></i>${name}` +
     (debt > 0 ? ` <span class="badge bg-warning text-dark">ໜີ້ ${Number(debt).toLocaleString()} ກີບ</span>` : '');
+  // map icon
+  const mapBtn = document.getElementById('customerMapBtn');
+  if (mapUrl) {
+    mapBtn.href = mapUrl;
+    mapBtn.classList.remove('d-none');
+  } else {
+    mapBtn.classList.add('d-none');
+  }
   hideCustomerSuggestions();
 }
 
 function clearCustomer() {
   document.getElementById('customerId').value = '';
+  document.getElementById('customerMapUrl').value = '';
   document.getElementById('customerSearch').value = '';
   document.getElementById('selectedCustomer').classList.add('d-none');
+  document.getElementById('customerMapBtn').classList.add('d-none');
   hideCustomerSuggestions();
 }
 
@@ -599,16 +658,40 @@ function submitSale(type) {
   }
   // ໂອນເງິນ: ສະແດງ QR modal ກ່ອນ
   if (type === 'transfer') {
-    const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
-    const currency = document.querySelector('input[name="currency"]:checked')?.value || 'LAK';
-    const fmt = currency === 'THB'
-      ? (total / (rateVal || 830)).toFixed(2) + ' ບາດ'
-      : Number(total).toLocaleString() + ' ກີບ';
-    document.getElementById('transferAmountDisplay').textContent = fmt;
+    window._transferTotalLak = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+    setQrCurrency('LAK');
     transferModal.show();
     return;
   }
   doSubmit(type);
+}
+
+let _qrCurrency = 'LAK';
+function setQrCurrency(cur) {
+  _qrCurrency = cur;
+  const total = window._transferTotalLak || 0;
+  const rate = rateVal || 830;
+  const amtEl = document.getElementById('transferAmountDisplay');
+  const lakSec = document.getElementById('qrLakSection');
+  const thbSec = document.getElementById('qrThbSection');
+  const btnLak = document.getElementById('btnQrLak');
+  const btnThb = document.getElementById('btnQrThb');
+  if (cur === 'THB') {
+    const thbAmt = Math.ceil(total / rate);
+    amtEl.textContent = thbAmt.toLocaleString() + ' ฿';
+    amtEl.className = 'fw-bold text-warning';
+    lakSec.classList.add('d-none');
+    thbSec.classList.remove('d-none');
+    btnLak.classList.remove('active'); btnLak.className = 'btn btn-outline-dark fw-bold';
+    btnThb.classList.add('active');    btnThb.className = 'btn btn-dark fw-bold active';
+  } else {
+    amtEl.textContent = Number(total).toLocaleString() + ' ກີບ';
+    amtEl.className = 'fw-bold text-primary';
+    lakSec.classList.remove('d-none');
+    thbSec.classList.add('d-none');
+    btnLak.className = 'btn btn-dark fw-bold active';
+    btnThb.className = 'btn btn-outline-dark fw-bold';
+  }
 }
 
 function confirmTransfer() {

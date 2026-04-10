@@ -25,18 +25,22 @@
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">ສິດທິ</label>
-            <select name="role" class="form-select">
+            <select name="role" id="roleSelect" class="form-select" onchange="showRoleNote(this.value)">
               {% set roles = [
-                ('admin',    'ຜູ້ດູແລລະບົບ (Admin)'),
-                ('cashier',  'ແຄັດເຊຍ (Cashier)'),
+                ('admin',      'ຜູ້ດູແລລະບົບ (Admin)'),
+                ('cashier',    'ແຄັດເຊຍ (Cashier)'),
                 ('accountant', 'ບັນຊີ (Accountant)'),
-                ('driver',   'ໂຊເຟີລົດ (Driver)'),
-                ('porter',   'ພະນັກງານແບກຫາມ (Porter)'),
+                ('driver',     'ໂຊເຟີລົດ (Driver)'),
+                ('porter',     'ພະນັກງານແບກຫາມ (Porter)'),
               ] %}
               {% for val, label in roles %}
               <option value="{{ val }}" {{ 'selected' if employee and employee.role == val }}>{{ label }}</option>
               {% endfor %}
             </select>
+
+            <!-- Role descriptions -->
+            <div id="roleNote" class="mt-2 p-2 rounded small" style="border:1px solid var(--bs-border-color);background:var(--bs-secondary-bg);">
+            </div>
           </div>
           <hr/>
           <p class="small fw-semibold text-muted mb-2"><i class="bi bi-wallet2 me-1"></i>ຂໍ້ມູນເງິນເດືອນ</p>
@@ -61,4 +65,81 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ROLE_NOTES = {
+  admin: {
+    color: '#dc2626', icon: 'bi-shield-fill-check',
+    title: 'ຜູ້ດູແລລະບົບ — ເຂົ້າໄດ້ທຸກສ່ວນ',
+    items: [
+      '✅ ໜ້າຂາຍ POS',
+      '✅ ສິນຄ້າ / Stock (ເພີ່ມ, ແກ້ໄຂ, ລຶບ)',
+      '✅ ລູກຄ້າ',
+      '✅ ໜີ້ສິນ',
+      '✅ ລາຍຮັບ / ລາຍຈ່າຍ',
+      '✅ ລາຍງານການຂາຍ',
+      '✅ ເງິນເດືອນ & ເບີກລ່ວງໜ້າ',
+      '✅ ຈັດການພະນັກງານ',
+      '✅ ການຕັ້ງຄ່າລະບົບ',
+      '⚠️ ສາມາດມີຫຼາຍຄົນເປັນ admin ໄດ້',
+    ]
+  },
+  cashier: {
+    color: '#2563eb', icon: 'bi-cash-register',
+    title: 'ແຄັດເຊຍ — ສິດຂາຍ ແລະ ຈັດການສິນຄ້າ',
+    items: [
+      '✅ ໜ້າຂາຍ POS',
+      '✅ ສິນຄ້າ / Stock (ເພີ່ມ, ແກ້ໄຂ)',
+      '✅ ລູກຄ້າ (ເພີ່ມ, ແກ້ໄຂ)',
+      '✅ ໜີ້ສິນ (ເບິ່ງ ແລະ ຮັບຊຳລະ)',
+      '❌ ລາຍຮັບ / ລາຍຈ່າຍ',
+      '❌ ລາຍງານ',
+      '❌ ເງິນເດືອນ',
+      '❌ ຈັດການພະນັກງານ',
+      '❌ ການຕັ້ງຄ່າລະບົບ',
+    ]
+  },
+  accountant: {
+    color: '#16a34a', icon: 'bi-calculator',
+    title: 'ບັນຊີ — ສິດເບິ່ງລາຍງານ ແລະ ການເງິນ',
+    items: [
+      '❌ ໜ້າຂາຍ POS',
+      '❌ ສິນຄ້າ / Stock',
+      '✅ ລູກຄ້າ (ເບິ່ງ)',
+      '✅ ໜີ້ສິນ (ເບິ່ງ)',
+      '✅ ລາຍຮັບ / ລາຍຈ່າຍ',
+      '✅ ລາຍງານການຂາຍ',
+      '✅ ເງິນເດືອນ & ເບີກລ່ວງໜ້າ',
+      '❌ ຈັດການພະນັກງານ',
+      '❌ ການຕັ້ງຄ່າລະບົບ',
+    ]
+  },
+  driver: {
+    color: '#d97706', icon: 'bi-truck',
+    title: 'ໂຊເຟີລົດ — ສິດເຂົ້າລະບົບເທົ່ານັ້ນ',
+    items: ['✅ Login ເຂົ້າລະບົບໄດ້', '❌ ບໍ່ມີສິດຕໍ່ section ພິເສດໃດ']
+  },
+  porter: {
+    color: '#64748b', icon: 'bi-person-arms-up',
+    title: 'ພະນັກງານແບກຫາມ — ສິດເຂົ້າລະບົບເທົ່ານັ້ນ',
+    items: ['✅ Login ເຂົ້າລະບົບໄດ້', '❌ ບໍ່ມີສິດຕໍ່ section ພິເສດໃດ']
+  },
+};
+
+function showRoleNote(role) {
+  const note = ROLE_NOTES[role];
+  const el = document.getElementById('roleNote');
+  if (!note) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="fw-semibold mb-1" style="color:${note.color};">
+      <i class="bi ${note.icon} me-1"></i>${note.title}
+    </div>
+    <ul class="mb-0 ps-3">
+      ${note.items.map(i => `<li style="line-height:1.7;">${i}</li>`).join('')}
+    </ul>`;
+}
+showRoleNote(document.getElementById('roleSelect').value);
+</script>
 {% endblock %}

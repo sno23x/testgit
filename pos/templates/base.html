@@ -52,11 +52,18 @@
           <i class="bi bi-cart-check"></i>ໜ້າຂາຍ (POS)
         </a>
       </li>
+      {% if current_user.can_manage_products() %}
       <li class="nav-item">
         <a href="{{ url_for('products.list_products') }}" class="nav-link {{ 'active' if 'products' in request.endpoint }}">
           <i class="bi bi-box-seam"></i>ສິນຄ້າ / Stock
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{{ url_for('stock_in.list_stock_ins') }}" class="nav-link {{ 'active' if 'stock_in' in request.endpoint }}">
+          <i class="bi bi-box-arrow-in-down"></i>ຮັບສິນຄ້າເຂົ້າ
+        </a>
+      </li>
+      {% endif %}
       <li class="nav-item">
         <a href="{{ url_for('customers.list_customers') }}" class="nav-link {{ 'active' if 'customers' in request.endpoint }}">
           <i class="bi bi-people"></i>ລູກຄ້າ
@@ -68,17 +75,32 @@
         </a>
       </li>
       <li class="nav-item">
+        <a href="{{ url_for('quotations.list_quotations') }}" class="nav-link {{ 'active' if 'quotations' in request.endpoint }}">
+          <i class="bi bi-file-earmark-text"></i>ໃບສະເໜີລາຄາ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('calculator.index') }}" class="nav-link {{ 'active' if 'calculator' in request.endpoint }}">
+          <i class="bi bi-calculator"></i>ຄຳນວນວັດສະດຸ
+        </a>
+      </li>
+      {% if current_user.is_accountant() %}
+      <li class="nav-item">
         <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {{ 'active' if 'expenses' in request.endpoint }}">
           <i class="bi bi-cash-stack"></i>ລາຍຮັບ/ລາຍຈ່າຍ
         </a>
       </li>
+      {% endif %}
+      {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('employees.list_employees') }}" class="nav-link {{ 'active' if 'employees' in request.endpoint }}">
           <i class="bi bi-person-badge"></i>ພະນັກງານ
         </a>
       </li>
+      {% endif %}
 
       <!-- Section: ລາຍງານ & ການຈັດການ -->
+      {% if current_user.is_accountant() %}
       <li><div class="sidebar-section-label">ລາຍງານ &amp; ການຈັດການ</div></li>
 
       <li class="nav-item">
@@ -92,15 +114,23 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if 'reports' in request.endpoint }}">
-          <i class="bi bi-bar-chart-line"></i>ລາຍງານ
+        <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.index' }}">
+          <i class="bi bi-bar-chart-line"></i>ລາຍງານຍອດຂາຍ
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{{ url_for('reports.margin_report') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.margin_report' }}">
+          <i class="bi bi-graph-up-arrow"></i>ລາຍງານກຳໄລ
+        </a>
+      </li>
+      {% endif %}
+      {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('settings.index') }}" class="nav-link {{ 'active' if 'settings' in request.endpoint }}">
           <i class="bi bi-gear"></i>ຕັ້ງຄ່າລະບົບ
         </a>
       </li>
+      {% endif %}
     </ul>
 
     <!-- Sidebar footer: user info -->
@@ -125,9 +155,9 @@
         <button class="btn btn-sm btn-outline-secondary" id="darkToggle" title="Dark / Light mode" onclick="toggleDark()">
           <i class="bi bi-moon-stars-fill" id="darkIcon"></i>
         </button>
-        <small class="text-muted d-none d-sm-block">
-          <i class="bi bi-calendar me-1"></i><span id="clock"></span>
-        </small>
+        <span class="text-muted d-none d-sm-flex align-items-center gap-1" style="font-size:inherit;">
+          <i class="bi bi-calendar2"></i><span id="clock"></span>
+        </span>
       </div>
     </header>
 
@@ -340,8 +370,16 @@
 <script>
   function updateClock(){
     const now = new Date();
-    document.getElementById('clock').textContent =
-      now.toLocaleDateString('lo-LA') + ' ' + now.toLocaleTimeString('lo-LA');
+    const d = String(now.getDate()).padStart(2,'0');
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const y = now.getFullYear();
+    let h = now.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    const hh = String(h).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${d}/${m}/${y} ${hh}:${mm}:${ss} ${ampm}`;
   }
   setInterval(updateClock, 1000); updateClock();
 

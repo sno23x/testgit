@@ -31,7 +31,7 @@
           </div>
 
           <hr/>
-          <p class="fw-semibold mb-2"><i class="bi bi-bank me-1 text-info"></i>ຂໍ້ມູນໂອນເງິນ</p>
+          <p class="fw-semibold mb-2"><i class="bi bi-bank me-1 text-info"></i>ຂໍ້ມູນໂອນເງິນ (ກີບ ₭)</p>
           <div class="row g-2 mb-3">
             <div class="col-md-4">
               <label class="form-label small">ທະນາຄານ / Mobile Banking</label>
@@ -47,6 +47,31 @@
               <label class="form-label small">ເລກບັນຊີ</label>
               <input type="text" name="bank_account_no" class="form-control form-control-sm"
                      value="{{ s.bank_account_no }}" placeholder="xxxx-xxxx-xxxx"/>
+            </div>
+          </div>
+
+          <hr/>
+          <p class="fw-semibold mb-2"><i class="bi bi-bank me-1 text-warning"></i>ຂໍ້ມູນໂອນເງິນ (ບາດ ฿)</p>
+          <div class="mb-2">
+            <label class="form-label small">URL ຮູບ QR ໄທ (PromptPay / Thai bank)</label>
+            <input type="text" name="thb_qr" class="form-control form-control-sm"
+                   value="{{ s.thb_qr }}" placeholder="https://..."/>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small">ທະນາຄານໄທ</label>
+              <input type="text" name="thb_bank_name" class="form-control form-control-sm"
+                     value="{{ s.thb_bank_name }}" placeholder="ເຊັ່ນ: KBank, SCB..."/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">ຊື່ບັນຊີ</label>
+              <input type="text" name="thb_bank_account_name" class="form-control form-control-sm"
+                     value="{{ s.thb_bank_account_name }}" placeholder="ຊື່ເຈົ້າຂອງບັນຊີ"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">ເລກບັນຊີ / PromptPay</label>
+              <input type="text" name="thb_bank_account_no" class="form-control form-control-sm"
+                     value="{{ s.thb_bank_account_no }}" placeholder="xxxx-xxxx-xxxx"/>
             </div>
           </div>
 

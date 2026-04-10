@@ -1,73 +1,116 @@
 {% extends "base.html" %}
-{% block title %}ໜ້າຫຼັກ-POS{% endblock %}
-{% block page_title %}ໜ້າຫຼັກ{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
 
 <!-- ═══ Stat Cards ═══ -->
 <div class="row g-3 mb-4">
 
-  <!-- Revenue today -->
   <div class="col-6 col-xl-3">
-    <div class="card stat-card stat-success">
-      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-        <div class="stat-icon">
-          <i class="bi bi-cash-coin"></i>
-        </div>
-        <div class="min-width-0">
-          <div class="stat-value">{{ "{:,.0f}".format(revenue_today) }}</div>
-          <div class="stat-label">ລາຍຮັບວັນນີ້ (ກີບ)</div>
-        </div>
+    <div class="dash-card" style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
+      <div class="dash-card-inner">
+        <div class="dash-icon"><i class="bi bi-cash-coin"></i></div>
+        <span class="dash-badge">ວັນນີ້</span>
       </div>
-      <div class="stat-accent"></div>
+      <div class="dash-value">{{ "{:,.0f}".format(revenue_today) }}</div>
+      <div class="dash-label">ລາຍຮັບວັນນີ້ (ກີບ)</div>
+      <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 C30,35 70,5 100,20 C130,35 170,5 200,20 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
   </div>
 
-  <!-- Debt today -->
   <div class="col-6 col-xl-3">
-    <div class="card stat-card stat-warning">
-      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-        <div class="stat-icon">
-          <i class="bi bi-credit-card"></i>
-        </div>
-        <div class="min-width-0">
-          <div class="stat-value">{{ "{:,.0f}".format(debt_today) }}</div>
-          <div class="stat-label">ຄ້າງຊຳລະວັນນີ້ (ກີບ)</div>
-        </div>
+    <div class="dash-card" style="background: linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);">
+      <div class="dash-card-inner">
+        <div class="dash-icon"><i class="bi bi-receipt"></i></div>
+        <span class="dash-badge">ວັນນີ້</span>
       </div>
-      <div class="stat-accent"></div>
+      <div class="dash-value">{{ tx_count }}</div>
+      <div class="dash-label">ຈຳນວນບິນ</div>
+      <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 C30,5 70,35 100,20 C130,5 170,35 200,20 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
   </div>
 
-  <!-- Transaction count -->
   <div class="col-6 col-xl-3">
-    <div class="card stat-card stat-primary">
-      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-        <div class="stat-icon">
-          <i class="bi bi-receipt"></i>
-        </div>
-        <div class="min-width-0">
-          <div class="stat-value">{{ tx_count }}</div>
-          <div class="stat-label">ຈໍານວນບິນວັນນີ້</div>
-        </div>
+    <div class="dash-card" style="background: linear-gradient(135deg,#fa709a 0%,#fee140 100%);">
+      <div class="dash-card-inner">
+        <div class="dash-icon"><i class="bi bi-credit-card"></i></div>
+        <span class="dash-badge">ວັນນີ້</span>
       </div>
-      <div class="stat-accent"></div>
+      <div class="dash-value">{{ "{:,.0f}".format(debt_today) }}</div>
+      <div class="dash-label">ຄ້າງຊຳລະວັນນີ້ (ກີບ)</div>
+      <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,15 C40,30 80,5 120,20 C155,30 180,10 200,15 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
   </div>
 
-  <!-- Total outstanding debt -->
   <div class="col-6 col-xl-3">
-    <div class="card stat-card stat-danger">
-      <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-        <div class="stat-icon">
-          <i class="bi bi-exclamation-triangle"></i>
+    <div class="dash-card" style="background: linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%);">
+      <div class="dash-card-inner">
+        <div class="dash-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <span class="dash-badge">ທັງໝົດ</span>
+      </div>
+      <div class="dash-value">{{ "{:,.0f}".format(total_debt_outstanding) }}</div>
+      <div class="dash-label">ໜີ້ຄ້າງທັງໝົດ (ກີບ)</div>
+      <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,25 C50,10 100,35 150,15 C170,8 185,20 200,25 L200,40 L0,40 Z" fill="white"/></svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ Charts Row ═══ -->
+<div class="row g-3 mb-4">
+
+  <!-- Monthly Area Chart -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div>
+            <h6 class="fw-bold mb-0">ຍອດຂາຍລາຍເດືອນ</h6>
+            <small class="text-muted">ລາຍຮັບທັງໝົດ (ກີບ)</small>
+          </div>
+          <a href="{{ url_for('reports.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+            ລາຍງານເຕັມ <i class="bi bi-arrow-right ms-1"></i>
+          </a>
         </div>
-        <div class="min-width-0">
-          <div class="stat-value">{{ "{:,.0f}".format(total_debt_outstanding) }}</div>
-          <div class="stat-label">ໜີ້ຄ້າງທັງໝົດ (ກີບ)</div>
+        <canvas id="monthlyChart" height="110"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Donut -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-0">ປະເພດຊຳລະ</h6>
+        <small class="text-muted">ເດືອນນີ້</small>
+        <div class="mt-3" style="position:relative;height:175px;">
+          <canvas id="paymentChart"></canvas>
+        </div>
+        <div class="mt-3 d-flex flex-column gap-2">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:#4facfe;flex-shrink:0;"></div>
+              <small>ເງິນສົດ</small>
+            </div>
+            <small class="fw-semibold">{{ "{:,.0f}".format(cash_month) }}</small>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:#a18cd1;flex-shrink:0;"></div>
+              <small>ໂອນເງິນ</small>
+            </div>
+            <small class="fw-semibold">{{ "{:,.0f}".format(transfer_month) }}</small>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:#fa709a;flex-shrink:0;"></div>
+              <small>ຄ້າງຊຳລະ</small>
+            </div>
+            <small class="fw-semibold">{{ "{:,.0f}".format(debt_month) }}</small>
+          </div>
         </div>
       </div>
-      <div class="stat-accent"></div>
     </div>
   </div>
 
@@ -76,72 +119,94 @@
 <!-- ═══ Bottom Row ═══ -->
 <div class="row g-3">
 
-  <!-- Quick actions + Low stock -->
+  <!-- Recent Sales -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div>
+            <h6 class="fw-bold mb-0">ການຂາຍລ່າສຸດ</h6>
+            <small class="text-muted">10 ລາຍການຫຼ້າສຸດ</small>
+          </div>
+          <a href="{{ url_for('reports.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">ທັງໝົດ</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0" style="--bs-table-bg:transparent;--bs-table-hover-bg:transparent;">
+            <thead>
+              <tr style="background:transparent;">
+                <th class="border-0 ps-0" style="font-size:.75rem;color:#94a3b8;font-weight:600;">ເລກບິນ</th>
+                <th class="border-0" style="font-size:.75rem;color:#94a3b8;font-weight:600;">ລູກຄ້າ</th>
+                <th class="border-0" style="font-size:.75rem;color:#94a3b8;font-weight:600;">ເວລາ</th>
+                <th class="border-0 text-end" style="font-size:.75rem;color:#94a3b8;font-weight:600;">ຍອດ (ກີບ)</th>
+                <th class="border-0 text-center" style="font-size:.75rem;color:#94a3b8;font-weight:600;">ປະເພດ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in recent_sales %}
+              <tr>
+                <td class="ps-0">
+                  <a href="{{ url_for('pos.receipt', sale_id=s.id) }}" class="text-decoration-none fw-semibold text-primary" style="font-size:.85rem;">{{ s.sale_no }}</a>
+                </td>
+                <td style="font-size:.85rem;">{{ s.customer.name if s.customer else '-' }}</td>
+                <td style="font-size:.8rem;color:#9ca3af;">{{ s.created_at.strftime('%d/%m %H:%M') }}</td>
+                <td class="text-end fw-semibold" style="font-size:.85rem;">{{ "{:,.0f}".format(s.total) }}</td>
+                <td class="text-center">
+                  {% if s.payment_type == 'cash' %}
+                    <span class="badge rounded-pill" style="background:#dcfce7;color:#16a34a;font-size:.7rem;">ເງິນສົດ</span>
+                  {% elif s.payment_type == 'transfer' %}
+                    <span class="badge rounded-pill" style="background:#dbeafe;color:#2563eb;font-size:.7rem;">ໂອນ</span>
+                  {% else %}
+                    <span class="badge rounded-pill" style="background:#fee2e2;color:#dc2626;font-size:.7rem;">ຄ້າງ</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-center text-muted py-4">ຍັງບໍ່ມີການຂາຍ</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions + Low Stock -->
   <div class="col-lg-4 d-flex flex-column gap-3">
 
-    <!-- Quick actions -->
-    <div class="card">
-      <div class="card-header d-flex align-items-center gap-2">
-        <i class="bi bi-lightning-charge text-warning"></i>
-        <span>ທາງລັດ</span>
-      </div>
-      <div class="card-body d-grid gap-2 pb-3">
-
-        <a href="{{ url_for('pos.pos_page') }}"
-           class="quick-action-btn btn"
-           style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:0;box-shadow:0 2px 8px rgba(99,102,241,.28);">
-          <span style="background:rgba(255,255,255,.2);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i class="bi bi-cart-plus"></i>
-          </span>
-          <div>
-            <div class="fw-bold" style="font-size:.9rem;">ເປີດໜ້າຂາຍ</div>
-            <div style="font-size:.72rem;opacity:.8;">POS Terminal</div>
-          </div>
-        </a>
-
-        <a href="{{ url_for('products.add_product') }}"
-           class="quick-action-btn btn btn-outline-secondary">
-          <span style="background:#f1f5f9;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4f46e5;">
-            <i class="bi bi-plus-circle"></i>
-          </span>
-          <span>ເພີ່ມສິນຄ້າ</span>
-        </a>
-
-        <a href="{{ url_for('customers.add_customer') }}"
-           class="quick-action-btn btn btn-outline-secondary">
-          <span style="background:#f1f5f9;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#16a34a;">
-            <i class="bi bi-person-plus"></i>
-          </span>
-          <span>ເພີ່ມລູກຄ້າ</span>
-        </a>
-
-        <a href="{{ url_for('debts.list_debts') }}"
-           class="quick-action-btn btn btn-outline-warning">
-          <span style="background:#fef3c7;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#d97706;">
-            <i class="bi bi-credit-card"></i>
-          </span>
-          <span>ຈັດການໜີ້ສິນ</span>
-        </a>
-
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning me-1"></i>ທາງລັດ</h6>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('pos.pos_page') }}" class="btn text-white fw-semibold d-flex align-items-center gap-2 justify-content-center"
+             style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;border:0;padding:.6rem;">
+            <i class="bi bi-cart-plus"></i> ເປີດໜ້າຂາຍ
+          </a>
+          <a href="{{ url_for('products.add_product') }}" class="btn btn-outline-secondary d-flex align-items-center gap-2 justify-content-center" style="border-radius:12px;">
+            <i class="bi bi-plus-circle text-primary"></i> ເພີ່ມສິນຄ້າ
+          </a>
+          <a href="{{ url_for('customers.add_customer') }}" class="btn btn-outline-secondary d-flex align-items-center gap-2 justify-content-center" style="border-radius:12px;">
+            <i class="bi bi-person-plus text-success"></i> ເພີ່ມລູກຄ້າ
+          </a>
+          <a href="{{ url_for('debts.list_debts') }}" class="btn btn-outline-warning d-flex align-items-center gap-2 justify-content-center" style="border-radius:12px;">
+            <i class="bi bi-credit-card"></i> ຈັດການໜີ້ສິນ
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- Low stock warning -->
     {% if low_stock %}
-    <div class="card" style="border-left:3px solid #d97706;">
-      <div class="card-header d-flex align-items-center gap-2" style="color:#d97706;">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>Stock ໃກ້ໝົດ</span>
-        <span class="badge ms-auto" style="background:#fef3c7;color:#b45309;font-size:.7rem;">{{ low_stock|length }} ລາຍການ</span>
-      </div>
-      <div class="card-body p-0">
-        <ul class="list-group list-group-flush">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;border-left:4px solid #f59e0b!important;">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+          <h6 class="fw-bold mb-0">Stock ໃກ້ໝົດ</h6>
+          <span class="badge ms-auto" style="background:#fef3c7;color:#b45309;">{{ low_stock|length }} ລາຍການ</span>
+        </div>
+        <ul class="list-unstyled mb-0" style="max-height:220px;overflow-y:auto;">
           {% for p in low_stock %}
-          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-            <span class="small text-truncate me-2" style="max-width:160px;">{{ p.name }}</span>
-            <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;font-size:.72rem;">
-              {{ p.stock_qty }} {{ p.unit }}
-            </span>
+          <li class="d-flex justify-content-between align-items-center py-1" style="border-bottom:1px solid #f1f5f9;">
+            <span class="text-truncate me-2" style="font-size:.82rem;max-width:140px;">{{ p.name }}</span>
+            <span class="badge" style="background:{% if p.stock_qty <= 0 %}#dc2626{% else %}#fee2e2{% endif %};color:{% if p.stock_qty <= 0 %}#fff{% else %}#dc2626{% endif %};font-size:.7rem;white-space:nowrap;">{{ p.stock_qty }} {{ p.unit }}</span>
           </li>
           {% endfor %}
         </ul>
@@ -151,59 +216,72 @@
 
   </div>
 
-  <!-- Monthly sales chart -->
-  <div class="col-lg-8">
-    <div class="card h-100">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-bar-chart-line text-primary"></i>
-          <span>ຍອດຂາຍລາຍເດືອນ</span>
-        </div>
-        <a href="{{ url_for('reports.index', view='yearly') }}"
-           class="btn btn-sm btn-outline-primary rounded-pill px-3">
-          <i class="bi bi-arrow-right me-1"></i>ລາຍງານເຕັມ
-        </a>
-      </div>
-      <div class="card-body" style="padding:1.25rem 1.25rem 1rem;">
-        <canvas id="monthlyChart" height="110"></canvas>
-      </div>
-    </div>
-  </div>
-
 </div>
+
+<style>
+.dash-card {
+  border-radius: 16px;
+  padding: 1rem 1.1rem 2.2rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,.12);
+  transition: transform .2s, box-shadow .2s;
+}
+.dash-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.18); }
+.dash-card-inner { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }
+.dash-icon {
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+.dash-badge {
+  background: rgba(255,255,255,.2);
+  border-radius: 20px;
+  font-size: .68rem;
+  padding: .2rem .6rem;
+}
+.dash-value { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+.dash-label { font-size: .73rem; opacity: .85; margin-top: 3px; }
+.dash-wave { position:absolute; bottom:0; left:0; right:0; width:100%; height:35px; opacity:.15; }
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 (function() {
-  const monthly = {{ monthly | tojson }};
-  const labels  = monthly.map(r => `ເດືອນ ${r[1]}`);
-  const data    = monthly.map(r => r[2]);
+  const MONTHS = ['ມ.ກ','ກ.ພ','ມີ','ເມ','ພ.ພ','ມິ','ກ.ລ','ສ.ຫ','ກ.ຍ','ຕ.ລ','ພ.ຈ','ທ.ວ'];
 
-  const isDark = () => document.documentElement.getAttribute('data-bs-theme') === 'dark';
-  const gridColor = () => isDark() ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)';
-  const textColor = () => isDark() ? '#8b949e' : '#64748b';
+  // ── Area Chart ──
+  const monthly = {{ monthly | tojson }};
+  const labels = monthly.map(r => MONTHS[r[1]-1] + ' ' + String(r[0]).slice(2));
+  const data   = monthly.map(r => r[2]);
 
   const ctx = document.getElementById('monthlyChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 260);
+  grad.addColorStop(0,   'rgba(79,172,254,.45)');
+  grad.addColorStop(1,   'rgba(79,172,254,.02)');
 
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, 0, 0, 280);
-  grad.addColorStop(0,   'rgba(99,102,241,.85)');
-  grad.addColorStop(0.65,'rgba(124,58,237,.55)');
-  grad.addColorStop(1,   'rgba(124,58,237,.08)');
-
-  const chart = new Chart(ctx, {
-    type: 'bar',
+  new Chart(ctx, {
+    type: 'line',
     data: {
       labels,
       datasets: [{
-        label: 'ຍອດຂາຍ (ກີບ)',
+        label: 'ຍອດຂາຍ',
         data,
+        borderColor: '#4facfe',
         backgroundColor: grad,
-        borderRadius: 8,
-        borderSkipped: false,
-        hoverBackgroundColor: 'rgba(99,102,241,.95)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#4facfe',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       }]
     },
     options: {
@@ -211,48 +289,60 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: isDark() ? '#1e2433' : '#fff',
-          titleColor: isDark() ? '#c9d1d9' : '#0f172a',
-          bodyColor:  isDark() ? '#8b949e'  : '#64748b',
-          borderColor: isDark() ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)',
+          backgroundColor: '#fff',
+          titleColor: '#0f172a',
+          bodyColor: '#64748b',
+          borderColor: 'rgba(0,0,0,.1)',
           borderWidth: 1,
           padding: 10,
           cornerRadius: 8,
-          callbacks: {
-            label: ctx => ' ' + Number(ctx.parsed.y).toLocaleString() + ' ກີບ'
-          }
+          callbacks: { label: c => ' ' + Number(c.parsed.y).toLocaleString() + ' ກີບ' }
         }
       },
       scales: {
-        x: {
-          grid: { color: gridColor() },
-          ticks: { color: textColor(), font: { size: 11 } }
-        },
-        y: {
-          beginAtZero: true,
-          grid: { color: gridColor() },
-          ticks: {
-            color: textColor(),
-            font: { size: 11 },
-            callback: v => Number(v).toLocaleString()
-          }
-        }
+        x: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' },
+             ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => Number(v).toLocaleString() } }
       }
     }
   });
 
-  // Re-theme chart on dark mode toggle
-  const observer = new MutationObserver(() => {
-    chart.options.scales.x.grid.color = gridColor();
-    chart.options.scales.x.ticks.color = textColor();
-    chart.options.scales.y.grid.color = gridColor();
-    chart.options.scales.y.ticks.color = textColor();
-    chart.options.plugins.tooltip.backgroundColor = isDark() ? '#1e2433' : '#fff';
-    chart.options.plugins.tooltip.titleColor = isDark() ? '#c9d1d9' : '#0f172a';
-    chart.options.plugins.tooltip.bodyColor   = isDark() ? '#8b949e'  : '#64748b';
-    chart.update('none');
+  // ── Donut Chart ──
+  const cashAmt     = {{ cash_month | float }};
+  const transferAmt = {{ transfer_month | float }};
+  const debtAmt     = {{ debt_month | float }};
+  const total = cashAmt + transferAmt + debtAmt;
+
+  new Chart(document.getElementById('paymentChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['ເງິນສົດ','ໂອນ','ຄ້າງຊຳລະ'],
+      datasets: [{
+        data: total > 0 ? [cashAmt, transferAmt, debtAmt] : [1, 0, 0],
+        backgroundColor: ['#4facfe','#a18cd1','#fa709a'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff',
+          titleColor: '#0f172a',
+          bodyColor: '#64748b',
+          borderColor: 'rgba(0,0,0,.1)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: { label: c => ' ' + Number(c.parsed).toLocaleString() + ' ກີບ' }
+        }
+      }
+    }
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
 })();
 </script>
 {% endblock %}
