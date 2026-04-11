@@ -526,11 +526,15 @@ def api_mark_paid(sale_no):
 
     return jsonify({
         "ok": True,
-        "sale_no": sale.sale_no,
-        "payment_type": sale.payment_type,
-        "status": "paid",
-        "status_label": status_label,
-        "total": sale.total,
-        "customer": customer_name,
-        "updated_msg": updated_msg,
+        "event": "daily_summary",
+        "date_lao": d.strftime("%d/%m/%Y"),
+        "total_revenue": total_revenue,
+        "telegram_msg": msg, 
+        "data": {
+            "total_sales": len(sales),
+            "cash_total": cash_total,
+            "transfer_total": transfer_total,
+            "debt_total": debt_total,
+            "debt_count": debt_count
+        }
     })
