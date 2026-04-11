@@ -23,8 +23,15 @@ def index():
         sales = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)\
             .order_by(Sale.created_at.desc()).all()
         total = sum(s.total for s in sales)
+        cash_total = sum(s.total for s in sales if s.payment_type == "cash")
+        debt_sales_today = [s for s in sales if s.payment_type == "debt"]
+        debt_total = sum(s.debt_remaining for s in debt_sales_today)
+        overdue_sales = [s for s in debt_sales_today if s.debt_remaining > 0]
         label = f"ລາຍວັນ – {sel_dt.strftime('%d/%m/%Y')}"
-        context = dict(view=view, sales=sales, total=total, label=label, sel_date=str(sel_dt))
+        context = dict(view=view, sales=sales, total=total, label=label,
+                       sel_date=str(sel_dt),
+                       cash_total=cash_total, debt_total=debt_total,
+                       bill_count=len(sales), overdue_sales=overdue_sales)
 
     elif view == "monthly":
         sel_month = request.args.get("month", today.strftime("%Y-%m"))
