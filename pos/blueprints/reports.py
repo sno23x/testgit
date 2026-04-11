@@ -1,11 +1,102 @@
 from datetime import date
-from flask import Blueprint, render_template, request, send_file
+from flask import Blueprint, render_template, request, send_file, jsonify
 from flask_login import login_required
 from sqlalchemy import extract, func
 from models import db, Sale, SaleItem, Product, Customer
 import io, openpyxl
 
 reports_bp = Blueprint("reports", __name__)
+
+
+def _aggregate_overdue_by_customer():
+    """Return a list of {name, phone, amount, bills} for every customer who
+    currently has outstanding debt, sorted by amount (descending).
+    Sales without a customer are grouped under "ລູກຄ້າໜ້າຮ້ານ" (walk-in).
+    """
+    debt_sales = Sale.query.filter_by(payment_type="debt").all()
+    groups = {}
+    walk_in = {"name": "ລູກຄ້າໜ້າຮ້ານ", "phone": "", "amount": 0, "bills": 0}
+    for s in debt_sales:
+        rem = s.debt_remaining
+        if rem <= 0:
+            continue
+        if s.customer:
+            key = s.customer.id
+            if key not in groups:
+                groups[key] = {
+                    "name": s.customer.name,
+                    "phone": s.customer.phone or "",
+                    "amount": 0,
+                    "bills": 0,
+                }
+            groups[key]["amount"] += rem
+            groups[key]["bills"] += 1
+        else:
+            walk_in["amount"] += rem
+            walk_in["bills"] += 1
+
+    result = sorted(groups.values(), key=lambda c: c["amount"], reverse=True)
+    if walk_in["amount"] > 0:
+        result.append(walk_in)
+    return result
+
+
+def _build_daily_summary(sel_dt):
+    """Compute daily figures + per-customer overdue list for sel_dt.
+
+    This repo's Sale.payment_type only knows "cash" / "debt", so
+    transfer_total is reported as 0. If a transfer payment type is
+    added to the data model, just extend the split here.
+    """
+    sales = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)\
+        .order_by(Sale.created_at.desc()).all()
+    total_revenue = sum(s.total for s in sales)
+    cash_total = sum(s.total for s in sales if s.payment_type == "cash")
+    transfer_total = sum(s.total for s in sales if s.payment_type == "transfer")
+    debt_sales_today = [s for s in sales if s.payment_type == "debt"]
+    debt_total_today = sum(s.total for s in debt_sales_today)
+    overdue_customers = _aggregate_overdue_by_customer()
+    return dict(
+        sales=sales,
+        bill_count=len(sales),
+        total_revenue=total_revenue,
+        cash_total=cash_total,
+        transfer_total=transfer_total,
+        debt_total_today=debt_total_today,
+        debt_count_today=len(debt_sales_today),
+        overdue_customers=overdue_customers,
+        overdue_total=sum(c["amount"] for c in overdue_customers),
+    )
+
+
+def _format_telegram_msg(sel_dt, summary):
+    """Build the daily summary message for Telegram.
+
+    Matches the existing vannahomepos_bot layout (cash / transfer /
+    overdue) and appends a per-customer overdue list.
+    """
+    divider = "━━━━━━━━━━━━━━━"
+    lines = [
+        f"📊 *ສະຫຼຸບຍອດ {sel_dt.strftime('%d/%m/%Y')}*",
+        divider,
+        f"🧾 ບິນທັງໝົດ:  *{summary['bill_count']} ບິນ*",
+        f"💰 ລາຍຮັບລວມ: *{summary['total_revenue']:,.0f} ₭*",
+        divider,
+        f"💵 ເງິນສົດ:  {summary['cash_total']:,.0f} ₭",
+        f"📲 ໂອນເງິນ:  {summary['transfer_total']:,.0f} ₭",
+        f"⚠️ ຄ້າງຊຳລະ:  {summary['debt_total_today']:,.0f} ₭"
+        f"  ({summary['debt_count_today']} ບິນ)",
+    ]
+    overdue = summary["overdue_customers"]
+    if overdue:
+        lines.append(divider)
+        lines.append(f"👥 *ລາຍຊື່ລູກຄ້າຄ້າງຊຳລະ* ({len(overdue)} ຄົນ)")
+        for c in overdue:
+            phone = f" ({c['phone']})" if c["phone"] else ""
+            lines.append(f"• {c['name']}{phone}:  {c['amount']:,.0f} ₭")
+        lines.append(f"ລວມຄ້າງທັງໝົດ: *{summary['overdue_total']:,.0f} ₭*")
+    lines.append(divider)
+    return "\n".join(lines)
 
 
 @reports_bp.route("/")
@@ -20,11 +111,20 @@ def index():
             sel_dt = date.fromisoformat(sel_date)
         except Exception:
             sel_dt = today
-        sales = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)\
-            .order_by(Sale.created_at.desc()).all()
-        total = sum(s.total for s in sales)
+        summary = _build_daily_summary(sel_dt)
         label = f"ລາຍວັນ – {sel_dt.strftime('%d/%m/%Y')}"
-        context = dict(view=view, sales=sales, total=total, label=label, sel_date=str(sel_dt))
+        context = dict(
+            view=view,
+            sales=summary["sales"],
+            total=summary["total_revenue"],
+            label=label,
+            sel_date=str(sel_dt),
+            cash_total=summary["cash_total"],
+            debt_total=summary["debt_total_today"],
+            bill_count=summary["bill_count"],
+            overdue_customers=summary["overdue_customers"],
+            overdue_total=summary["overdue_total"],
+        )
 
     elif view == "monthly":
         sel_month = request.args.get("month", today.strftime("%Y-%m"))
@@ -69,6 +169,42 @@ def index():
 
     context["top_products"] = top_products
     return render_template("reports/index.html", **context)
+
+
+@reports_bp.route("/daily-summary.json")
+def daily_summary_json():
+    """Return the daily summary as JSON for Telegram/webhook integrations.
+
+    Example: /reports/daily-summary.json?date=2026-04-11
+    Defaults to today. No auth so an external scheduler (n8n / cron) can
+    fetch and post the `whatsapp_msg` field directly to Telegram.
+    """
+    sel_date = request.args.get("date", date.today().isoformat())
+    try:
+        sel_dt = date.fromisoformat(sel_date)
+    except Exception:
+        sel_dt = date.today()
+
+    summary = _build_daily_summary(sel_dt)
+    whatsapp_msg = _format_telegram_msg(sel_dt, summary)
+
+    return jsonify({
+        # core fields the existing n8n "daily summary" workflow already
+        # reads — keep these names/shape so swapping the HTTP Request URL
+        # over to this endpoint is a drop-in replacement.
+        "date": sel_dt.isoformat(),
+        "total_sales": summary["bill_count"],
+        "total_revenue": summary["total_revenue"],
+        "cash_total": summary["cash_total"],
+        "transfer_total": summary["transfer_total"],
+        "debt_total": summary["debt_total_today"],
+        "debt_count": summary["debt_count_today"],
+        # per-person overdue breakdown (new)
+        "overdue_total": summary["overdue_total"],
+        "overdue_customers": summary["overdue_customers"],
+        # ready-to-post Telegram message (with per-person overdue list)
+        "whatsapp_msg": whatsapp_msg,
+    })
 
 
 @reports_bp.route("/export")
