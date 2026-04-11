@@ -416,17 +416,18 @@ def api_daily_summary():
     else:
         debt_section = ""
 
+    divider = "─" * 18
     msg = (
         f"📊 *ສະຫຼຸບຍອດ {d.strftime('%d/%m/%Y')}*\n"
-        f"{'─'*24}\n"
+        f"{divider}\n"
         f"🧾 ບິນທັງໝົດ:   *{len(sales)} ບິນ*\n"
         f"💰 ລາຍຮັບລວມ: *{total_revenue:,.0f} ₭*\n"
-        f"{'─'*24}\n"
+        f"{divider}\n"
         f"  💵 ເງິນສົດ:     {cash_total:,.0f} ₭\n"
         f"  📲 ໂອນເງິນ:    {transfer_total:,.0f} ₭\n"
         f"  ⚠️  ຄ້າງຊຳລະ:  {debt_total:,.0f} ₭  ({debt_count} ບິນ)\n"
-        f"{'─'*24}"
-        f"{debt_section}"
+        f"{divider}"
+        f"{debt_section}" 
     )
 
     return jsonify({
