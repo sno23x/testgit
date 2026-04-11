@@ -469,7 +469,7 @@ def _check_api_key():
 
 @pos_bp.route("/api/sales/<sale_no>/mark-paid", methods=["POST"])
 def api_mark_paid(sale_no):
-    """n8n ເອີ້ນເມື່ອລູກຄ້າກົດปุ่ມ 'ຮັບເງິນສົດ' ຫຼື 'ໂອນແລ້ວ' ໃນ Telegram"""
+    """n8n ເອີ້ນເມື່ອລູກຄ້າກົດປຸ່ມ 'ຮັບເງິນສົດ' ຫຼື 'ໂອນແລ້ວ' ໃນ Telegram"""
     if not _check_api_key():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
 
