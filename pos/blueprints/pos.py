@@ -1,4 +1,6 @@
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
+
+_TZ_LAO = timezone(timedelta(hours=7))
 import threading
 import requests as _req
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
@@ -47,8 +49,8 @@ def notify_n8n(sale):
     payload = {
         "event": "sale_created",
         "sale_no": sale.sale_no,
-        "date": sale.created_at.strftime("%d/%m/%Y"),
-        "time": sale.created_at.strftime("%H:%M"),
+        "date": sale.created_at.replace(tzinfo=timezone.utc).astimezone(_TZ_LAO).strftime("%d/%m/%Y"),
+        "time": sale.created_at.replace(tzinfo=timezone.utc).astimezone(_TZ_LAO).strftime("%H:%M"),
         "customer": customer_name,
         "items": [
             {"name": si.product.name if si.product else "?",
