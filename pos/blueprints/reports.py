@@ -42,11 +42,17 @@ def _aggregate_overdue_by_customer():
 
 
 def _build_daily_summary(sel_dt):
-    """Compute daily figures + per-customer overdue list for sel_dt."""
+    """Compute daily figures + per-customer overdue list for sel_dt.
+
+    This repo's Sale.payment_type only knows "cash" / "debt", so
+    transfer_total is reported as 0. If a transfer payment type is
+    added to the data model, just extend the split here.
+    """
     sales = Sale.query.filter(db.func.date(Sale.created_at) == sel_dt)\
         .order_by(Sale.created_at.desc()).all()
     total_revenue = sum(s.total for s in sales)
     cash_total = sum(s.total for s in sales if s.payment_type == "cash")
+    transfer_total = sum(s.total for s in sales if s.payment_type == "transfer")
     debt_sales_today = [s for s in sales if s.payment_type == "debt"]
     debt_total_today = sum(s.total for s in debt_sales_today)
     overdue_customers = _aggregate_overdue_by_customer()
@@ -55,6 +61,7 @@ def _build_daily_summary(sel_dt):
         bill_count=len(sales),
         total_revenue=total_revenue,
         cash_total=cash_total,
+        transfer_total=transfer_total,
         debt_total_today=debt_total_today,
         debt_count_today=len(debt_sales_today),
         overdue_customers=overdue_customers,
@@ -63,26 +70,32 @@ def _build_daily_summary(sel_dt):
 
 
 def _format_telegram_msg(sel_dt, summary):
-    """Build the daily summary message for Telegram/WhatsApp."""
-    lines = []
-    lines.append(f"📊 *ສະຫຼຸບຍອດ {sel_dt.strftime('%d/%m/%Y')}*")
-    lines.append("━━━━━━━━━━━━━━━")
-    lines.append(f"🧾 ບິນທັງໝົດ:  *{summary['bill_count']} ບິນ*")
-    lines.append(f"💰 ລາຍຮັບລວມ: *{summary['total_revenue']:,.0f} ₭*")
-    lines.append("━━━━━━━━━━━━━━━")
-    lines.append(f"💵 ເງິນສົດ:  {summary['cash_total']:,.0f} ₭")
-    lines.append(
-        f"⚠️ ຄ້າງຊຳລະວັນນີ້:  {summary['debt_total_today']:,.0f} ₭"
-        f"  ({summary['debt_count_today']} ບິນ)"
-    )
+    """Build the daily summary message for Telegram.
+
+    Matches the existing vannahomepos_bot layout (cash / transfer /
+    overdue) and appends a per-customer overdue list.
+    """
+    divider = "━━━━━━━━━━━━━━━"
+    lines = [
+        f"📊 *ສະຫຼຸບຍອດ {sel_dt.strftime('%d/%m/%Y')}*",
+        divider,
+        f"🧾 ບິນທັງໝົດ:  *{summary['bill_count']} ບິນ*",
+        f"💰 ລາຍຮັບລວມ: *{summary['total_revenue']:,.0f} ₭*",
+        divider,
+        f"💵 ເງິນສົດ:  {summary['cash_total']:,.0f} ₭",
+        f"📲 ໂອນເງິນ:  {summary['transfer_total']:,.0f} ₭",
+        f"⚠️ ຄ້າງຊຳລະ:  {summary['debt_total_today']:,.0f} ₭"
+        f"  ({summary['debt_count_today']} ບິນ)",
+    ]
     overdue = summary["overdue_customers"]
     if overdue:
-        lines.append("━━━━━━━━━━━━━━━")
+        lines.append(divider)
         lines.append(f"👥 *ລາຍຊື່ລູກຄ້າຄ້າງຊຳລະ* ({len(overdue)} ຄົນ)")
         for c in overdue:
             phone = f" ({c['phone']})" if c["phone"] else ""
-            lines.append(f"• {c['name']}{phone}: {c['amount']:,.0f} ₭")
+            lines.append(f"• {c['name']}{phone}:  {c['amount']:,.0f} ₭")
         lines.append(f"ລວມຄ້າງທັງໝົດ: *{summary['overdue_total']:,.0f} ₭*")
+    lines.append(divider)
     return "\n".join(lines)
 
 
@@ -176,14 +189,20 @@ def daily_summary_json():
     whatsapp_msg = _format_telegram_msg(sel_dt, summary)
 
     return jsonify({
+        # core fields the existing n8n "daily summary" workflow already
+        # reads — keep these names/shape so swapping the HTTP Request URL
+        # over to this endpoint is a drop-in replacement.
         "date": sel_dt.isoformat(),
         "total_sales": summary["bill_count"],
         "total_revenue": summary["total_revenue"],
         "cash_total": summary["cash_total"],
-        "debt_total_today": summary["debt_total_today"],
-        "debt_count_today": summary["debt_count_today"],
+        "transfer_total": summary["transfer_total"],
+        "debt_total": summary["debt_total_today"],
+        "debt_count": summary["debt_count_today"],
+        # per-person overdue breakdown (new)
         "overdue_total": summary["overdue_total"],
         "overdue_customers": summary["overdue_customers"],
+        # ready-to-post Telegram message (with per-person overdue list)
         "whatsapp_msg": whatsapp_msg,
     })
 
