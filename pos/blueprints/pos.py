@@ -396,6 +396,26 @@ def api_daily_summary():
     debt_total    = sum(s.total for s in sales if s.payment_type == "debt")
     debt_count    = sum(1 for s in sales if s.payment_type == "debt")
 
+    # ລາຍຊື່ລູກຄ້າທີ່ຍັງຄ້າງຊຳລະ (ທຸກໆ debt ທີ່ຍັງຄ້າງ ບໍ່ຈຳກັດສະເພາະວັນນີ້)
+    debt_customers = (
+        db.session.query(Customer.name, func.sum(Sale.total - Sale.paid_amount).label("outstanding"))
+        .join(Sale, Sale.customer_id == Customer.id)
+        .filter(Sale.payment_type == "debt", Sale.voided == False)
+        .group_by(Customer.id, Customer.name)
+        .having(func.sum(Sale.total - Sale.paid_amount) > 0)
+        .order_by(func.sum(Sale.total - Sale.paid_amount).desc())
+        .all()
+    )
+
+    if debt_customers:
+        debt_lines = "\n".join(
+            f"  • {row.name}: {row.outstanding:,.0f} ₭"
+            for row in debt_customers
+        )
+        debt_section = f"\n\n📋 *ລາຍຊື່ຄ້າງຊຳລະ:*\n{debt_lines}"
+    else:
+        debt_section = ""
+
     msg = (
         f"📊 *ສະຫຼຸບຍອດ {d.strftime('%d/%m/%Y')}*\n"
         f"{'─'*24}\n"
@@ -406,6 +426,7 @@ def api_daily_summary():
         f"  📲 ໂອນເງິນ:    {transfer_total:,.0f} ₭\n"
         f"  ⚠️  ຄ້າງຊຳລະ:  {debt_total:,.0f} ₭  ({debt_count} ບິນ)\n"
         f"{'─'*24}"
+        f"{debt_section}"
     )
 
     return jsonify({
@@ -419,6 +440,10 @@ def api_daily_summary():
         "debt_total": debt_total,
         "debt_count": debt_count,
         "whatsapp_msg": msg,
+        "debt_customers": [
+            {"name": row.name, "outstanding": float(row.outstanding)}
+            for row in debt_customers
+        ],
         "sales": [
             {"sale_no": s.sale_no,
              "total": s.total,
