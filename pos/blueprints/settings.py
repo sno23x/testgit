@@ -28,6 +28,7 @@ DEFAULT_SETTINGS = {
     "n8n_api_key": "",
     "callmebot_phone": "",
     "callmebot_apikey": "",
+    "cashback_daily_quota": "0",
 }
 
 
