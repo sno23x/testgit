@@ -148,6 +148,17 @@
       font-size: 2rem; font-weight: 700; color: #f1f5f9;
       background: #14532d; padding: .5rem 2rem; border-radius: .75rem;
     }
+    .confirm-money-row {
+      display: flex; gap: 2.5rem; justify-content: center; align-items: stretch;
+    }
+    .confirm-money-card {
+      background: #0f172a; border-radius: 1rem; padding: .75rem 2rem; min-width: 200px;
+      text-align: center; border: 1.5px solid #1e3a2f;
+    }
+    .confirm-money-label { font-size: .95rem; color: #94a3b8; margin-bottom: .2rem; }
+    .confirm-money-val   { font-size: 2rem; font-weight: 800; }
+    .confirm-paid-val    { color: #f1f5f9; }
+    .confirm-change-val  { color: #fbbf24; }
     .confirm-sub { font-size: 1.1rem; color: #4ade80; }
 
     @keyframes fadeUp {
@@ -243,6 +254,16 @@
       <div class="confirm-title">ຂອບໃຈ!</div>
       <div class="confirm-saleno" id="cd-sale-no"></div>
       <div class="confirm-total" id="cd-confirm-total"></div>
+      <div class="confirm-money-row" id="cd-money-row">
+        <div class="confirm-money-card">
+          <div class="confirm-money-label"><i class="bi bi-cash me-1"></i>ຮັບເງິນ</div>
+          <div class="confirm-money-val confirm-paid-val" id="cd-paid-amt">—</div>
+        </div>
+        <div class="confirm-money-card" id="cd-change-card">
+          <div class="confirm-money-label"><i class="bi bi-arrow-return-left me-1"></i>ເງິນທອນ</div>
+          <div class="confirm-money-val confirm-change-val" id="cd-change-amt">0</div>
+        </div>
+      </div>
       <div class="confirm-sub"><i class="bi bi-heart-fill me-1"></i>ສຳເລັດການຊຳລະ — ຂໍໃຫ້ໂຊກດີ</div>
     </div>
 
@@ -316,9 +337,22 @@
     socket.on('cart_confirmed', function(data) {
       document.getElementById('cd-sale-no').textContent = 'ເລກບິນ: ' + (data.sale_no || '');
       document.getElementById('cd-confirm-total').textContent = Number(data.total).toLocaleString() + ' ₭';
+
+      const paid   = data.paid   ?? data.total;
+      const change = data.change ?? 0;
+      const moneyRow   = document.getElementById('cd-money-row');
+      const changeCard = document.getElementById('cd-change-card');
+
+      document.getElementById('cd-paid-amt').textContent   = Number(paid).toLocaleString() + ' ₭';
+      document.getElementById('cd-change-amt').textContent = Number(change).toLocaleString() + ' ₭';
+
+      // Hide paid/change row for transfer (paid == total, change == 0)
+      moneyRow.style.display   = (paid > 0) ? 'flex' : 'none';
+      changeCard.style.display = (change > 0) ? '' : 'none';
+
       show('confirmed');
       clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(() => show('idle'), 3000);
+      confirmTimer = setTimeout(() => show('idle'), 4000);
     });
 
     socket.on('cart_cleared', () => show('idle'));

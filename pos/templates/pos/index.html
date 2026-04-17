@@ -973,7 +973,11 @@ function doSubmit(type, paidAmount) {
       renderCart(true);
       clearSearch();
     } else {
-      socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
+      socket.emit('cart_confirmed', {
+        sale_no: data.sale_no, total: total,
+        paid: paidAmount ?? total,
+        change: changeAmt,
+      });
       successModal.show();
     }
   }).catch(() => alert('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່'));
