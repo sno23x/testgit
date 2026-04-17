@@ -266,23 +266,39 @@
           <span class="fw-bold fs-4"><i class="bi bi-arrow-return-left me-1"></i>ເງິນທອນ</span>
           <span class="fw-bold fs-2 text-success" id="pm-change">0 ກີບ</span>
         </div>
-        <div id="pm-quota-row" class="d-none small rounded p-2 mb-1 border border-warning">
-          <div class="d-flex justify-content-between">
+        <div id="pm-quota-row" class="d-none small rounded p-2 mb-1 border">
+          <div class="d-flex justify-content-between align-items-center">
             <span><i class="bi bi-piggy-bank me-1 text-warning"></i>ເງິນທອນວັນນີ້ລວມ</span>
-            <span id="pm-used-lbl" class="fw-semibold">—</span>
+            <div class="d-flex align-items-center gap-2">
+              <span id="pm-used-lbl" class="fw-semibold">—</span>
+              {% if current_user.is_manager() %}
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1"
+                      onclick="openQuotaEdit()" title="ຕັ້ງ/ເພີ່ມວົງເງິນ">
+                <i class="bi bi-pencil-fill" style="font-size:0.7rem;"></i>
+              </button>
+              {% endif %}
+            </div>
           </div>
           <div class="d-flex justify-content-between">
             <span>ວົງເງິນ / ວັນ</span>
             <span id="pm-quota-lbl" class="fw-semibold">—</span>
           </div>
           <div class="progress mt-1" style="height:6px;">
-            <div class="progress-bar bg-warning" id="pm-quota-bar" style="width:0%"></div>
+            <div class="progress-bar bg-success" id="pm-quota-bar" style="width:0%"></div>
           </div>
         </div>
-        <div id="pm-quota-warn" class="d-none alert alert-danger py-1 small mb-1">
-          <i class="bi bi-exclamation-triangle-fill me-1"></i>
-          ເງິນທອນວັນນີ້ໃກ້/ເກີນວົງເງິນ! ກະລຸນາກວດສອບ.
+        {% if current_user.is_manager() %}
+        <div id="pm-quota-edit" class="d-none mt-1 p-2 border rounded bg-body-secondary small">
+          <div class="fw-semibold mb-1">ຕັ້ງວົງເງິນທອນ / ວັນ (ກີບ)</div>
+          <div class="input-group input-group-sm">
+            <input type="number" id="pm-quota-input" class="form-control" min="0" step="10000"
+                   placeholder="0 = ບໍ່ຈຳກັດ"/>
+            <button type="button" class="btn btn-primary" onclick="saveQuota()">ບັນທຶກ</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="cancelQuotaEdit()">ຍົກເລີກ</button>
+          </div>
         </div>
+        {% endif %}
+        <div id="pm-quota-warn" class="d-none alert py-1 small mb-1"></div>
       </div>
       <div class="modal-footer pt-1">
         <button class="btn btn-secondary" data-bs-dismiss="modal">ຍົກເລີກ</button>
@@ -367,21 +383,8 @@ function openPaymentModal() {
   fetch('/pos/cashback-status')
     .then(r => r.json())
     .then(cb => {
-      const quotaRow  = document.getElementById('pm-quota-row');
-      const quotaWarn = document.getElementById('pm-quota-warn');
-      if (cb.quota > 0) {
-        quotaRow.classList.remove('d-none');
-        document.getElementById('pm-used-lbl').textContent  = Number(cb.used).toLocaleString() + ' ກີບ';
-        document.getElementById('pm-quota-lbl').textContent = Number(cb.quota).toLocaleString() + ' ກີບ';
-        const pct = Math.min(100, (cb.used / cb.quota) * 100);
-        const bar = document.getElementById('pm-quota-bar');
-        bar.style.width = pct + '%';
-        bar.className = 'progress-bar ' + (pct >= 90 ? 'bg-danger' : pct >= 70 ? 'bg-warning' : 'bg-success');
-        pmCheckQuotaWarn(cb);
-      } else {
-        quotaRow.classList.add('d-none');
-        quotaWarn.classList.add('d-none');
-      }
+      pmCbStatus = cb;
+      refreshQuotaDisplay(cb);
     }).catch(() => {});
 
   paymentModal.show();
@@ -405,6 +408,26 @@ function pmCalc() {
   if (pmCbStatus) pmCheckQuotaWarn(pmCbStatus, change);
 }
 
+function refreshQuotaDisplay(cb) {
+  const quotaRow  = document.getElementById('pm-quota-row');
+  const quotaWarn = document.getElementById('pm-quota-warn');
+  if (cb.quota <= 0) {
+    quotaRow.classList.add('d-none');
+    quotaWarn.classList.add('d-none');
+    return;
+  }
+  quotaRow.classList.remove('d-none');
+  document.getElementById('pm-used-lbl').textContent  = Number(cb.used).toLocaleString() + ' ກີບ';
+  document.getElementById('pm-quota-lbl').textContent = Number(cb.quota).toLocaleString() + ' ກີບ';
+  const pct = Math.min(100, (cb.used / cb.quota) * 100);
+  const bar = document.getElementById('pm-quota-bar');
+  bar.style.width = pct + '%';
+  bar.className = 'progress-bar ' + (pct >= 100 ? 'bg-danger' : pct >= 70 ? 'bg-warning' : 'bg-success');
+  quotaRow.className = 'small rounded p-2 mb-1 border ' +
+    (pct >= 100 ? 'border-danger' : pct >= 70 ? 'border-warning' : 'border-secondary');
+  pmCheckQuotaWarn(cb);
+}
+
 function pmCheckQuotaWarn(cb, change) {
   if (change === undefined) {
     change = Math.max(0, (parseFloat(document.getElementById('pm-paid').value) || 0)
@@ -412,12 +435,47 @@ function pmCheckQuotaWarn(cb, change) {
   }
   pmCbStatus = cb;
   const warn = document.getElementById('pm-quota-warn');
-  if (cb.quota > 0 && (cb.used + change) >= cb.quota * 0.9) {
+  if (cb.quota <= 0) { warn.classList.add('d-none'); return; }
+  const afterUsed = cb.used + change;
+  const remaining = Math.max(0, cb.quota - cb.used);
+  if (afterUsed >= cb.quota) {
+    warn.className = 'alert alert-danger py-1 small mb-1';
+    warn.innerHTML = '<i class="bi bi-x-octagon-fill me-1"></i>ເງິນທອນໝົດແລ້ວ! ກະລຸນາຕື່ມເງິນທອນ.';
+    warn.classList.remove('d-none');
+  } else if (afterUsed >= cb.quota * 0.7) {
+    warn.className = 'alert alert-warning py-1 small mb-1';
+    warn.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>ເງິນທອນໃກ້ໝົດ! ເຫຼືອ ${Number(remaining).toLocaleString()} ກີບ.`;
     warn.classList.remove('d-none');
   } else {
     warn.classList.add('d-none');
   }
 }
+
+{% if current_user.is_manager() %}
+function openQuotaEdit() {
+  document.getElementById('pm-quota-input').value = pmCbStatus?.quota || 0;
+  document.getElementById('pm-quota-edit').classList.remove('d-none');
+}
+function cancelQuotaEdit() {
+  document.getElementById('pm-quota-edit').classList.add('d-none');
+}
+function saveQuota() {
+  const quota = parseFloat(document.getElementById('pm-quota-input').value) || 0;
+  fetch('/pos/cashback-set', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({quota}),
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      document.getElementById('pm-quota-edit').classList.add('d-none');
+      fetch('/pos/cashback-status').then(r => r.json()).then(cb => {
+        pmCbStatus = cb;
+        refreshQuotaDisplay(cb);
+      });
+    }
+  });
+}
+{% endif %}
 
 function confirmPayment() {
   const paid  = parseFloat(document.getElementById('pm-paid').value) || 0;

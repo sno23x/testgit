@@ -368,6 +368,19 @@ def customer_display():
 
 
 # ──────────────── Cashback quota status ────────────────
+@pos_bp.route("/cashback-set", methods=["POST"])
+@login_required
+def cashback_set():
+    if not current_user.is_manager():
+        return jsonify({"error": "ສິດທິບໍ່ພຽງພໍ"}), 403
+    data = request.get_json() or {}
+    quota = data.get("quota")
+    if quota is not None:
+        Setting.set("cashback_daily_quota", str(max(0, float(quota))))
+        db.session.commit()
+    return jsonify({"ok": True})
+
+
 @pos_bp.route("/cashback-status")
 @login_required
 def cashback_status():
