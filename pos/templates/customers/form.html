@@ -45,12 +45,14 @@
             <div class="input-group">
               <input type="url" name="map_url" id="mapUrlInput" class="form-control"
                      placeholder="https://maps.app.goo.gl/..."
-                     value="{{ customer.map_url if customer else '' }}"/>
-              {% if customer and customer.map_url %}
-              <a href="{{ customer.map_url }}" target="_blank" class="btn btn-outline-danger" title="ເປີດ Maps">
-                <i class="bi bi-map"></i>
+                     value="{{ customer.map_url if customer else '' }}"
+                     oninput="updateMapBtn(this.value)"/>
+              <a id="mapOpenBtn" href="{{ customer.map_url if customer and customer.map_url else '#' }}"
+                 target="_blank"
+                 class="btn btn-outline-danger {% if not (customer and customer.map_url) %}d-none{% endif %}"
+                 title="ເປີດ Google Maps">
+                <i class="bi bi-map-fill"></i>
               </a>
-              {% endif %}
             </div>
             <div class="form-text">
               ວິທີໄດ້ link: ເປີດ Google Maps → ຄລິກສະຖານທີ່ → Share → Copy link
@@ -73,6 +75,15 @@ function refreshCid() {
   fetch('/customers/next-cid')
     .then(r => r.json())
     .then(d => { document.getElementById('custCodeInput').value = d.cid; });
+}
+function updateMapBtn(val) {
+  const btn = document.getElementById('mapOpenBtn');
+  if (val && val.startsWith('http')) {
+    btn.href = val;
+    btn.classList.remove('d-none');
+  } else {
+    btn.classList.add('d-none');
+  }
 }
 </script>
 {% endblock %}
