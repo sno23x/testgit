@@ -248,7 +248,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body pb-2">
-        <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded bg-light">
+        <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded border">
           <span class="fw-semibold text-muted">ຍອດທີ່ຕ້ອງຈ່າຍ</span>
           <span class="fw-bold fs-4 text-primary" id="pm-total">0 ກີບ</span>
         </div>
@@ -261,12 +261,12 @@
           <input type="number" id="pm-paid" class="form-control form-control-lg fw-bold text-center"
                  min="0" step="1000" oninput="pmCalc()"/>
         </div>
-        <div class="d-flex justify-content-between align-items-center p-3 rounded mb-3"
-             id="pm-change-row" style="background:#d1fae5;">
+        <div class="d-flex justify-content-between align-items-center p-3 rounded mb-3 border border-success"
+             id="pm-change-row">
           <span class="fw-bold fs-5"><i class="bi bi-arrow-return-left me-1"></i>ເງິນທອນ</span>
           <span class="fw-bold fs-3 text-success" id="pm-change">0 ກີບ</span>
         </div>
-        <div id="pm-quota-row" class="d-none small rounded p-2 mb-1" style="background:#fef9c3;">
+        <div id="pm-quota-row" class="d-none small rounded p-2 mb-1 border border-warning">
           <div class="d-flex justify-content-between">
             <span><i class="bi bi-piggy-bank me-1 text-warning"></i>ເງິນທອນວັນນີ້ລວມ</span>
             <span id="pm-used-lbl" class="fw-semibold">—</span>
@@ -386,7 +386,8 @@ function pmCalc() {
   const change = Math.max(0, paid - total);
   const row    = document.getElementById('pm-change-row');
   document.getElementById('pm-change').textContent = Number(change).toLocaleString() + ' ກີບ';
-  row.style.background = change > 0 ? '#d1fae5' : '#f1f5f9';
+  row.classList.toggle('border-success', change > 0);
+  row.classList.toggle('border-secondary', change <= 0);
   if (pmCbStatus) pmCheckQuotaWarn(pmCbStatus, change);
 }
 

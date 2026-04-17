@@ -277,6 +277,35 @@
     </div>
   </div>
 </div>
+
+<!-- Cashback Quota -->
+<div class="row g-4 mt-0">
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold" style="background:linear-gradient(135deg,#0369a1,#0284c7);color:#fff;">
+        <i class="bi bi-piggy-bank me-1"></i>ວົງເງິນເງິນທອນ (Cashback Quota)
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label fw-semibold">ວົງເງິນທອນສູງສຸດ / ວັນ (ກີບ)</label>
+              <input type="number" name="cashback_daily_quota" class="form-control"
+                     placeholder="0 = ບໍ່ຈຳກັດ" min="0" step="1000"
+                     value="{{ s.cashback_daily_quota or '0' }}"/>
+              <div class="form-text">ຖ້າເງິນທອນລວມໃນວັນນັ້ນ ໃກ້/ເກີນຈຳນວນນີ້ ຈະແຈ້ງເຕືອນ. ໃສ່ 0 = ບໍ່ຈຳກັດ</div>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary fw-bold">
+                <i class="bi bi-save me-1"></i>ບັນທຶກ
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

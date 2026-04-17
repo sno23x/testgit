@@ -3,311 +3,250 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ shop_name }} – ໜ້າຈໍລູກຄ້າ</title>
+  <title>{{ shop_name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wdth,wght@100,300;100,400;100,600;100,700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Noto Sans Lao', sans-serif;
-      background: #0f172a;
+      background: #080e1a;
       color: #f1f5f9;
       min-height: 100vh;
-      margin: 0;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* ── Header ── */
-    .cd-header {
-      background: linear-gradient(135deg, #1e3a5f 0%, #0e4d92 100%);
-      padding: 1rem 2rem;
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-bottom: 2px solid #334155;
+      padding: 0.9rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 3px solid #3b82f6;
+      flex-shrink: 0;
     }
-    .cd-header .shop-name {
-      font-size: 1.6rem;
+    .shop-name {
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.03em;
     }
-    .cd-header .clock {
-      font-size: 1.1rem;
-      color: #93c5fd;
+    .header-right { display: flex; align-items: center; gap: 1.5rem; }
+    .clock { font-size: 1.2rem; font-weight: 600; color: #94a3b8; font-variant-numeric: tabular-nums; }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; box-shadow: 0 0 8px #22c55e; }
+      50%      { opacity:.5; box-shadow: 0 0 2px #22c55e; }
     }
 
-    /* ── Main area ── */
-    .cd-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 2rem;
-    }
+    /* ── Main ── */
+    main { flex: 1; display: flex; flex-direction: column; padding: 1.5rem 2rem; min-height: 0; }
 
-    /* ── Idle screen ── */
+    /* ── IDLE ── */
     #screen-idle {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 1.5rem;
-      animation: fadeIn 0.5s ease;
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; gap: 2rem;
+      animation: fadeUp .5s ease;
     }
-    #screen-idle .welcome-icon {
-      font-size: 6rem;
-      color: #3b82f6;
-      animation: pulse 2.5s infinite;
+    .idle-icon {
+      font-size: 7rem;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: float 3s ease-in-out infinite;
     }
-    #screen-idle h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      color: #f1f5f9;
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
     }
-    #screen-idle p {
-      font-size: 1.4rem;
-      color: #94a3b8;
+    .idle-title { font-size: 3.5rem; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
+    .idle-sub   { font-size: 1.3rem; color: #64748b; }
+    .idle-divider {
+      width: 80px; height: 4px; border-radius: 2px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     }
 
-    /* ── Cart screen ── */
+    /* ── CART ── */
     #screen-cart {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      gap: 1rem;
-      animation: fadeIn 0.3s ease;
+      flex: 1; display: none; flex-direction: column; gap: 1rem;
+      animation: fadeUp .3s ease;
     }
-    .cd-table-wrap {
-      flex: 1;
-      overflow-y: auto;
+    .cart-title { font-size: 1rem; font-weight: 600; color: #64748b; letter-spacing: .05em; text-transform: uppercase; }
+
+    .items-wrap { flex: 1; overflow-y: auto; padding-right: 4px; }
+    .items-wrap::-webkit-scrollbar { width: 4px; }
+    .items-wrap::-webkit-scrollbar-track { background: #1e293b; border-radius: 2px; }
+    .items-wrap::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+
+    .item-row {
+      display: flex; align-items: center; gap: 1rem;
+      padding: .75rem 1rem;
+      border-radius: .75rem;
+      border: 1px solid #1e293b;
+      margin-bottom: .5rem;
+      transition: background .2s;
     }
-    .cd-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 1.15rem;
+    .item-row:hover { background: #0f172a; }
+    .item-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+      color: #fff; font-size: .8rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .cd-table thead th {
-      background: #1e40af;
-      color: #bfdbfe;
-      padding: 0.75rem 1rem;
-      text-align: left;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-    }
-    .cd-table thead th:last-child { text-align: right; }
-    .cd-table tbody tr {
-      border-bottom: 1px solid #1e293b;
-      transition: background 0.2s;
-    }
-    .cd-table tbody tr:hover { background: #1e293b; }
-    .cd-table tbody td {
-      padding: 0.7rem 1rem;
-      vertical-align: middle;
-    }
-    .cd-table tbody td:last-child {
-      text-align: right;
-      font-weight: 700;
-      color: #60a5fa;
-    }
-    .item-name { font-weight: 600; color: #f1f5f9; }
-    .item-qty  { color: #94a3b8; font-size: 1rem; }
+    .item-name  { flex: 1; font-weight: 600; font-size: 1.1rem; color: #e2e8f0; }
+    .item-qty   { color: #94a3b8; font-size: .95rem; white-space: nowrap; }
+    .item-price { font-weight: 700; color: #60a5fa; font-size: 1.05rem; white-space: nowrap; }
 
     /* ── Total bar ── */
-    .cd-total-bar {
-      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    .total-bar {
+      background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
       border-radius: 1rem;
-      padding: 1.2rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 1.2rem 1.8rem;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 24px rgba(79,70,229,.35);
+      flex-shrink: 0;
     }
-    .cd-total-bar .label {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #bfdbfe;
-    }
-    .cd-total-bar .amount {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: 0.02em;
-    }
+    .total-label  { font-size: 1.3rem; font-weight: 600; color: #bfdbfe; }
+    .total-amount { font-size: 2.8rem; font-weight: 800; color: #fff; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 
-    /* ── Confirmed screen ── */
+    /* ── CONFIRMED ── */
     #screen-confirmed {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 1.5rem;
-      animation: fadeIn 0.5s ease;
+      flex: 1; display: none; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; gap: 1.5rem;
+      animation: fadeUp .4s ease;
     }
-    #screen-confirmed .confirm-icon {
-      font-size: 7rem;
-      color: #22c55e;
-      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    #screen-confirmed h1 {
-      font-size: 3.5rem;
-      font-weight: 800;
-      color: #22c55e;
-    }
-    #screen-confirmed .sale-no {
-      font-size: 1.3rem;
-      color: #86efac;
-    }
-    #screen-confirmed .total-confirm {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      background: #14532d;
-      padding: 0.5rem 2rem;
-      border-radius: 0.75rem;
-    }
-
-    /* ── Animations ── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.5; }
+    .confirm-ring {
+      width: 130px; height: 130px; border-radius: 50%;
+      background: radial-gradient(circle, #14532d, #15803d);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem; color: #4ade80;
+      box-shadow: 0 0 40px rgba(34,197,94,.4);
+      animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
     }
     @keyframes popIn {
-      from { transform: scale(0.5); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
+      from { transform: scale(.4); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+    .confirm-title  { font-size: 3.5rem; font-weight: 800; color: #4ade80; }
+    .confirm-saleno { font-size: 1.2rem; color: #86efac; letter-spacing: .05em; }
+    .confirm-total  {
+      font-size: 2rem; font-weight: 700; color: #f1f5f9;
+      background: #14532d; padding: .5rem 2rem; border-radius: .75rem;
+    }
+    .confirm-sub { font-size: 1.1rem; color: #4ade80; }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    footer {
+      text-align: center; padding: .5rem;
+      font-size: .75rem; color: #1e293b;
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="cd-header">
-    <div class="shop-name">
-      <i class="bi bi-shop me-2"></i>{{ shop_name }}
+  <header>
+    <div class="shop-name"><i class="bi bi-shop me-2"></i>{{ shop_name }}</div>
+    <div class="header-right">
+      <div class="clock" id="cd-clock"></div>
+      <div class="status-dot" title="ເຊື່ອມຕໍ່ແລ້ວ"></div>
     </div>
-    <div class="clock" id="cd-clock"></div>
-  </div>
+  </header>
 
-  <!-- Main -->
-  <div class="cd-main">
-
-    <!-- Idle / Welcome -->
+  <main>
     <div id="screen-idle">
-      <div class="welcome-icon"><i class="bi bi-bag-heart-fill"></i></div>
-      <h1>ຍິນດີຕ້ອນຮັບ</h1>
-      <p>ກະລຸນາລໍຖ້າໃນຂະນະທີ່ພະນັກງານກໍາລັງດຳເນີນການ...</p>
+      <div class="idle-icon"><i class="bi bi-bag-heart-fill"></i></div>
+      <div>
+        <div class="idle-title">ຍິນດີຕ້ອນຮັບ</div>
+        <div class="idle-divider mx-auto mt-3 mb-3" style="margin:12px auto;"></div>
+        <div class="idle-sub">ກະລຸນາລໍຖ້າ ພະນັກງານກຳລັງດຳເນີນການ...</div>
+      </div>
     </div>
 
-    <!-- Cart items -->
     <div id="screen-cart">
-      <div class="cd-table-wrap">
-        <table class="cd-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>ສິນຄ້າ</th>
-              <th>ຈໍານວນ</th>
-              <th>ລາຄາ/ໜ່ວຍ</th>
-              <th>ລວມ</th>
-            </tr>
-          </thead>
-          <tbody id="cd-items"></tbody>
-        </table>
-      </div>
-      <div class="cd-total-bar">
-        <span class="label"><i class="bi bi-receipt me-2"></i>ລວມທັງໝົດ</span>
-        <span class="amount" id="cd-total">0 ກີບ</span>
+      <div class="cart-title"><i class="bi bi-receipt me-1"></i>ລາຍການສິນຄ້າ</div>
+      <div class="items-wrap"><div id="cd-items"></div></div>
+      <div class="total-bar">
+        <span class="total-label"><i class="bi bi-calculator me-2"></i>ລວມທັງໝົດ</span>
+        <span class="total-amount" id="cd-total">0 ₭</span>
       </div>
     </div>
 
-    <!-- Confirmed / Thank you -->
     <div id="screen-confirmed">
-      <div class="confirm-icon"><i class="bi bi-check-circle-fill"></i></div>
-      <h1>ຂອບໃຈ!</h1>
-      <div class="sale-no" id="cd-sale-no"></div>
-      <div class="total-confirm" id="cd-confirm-total"></div>
-      <p style="color:#86efac; font-size:1.2rem;">ສໍາເລັດການຊໍາລະ — ຂໍໃຫ້ໂຊກດີ</p>
+      <div class="confirm-ring"><i class="bi bi-check-lg"></i></div>
+      <div class="confirm-title">ຂອບໃຈ!</div>
+      <div class="confirm-saleno" id="cd-sale-no"></div>
+      <div class="confirm-total" id="cd-confirm-total"></div>
+      <div class="confirm-sub"><i class="bi bi-heart-fill me-1"></i>ສຳເລັດການຊຳລະ — ຂໍໃຫ້ໂຊກດີ</div>
     </div>
+  </main>
 
-  </div><!-- /cd-main -->
+  <footer>vannahome.shop</footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
   <script>
-    // ── Clock ──
-    function tickClock() {
+    function tick() {
       const now = new Date();
       document.getElementById('cd-clock').textContent =
         now.toLocaleDateString('lo-LA') + '  ' + now.toLocaleTimeString('lo-LA');
     }
-    setInterval(tickClock, 1000); tickClock();
+    setInterval(tick, 1000); tick();
 
-    // ── Screen switching ──
-    function showScreen(name) {
-      ['idle', 'cart', 'confirmed'].forEach(s => {
-        const el = document.getElementById('screen-' + s);
-        el.style.display = (s === name) ? 'flex' : 'none';
+    function show(name) {
+      ['idle','cart','confirmed'].forEach(s => {
+        document.getElementById('screen-' + s).style.display = s === name ? 'flex' : 'none';
       });
     }
-    showScreen('idle');
+    show('idle');
 
     let confirmTimer = null;
-
-    // ── Socket.IO ──
     const socket = io();
 
     socket.on('cart_update', function(data) {
       const items = data.items || [];
-      if (!items.length) { showScreen('idle'); return; }
-
-      const tbody = document.getElementById('cd-items');
-      tbody.innerHTML = items.map((it, i) => {
-        const lineTotal = it.unit_price * it.qty;
-        return `<tr>
-          <td class="text-muted">${i + 1}</td>
-          <td><span class="item-name">${escHtml(it.name)}</span></td>
-          <td><span class="item-qty">${it.qty} ${escHtml(it.unit)}</span></td>
-          <td>${Number(it.unit_price).toLocaleString()} ກີບ</td>
-          <td>${Number(lineTotal).toLocaleString()} ກີບ</td>
-        </tr>`;
-      }).join('');
-
-      document.getElementById('cd-total').textContent =
-        Number(data.total).toLocaleString() + ' ກີບ';
-
-      showScreen('cart');
+      if (!items.length) { show('idle'); return; }
+      document.getElementById('cd-items').innerHTML = items.map((it, i) => `
+        <div class="item-row">
+          <div class="item-num">${i + 1}</div>
+          <div class="item-name">${esc(it.name)}</div>
+          <div class="item-qty">${it.qty} ${esc(it.unit || '')}</div>
+          <div class="item-price">${Number(it.unit_price * it.qty).toLocaleString()} ₭</div>
+        </div>`).join('');
+      document.getElementById('cd-total').textContent = Number(data.total).toLocaleString() + ' ₭';
+      show('cart');
     });
 
     socket.on('cart_confirmed', function(data) {
       document.getElementById('cd-sale-no').textContent = 'ເລກບິນ: ' + (data.sale_no || '');
-      document.getElementById('cd-confirm-total').textContent =
-        Number(data.total).toLocaleString() + ' ກີບ';
-      showScreen('confirmed');
-
-      // Return to idle after 6 seconds
+      document.getElementById('cd-confirm-total').textContent = Number(data.total).toLocaleString() + ' ₭';
+      show('confirmed');
       clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(() => showScreen('idle'), 6000);
+      confirmTimer = setTimeout(() => show('idle'), 7000);
     });
 
-    socket.on('cart_cleared', function() {
-      showScreen('idle');
-    });
+    socket.on('cart_cleared', () => show('idle'));
 
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
   </script>
 </body>
