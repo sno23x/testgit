@@ -371,7 +371,7 @@ def customer_display():
 @pos_bp.route("/cashback-set", methods=["POST"])
 @login_required
 def cashback_set():
-    if not current_user.is_manager():
+    if not current_user.is_accountant():
         return jsonify({"error": "ສິດທິບໍ່ພຽງພໍ"}), 403
     data = request.get_json() or {}
     quota = data.get("quota")

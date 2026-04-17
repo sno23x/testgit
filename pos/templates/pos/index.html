@@ -271,7 +271,7 @@
             <span><i class="bi bi-piggy-bank me-1 text-warning"></i>ເງິນທອນວັນນີ້ລວມ</span>
             <div class="d-flex align-items-center gap-2">
               <span id="pm-used-lbl" class="fw-semibold">—</span>
-              {% if current_user.is_manager() %}
+              {% if current_user.is_accountant() %}
               <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1"
                       onclick="openQuotaEdit()" title="ຕັ້ງ/ເພີ່ມວົງເງິນ">
                 <i class="bi bi-pencil-fill" style="font-size:0.7rem;"></i>
@@ -287,7 +287,7 @@
             <div class="progress-bar bg-success" id="pm-quota-bar" style="width:0%"></div>
           </div>
         </div>
-        {% if current_user.is_manager() %}
+        {% if current_user.is_accountant() %}
         <div id="pm-quota-edit" class="d-none mt-1 p-2 border rounded bg-body-secondary small">
           <div class="fw-semibold mb-1">ຕັ້ງວົງເງິນທອນ / ວັນ (ກີບ)</div>
           <div class="input-group input-group-sm">
@@ -451,7 +451,7 @@ function pmCheckQuotaWarn(cb, change) {
   }
 }
 
-{% if current_user.is_manager() %}
+{% if current_user.is_accountant() %}
 function openQuotaEdit() {
   document.getElementById('pm-quota-input').value = pmCbStatus?.quota || 0;
   document.getElementById('pm-quota-edit').classList.remove('d-none');
