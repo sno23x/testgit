@@ -148,7 +148,7 @@
 
         <!-- Payment buttons -->
         <div class="d-grid gap-2">
-          <button class="pay-btn pay-btn-cash" onclick="submitSale('cash')">
+          <button class="pay-btn pay-btn-cash" onclick="openPaymentModal()">
             <div class="pay-icon"><i class="bi bi-cash"></i></div>
             <div><div class="pay-label">ເງິນສົດ</div><div class="pay-desc">Cash Payment</div></div>
           </button>
@@ -239,6 +239,61 @@
   </div>
 </div>
 
+<!-- Payment modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-cash-coin me-2"></i>ຊໍາລະເງິນສົດ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pb-2">
+        <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded bg-light">
+          <span class="fw-semibold text-muted">ຍອດທີ່ຕ້ອງຈ່າຍ</span>
+          <span class="fw-bold fs-4 text-primary" id="pm-total">0 ກີບ</span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small text-muted">ຈຳນວນທີ່ໃຊ້ທົ່ວໄປ</label>
+          <div class="d-flex flex-wrap gap-2" id="pm-quick-btns"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">ລູກຄ້າຈ່າຍ (ກີບ)</label>
+          <input type="number" id="pm-paid" class="form-control form-control-lg fw-bold text-center"
+                 min="0" step="1000" oninput="pmCalc()"/>
+        </div>
+        <div class="d-flex justify-content-between align-items-center p-3 rounded mb-3"
+             id="pm-change-row" style="background:#d1fae5;">
+          <span class="fw-bold fs-5"><i class="bi bi-arrow-return-left me-1"></i>ເງິນທອນ</span>
+          <span class="fw-bold fs-3 text-success" id="pm-change">0 ກີບ</span>
+        </div>
+        <div id="pm-quota-row" class="d-none small rounded p-2 mb-1" style="background:#fef9c3;">
+          <div class="d-flex justify-content-between">
+            <span><i class="bi bi-piggy-bank me-1 text-warning"></i>ເງິນທອນວັນນີ້ລວມ</span>
+            <span id="pm-used-lbl" class="fw-semibold">—</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>ວົງເງິນ / ວັນ</span>
+            <span id="pm-quota-lbl" class="fw-semibold">—</span>
+          </div>
+          <div class="progress mt-1" style="height:6px;">
+            <div class="progress-bar bg-warning" id="pm-quota-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <div id="pm-quota-warn" class="d-none alert alert-danger py-1 small mb-1">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          ເງິນທອນວັນນີ້ໃກ້/ເກີນວົງເງິນ! ກະລຸນາກວດສອບ.
+        </div>
+      </div>
+      <div class="modal-footer pt-1">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">ຍົກເລີກ</button>
+        <button class="btn btn-success btn-lg fw-bold px-4" onclick="confirmPayment()">
+          <i class="bi bi-check-circle me-1"></i>ຢືນຢັນ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Success modal -->
 <div class="modal fade" id="successModal" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -262,12 +317,100 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
 <script>
 const LAK_RATE = parseFloat("{{ rate }}") || 830;
 let cart = [];
 let rateVal = LAK_RATE;
 const successModal  = new bootstrap.Modal(document.getElementById('successModal'));
 const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+const paymentModal  = new bootstrap.Modal(document.getElementById('paymentModal'));
+
+// ─── Socket.IO ───
+const socket = io();
+
+// ─── Payment modal ───
+function openPaymentModal() {
+  if (!cart.length) { alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  document.getElementById('pm-total').textContent = Number(total).toLocaleString() + ' ກີບ';
+
+  const steps = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
+  const quickAmounts = [];
+  for (const step of steps) {
+    const rounded = Math.ceil(total / step) * step;
+    if (!quickAmounts.includes(rounded) && quickAmounts.length < 5) quickAmounts.push(rounded);
+    if (quickAmounts.length >= 5) break;
+  }
+  document.getElementById('pm-quick-btns').innerHTML = quickAmounts.map(a =>
+    `<button type="button" class="btn btn-outline-secondary btn-sm"
+       onclick="setPaid(${a})">${Number(a).toLocaleString()}</button>`
+  ).join('');
+
+  document.getElementById('pm-paid').value = total;
+  pmCalc();
+
+  fetch('/pos/cashback-status')
+    .then(r => r.json())
+    .then(cb => {
+      const quotaRow  = document.getElementById('pm-quota-row');
+      const quotaWarn = document.getElementById('pm-quota-warn');
+      if (cb.quota > 0) {
+        quotaRow.classList.remove('d-none');
+        document.getElementById('pm-used-lbl').textContent  = Number(cb.used).toLocaleString() + ' ກີບ';
+        document.getElementById('pm-quota-lbl').textContent = Number(cb.quota).toLocaleString() + ' ກີບ';
+        const pct = Math.min(100, (cb.used / cb.quota) * 100);
+        const bar = document.getElementById('pm-quota-bar');
+        bar.style.width = pct + '%';
+        bar.className = 'progress-bar ' + (pct >= 90 ? 'bg-danger' : pct >= 70 ? 'bg-warning' : 'bg-success');
+        pmCheckQuotaWarn(cb);
+      } else {
+        quotaRow.classList.add('d-none');
+        quotaWarn.classList.add('d-none');
+      }
+    }).catch(() => {});
+
+  paymentModal.show();
+  setTimeout(() => document.getElementById('pm-paid').select(), 300);
+}
+
+function setPaid(amount) {
+  document.getElementById('pm-paid').value = amount;
+  pmCalc();
+}
+
+let pmCbStatus = null;
+function pmCalc() {
+  const total  = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  const paid   = parseFloat(document.getElementById('pm-paid').value) || 0;
+  const change = Math.max(0, paid - total);
+  const row    = document.getElementById('pm-change-row');
+  document.getElementById('pm-change').textContent = Number(change).toLocaleString() + ' ກີບ';
+  row.style.background = change > 0 ? '#d1fae5' : '#f1f5f9';
+  if (pmCbStatus) pmCheckQuotaWarn(pmCbStatus, change);
+}
+
+function pmCheckQuotaWarn(cb, change) {
+  if (change === undefined) {
+    change = Math.max(0, (parseFloat(document.getElementById('pm-paid').value) || 0)
+      - cart.reduce((s, i) => s + i.unit_price * i.qty, 0));
+  }
+  pmCbStatus = cb;
+  const warn = document.getElementById('pm-quota-warn');
+  if (cb.quota > 0 && (cb.used + change) >= cb.quota * 0.9) {
+    warn.classList.remove('d-none');
+  } else {
+    warn.classList.add('d-none');
+  }
+}
+
+function confirmPayment() {
+  const paid  = parseFloat(document.getElementById('pm-paid').value) || 0;
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  if (paid < total) { alert('ຈຳນວນເງິນໜ້ອຍກວ່າຍອດ! ກະລຸນາກວດສອບ.'); return; }
+  paymentModal.hide();
+  doSubmit('cash', paid);
+}
 
 // ─── Barcode / search ───
 let searchTimer, barcodeBuffer = '', barcodeTimer;
@@ -514,6 +657,7 @@ function clearBill() {
   document.getElementById('noteInput').value = '';
   clearCustomer();
   renderCart();
+  socket.emit('cart_cleared', {});
 }
 
 function recalc() {
@@ -700,9 +844,10 @@ function confirmTransfer() {
   doSubmit('transfer');
 }
 
-function doSubmit(type) {
+function doSubmit(type, paidAmount) {
   const customerId = document.getElementById('customerId').value;
   const currency = document.querySelector('input[name="currency"]:checked')?.value || 'LAK';
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
   const payload = {
     items: cart.map(i => ({
       product_id: i.product_id, qty: i.qty, unit_price: i.unit_price
@@ -712,15 +857,21 @@ function doSubmit(type) {
     discount: 0,
     currency: currency,
     note: document.getElementById('noteInput').value,
+    paid_amount: paidAmount ?? null,
   };
+  socket.emit('cart_update', { items: [], total: 0 });
   fetch('/pos/sale', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then(r => r.json()).then(data => {
     if (data.error) { alert(data.error); return; }
-    document.getElementById('saleNoDisplay').textContent = 'ເລກບິນ: ' + data.sale_no;
+    const changeAmt = data.change_amount || 0;
+    let saleMsg = 'ເລກບິນ: ' + data.sale_no;
+    if (changeAmt > 0) saleMsg += `  |  ເງິນທອນ: ${Number(changeAmt).toLocaleString()} ກີບ`;
+    document.getElementById('saleNoDisplay').textContent = saleMsg;
     document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
+    socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
     successModal.show();
   }).catch(() => alert('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່'));
 }

@@ -240,6 +240,7 @@ def create_sale():
     customer_id  = data.get("customer_id") or None
     discount     = float(data.get("discount", 0))
     note         = data.get("note", "")
+    paid_amount_input = data.get("paid_amount")
 
     if payment_type == "debt" and not customer_id:
         return jsonify({"error": "ຕ້ອງເລືອກລູກຄ້າສຳລັບການຈັດສົ່ງ (ຄ້າງຊຳລະ)"}), 400
@@ -263,6 +264,13 @@ def create_sale():
 
     total_kip = max(0, subtotal - discount)
 
+    if payment_type == "cash" and paid_amount_input is not None:
+        paid_kip = float(paid_amount_input)
+        change_amt = max(0.0, paid_kip - total_kip)
+    else:
+        paid_kip = total_kip if payment_type in ("cash", "transfer") else 0
+        change_amt = 0.0
+
     # ຖ້າຊໍາລະເປັນ THB ຄຳນວນຍອດ LAK ຄືເດີມ, ແຕ່ record currency
     sale = Sale(
         sale_no=next_sale_no(),
@@ -273,7 +281,8 @@ def create_sale():
         total=total_kip,
         payment_type=payment_type,
         currency=currency,
-        paid_amount=total_kip if payment_type in ("cash", "transfer") else 0,
+        paid_amount=paid_kip,
+        change_amount=change_amt,
         note=note,
     )
     db.session.add(sale)
@@ -294,7 +303,7 @@ def create_sale():
 
     db.session.commit()
     notify_n8n(sale)
-    return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})
+    return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no, "change_amount": change_amt})
 
 
 # ──────────────── Receipt ────────────────
@@ -349,6 +358,28 @@ def void_sale(sale_id):
 
     flash(f"ຍົກເລີກບິນ {sale.sale_no} ສໍາເລັດ — ສິນຄ້າກັບຄືນ stock ແລ້ວ", "success")
     return redirect(request.referrer or url_for("reports.index"))
+
+
+# ──────────────── Customer display (mirror screen) ────────────────
+@pos_bp.route("/customer-display")
+def customer_display():
+    shop_name = Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ")
+    return render_template("pos/customer_display.html", shop_name=shop_name)
+
+
+# ──────────────── Cashback quota status ────────────────
+@pos_bp.route("/cashback-status")
+@login_required
+def cashback_status():
+    from sqlalchemy import func as sqlfunc
+    today = date.today()
+    used = db.session.query(sqlfunc.sum(Sale.change_amount)).filter(
+        func.date(Sale.created_at) == today,
+        Sale.payment_type == "cash",
+    ).scalar() or 0.0
+    quota = float(Setting.get("cashback_daily_quota", "0"))
+    remaining = max(0.0, quota - used) if quota > 0 else None
+    return jsonify({"used": used, "quota": quota, "remaining": remaining})
 
 
 # ──────────────── Webhook test (from settings page) ────────────────

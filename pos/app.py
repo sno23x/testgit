@@ -2,8 +2,26 @@ import os
 import sqlalchemy as sa
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
+from flask_socketio import SocketIO, emit
 from config import Config
 from models import db, Employee
+
+socketio = SocketIO()
+
+
+@socketio.on("cart_update")
+def handle_cart_update(data):
+    emit("cart_update", data, broadcast=True, include_self=False)
+
+
+@socketio.on("cart_confirmed")
+def handle_cart_confirmed(data):
+    emit("cart_confirmed", data, broadcast=True, include_self=False)
+
+
+@socketio.on("cart_cleared")
+def handle_cart_cleared(data):
+    emit("cart_cleared", {}, broadcast=True, include_self=False)
 from blueprints.auth import auth_bp
 from blueprints.pos import pos_bp
 from blueprints.products import products_bp
@@ -28,6 +46,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message = "ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນ"
@@ -119,6 +138,7 @@ def run_migrations(app):
                 subtotal FLOAT DEFAULT 0
             )""",
             "ALTER TABLE quotations ADD COLUMN sale_id INTEGER REFERENCES sales(id)",
+            "ALTER TABLE sales ADD COLUMN change_amount FLOAT DEFAULT 0",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:
