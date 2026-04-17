@@ -389,6 +389,7 @@ def cashback_status():
     used = db.session.query(sqlfunc.sum(Sale.change_amount)).filter(
         func.date(Sale.created_at) == today,
         Sale.payment_type == "cash",
+        Sale.voided == False,
     ).scalar() or 0.0
     quota = float(Setting.get("cashback_daily_quota", "0"))
     remaining = max(0.0, quota - used) if quota > 0 else None

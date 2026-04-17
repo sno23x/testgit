@@ -354,6 +354,18 @@ let cart = [];
 let rateVal = LAK_RATE;
 const successModal  = new bootstrap.Modal(document.getElementById('successModal'));
 const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+let _transferConfirmed = false;
+document.getElementById('transferModal').addEventListener('hidden.bs.modal', function() {
+  if (!_transferConfirmed) {
+    // Customer cancelled / changed to cash — restore cart on mirror screen
+    const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+    socket.emit('cart_update', {
+      items: cart.map(i => ({ name: i.name, unit: i.unit, qty: i.qty, unit_price: i.unit_price })),
+      total,
+    });
+  }
+  _transferConfirmed = false;
+});
 const paymentModal  = new bootstrap.Modal(document.getElementById('paymentModal'));
 
 // ─── Socket.IO ───
@@ -936,6 +948,7 @@ function setQrCurrency(cur) {
 }
 
 function confirmTransfer() {
+  _transferConfirmed = true;
   transferModal.hide();
   doSubmit('transfer');
 }
