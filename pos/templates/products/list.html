@@ -3,146 +3,223 @@
 {% block page_title %}ສິນຄ້າ / Stock{% endblock %}
 
 {% block content %}
-<!-- Sticky search toolbar -->
+<style>
+.action-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .85rem; border: none; transition: all .18s;
+}
+.action-btn:hover { transform: scale(1.12); }
+.btn-edit  { background: #e0f2fe; color: #0369a1; }
+.btn-edit:hover  { background: #0369a1; color: #fff; }
+.btn-del   { background: #fee2e2; color: #dc2626; }
+.btn-del:hover   { background: #dc2626; color: #fff; }
+
+.stock-badge {
+  display: inline-block; min-width: 56px; text-align: center;
+  padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: .8rem;
+}
+.stock-ok   { background:#d1fae5; color:#065f46; }
+.stock-low  { background:#fef3c7; color:#92400e; }
+.stock-out  { background:#fee2e2; color:#991b1b; }
+
+.toolbar-btn {
+  border-radius: 10px; font-weight: 600; font-size: .82rem;
+  padding: 6px 14px; display: inline-flex; align-items: center; gap: 5px;
+  transition: all .18s; border: none; white-space: nowrap;
+}
+.toolbar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+
+.pill-filter {
+  border-radius: 20px; font-size: .78rem; font-weight: 600;
+  padding: 4px 14px; border-width: 1.5px; transition: all .18s;
+}
+.pill-filter:hover { transform: translateY(-1px); }
+</style>
+
+<!-- ─── Sticky toolbar ─── -->
 <div class="sticky-toolbar mb-3">
-  <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
-    <a href="{{ url_for('products.add_product') }}" class="btn btn-primary btn-sm">
-      <i class="bi bi-plus-circle me-1"></i>ເພີ່ມສິນຄ້າ
+
+  <!-- Action buttons row -->
+  <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+    <a href="{{ url_for('products.add_product') }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+      <i class="bi bi-plus-circle-fill"></i>ເພີ່ມສິນຄ້າ
     </a>
-    <a href="{{ url_for('products.list_categories') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-tags me-1"></i>ໝວດໝູ່
+    <a href="{{ url_for('products.list_categories') }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);">
+      <i class="bi bi-tags-fill"></i>ໝວດໝູ່
     </a>
-    <a href="{{ url_for('import_data.import_products') }}" class="btn btn-outline-success btn-sm">
-      <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
+    <a href="{{ url_for('import_data.import_products') }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#10b981,#34d399);">
+      <i class="bi bi-file-earmark-arrow-up-fill"></i>ນໍາເຂົ້າ Excel
     </a>
-    <a href="{{ url_for('products.export_excel') }}" class="btn btn-outline-info btn-sm">
-      <i class="bi bi-download me-1"></i>Export Excel
+    <a href="{{ url_for('products.export_excel') }}"
+       class="toolbar-btn"
+       style="background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;">
+      <i class="bi bi-download"></i>Export Excel
     </a>
 
-    <!-- Bulk action bar -->
+    <!-- Bulk bar -->
     <div id="bulkBar" class="d-none ms-auto d-flex gap-2 align-items-center">
-      <small class="text-muted" id="selectedCount">0 ລາຍການ</small>
-      <select id="bulkCatSelect" class="form-select form-select-sm" style="width:auto;">
+      <span class="badge rounded-pill bg-primary px-3" id="selectedCount">0 ລາຍການ</span>
+      <select id="bulkCatSelect" class="form-select form-select-sm rounded-pill" style="width:auto;">
         <option value="">ປ່ຽນໝວດ...</option>
         {% for c in categories %}
         <option value="{{ c.id }}">{{ c.name }}</option>
         {% endfor %}
       </select>
-      <button class="btn btn-sm btn-outline-primary" onclick="bulkCategory()">ຕັ້ງ</button>
-      <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
-        <i class="bi bi-trash me-1"></i>ລຶບ
+      <button class="toolbar-btn text-white" style="background:#6366f1;" onclick="bulkCategory()">ຕັ້ງ</button>
+      <button class="toolbar-btn text-white" style="background:#ef4444;" onclick="bulkDelete()">
+        <i class="bi bi-trash-fill"></i>ລຶບ
       </button>
     </div>
   </div>
 
-  <!-- Search bar (Enter to search) -->
+  <!-- Search + filter row -->
   <div class="d-flex gap-2 flex-wrap align-items-center">
-    <div class="input-group" style="min-width:280px;max-width:420px;">
-      <input type="text" id="liveSearch" class="form-control form-control-sm"
+    <div class="input-group shadow-sm" style="min-width:260px;max-width:380px;">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="bi bi-search"></i>
+      </span>
+      <input type="text" id="liveSearch" class="form-control border-start-0 ps-0"
              placeholder="ຄົ້ນຫາຊື່ ຫຼື ລະຫັດ... (Enter)" value="{{ q }}"
              autocomplete="off"/>
       {% if q %}
-      <a href="{{ url_for('products.list_products', cat=cat_id) }}" class="btn btn-sm btn-outline-secondary" title="ລ້າງ">
+      <a href="{{ url_for('products.list_products', cat=cat_id) }}"
+         class="btn btn-outline-secondary border-start-0" title="ລ້າງ">
         <i class="bi bi-x-lg"></i>
       </a>
-      {% else %}
-      <button class="btn btn-sm btn-outline-primary" id="searchBtn" type="button">
-        <i class="bi bi-search"></i>
-      </button>
       {% endif %}
     </div>
-    <select id="catFilter" class="form-select form-select-sm w-auto">
+
+    <select id="catFilter" class="form-select form-select-sm rounded-pill shadow-sm" style="width:auto;">
       <option value="">ທຸກໝວດ</option>
       {% for c in categories %}
       <option value="{{ c.id }}" {{ 'selected' if cat_id == c.id|string }}>{{ c.name }}</option>
       {% endfor %}
     </select>
 
-    <!-- Stock filter -->
-    <div class="d-flex gap-1" id="stockFilter">
+    <!-- Stock filter pills -->
+    <div class="d-flex gap-1">
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='') }}"
-         class="btn btn-sm rounded-pill px-3 {% if not stock_filter %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+         class="btn pill-filter {{ 'btn-secondary text-white' if not stock_filter else 'btn-outline-secondary' }}">
         ທຸກລາຍການ
       </a>
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='low') }}"
-         class="btn btn-sm rounded-pill px-3 {% if stock_filter == 'low' %}text-white{% endif %}"
-         style="{% if stock_filter == 'low' %}background:#f59e0b;border-color:#f59e0b;color:#fff;{% else %}border-color:#f59e0b;color:#f59e0b;background:transparent;{% endif %}">
-        <i class="bi bi-exclamation-triangle-fill me-1" style="font-size:.75rem;"></i>ໃກ້ໝົດ
+         class="btn pill-filter {{ '' if stock_filter != 'low' else 'text-white' }}"
+         style="{{ 'background:#f59e0b;border-color:#f59e0b;' if stock_filter == 'low' else 'border-color:#f59e0b;color:#b45309;' }}">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>ໃກ້ໝົດ
       </a>
       <a href="{{ url_for('products.list_products', q=q, cat=cat_id, stock='out') }}"
-         class="btn btn-sm rounded-pill px-3"
-         style="{% if stock_filter == 'out' %}background:#ef4444;border-color:#ef4444;color:#fff;{% else %}border-color:#ef4444;color:#ef4444;background:transparent;{% endif %}">
-        <i class="bi bi-slash-circle-fill me-1" style="font-size:.75rem;"></i>ໝົດແລ້ວ
+         class="btn pill-filter {{ '' if stock_filter != 'out' else 'text-white' }}"
+         style="{{ 'background:#ef4444;border-color:#ef4444;' if stock_filter == 'out' else 'border-color:#ef4444;color:#dc2626;' }}">
+        <i class="bi bi-slash-circle-fill me-1"></i>ໝົດແລ້ວ
       </a>
     </div>
   </div>
 </div>
 
-<div class="card shadow-sm border-0">
+<!-- ─── Product table ─── -->
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <span class="text-white fw-bold">
+      <i class="bi bi-box-seam me-2"></i>ລາຍການສິນຄ້າ
+    </span>
+    <span class="badge bg-white text-primary fw-semibold">{{ pagination.total }} ລາຍການ</span>
+  </div>
+
   <div class="table-responsive">
-    <table class="table table-hover mb-0" id="productTable">
-      <thead class="table-light">
-        <tr>
-          <th style="width:36px;">
+    <table class="table table-hover align-middle mb-0" id="productTable">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th style="width:36px;" class="ps-3">
             <input type="checkbox" class="form-check-input" id="checkAll" onchange="toggleAll(this)"/>
           </th>
-          <th>ລະຫັດ</th><th>ຊື່ສິນຄ້າ</th><th>ໝວດ</th><th>ໜ່ວຍ</th>
-          <th class="text-end">ຕົ້ນທຶນ (ກີບ)</th>
+          <th>ລະຫັດ</th>
+          <th>ຊື່ສິນຄ້າ</th>
+          <th>ໝວດ</th>
+          <th>ໜ່ວຍ</th>
+          <th class="text-end">ຕົ້ນທຶນ</th>
           <th class="text-end">ລາຄາ (฿)</th>
-          <th class="text-end">ລາຄາຂາຍ (ກີບ)</th>
-          <th class="text-end">Stock</th><th></th>
+          <th class="text-end">ລາຄາຂາຍ</th>
+          <th class="text-end">Stock</th>
+          <th style="width:80px;"></th>
         </tr>
       </thead>
       <tbody>
         {% for p in products %}
-        <tr class="{{ 'table-warning' if p.stock_qty <= 5 }}">
-          <td>
+        {% set stock_cls = 'stock-out' if p.stock_qty <= 0 else ('stock-low' if p.stock_qty <= 5 else 'stock-ok') %}
+        <tr>
+          <td class="ps-3">
             <input type="checkbox" class="form-check-input row-check" value="{{ p.id }}"
                    onchange="updateBulkBar()"/>
           </td>
-          <td><code>{{ p.code }}</code></td>
-          <td>{{ p.name }}</td>
-          <td><span class="badge bg-secondary">{{ p.category.name if p.category else '-' }}</span></td>
-          <td>{{ p.unit }}</td>
-          <td class="text-end text-muted small">
-            {{ "{:,.0f}".format(p.cost_price) if p.cost_price else '-' }}
-          </td>
-          <td class="text-end text-muted small">
-            {{ "฿{:,.2f}".format(p.price_thb) if p.price_thb else '-' }}
-          </td>
-          <td class="text-end fw-semibold">{{ "{:,.0f}".format(p.sell_price) }}</td>
-          <td class="text-end {{ 'text-danger fw-bold' if p.stock_qty <= 5 else '' }}">
-            {{ "{:,.2f}".format(p.stock_qty) }}
-          </td>
+          <td><code class="small">{{ p.code }}</code></td>
+          <td class="fw-semibold">{{ p.name }}</td>
           <td>
+            <span class="badge rounded-pill"
+                  style="background:rgba(99,102,241,.15);color:#4f46e5;font-weight:600;">
+              {{ p.category.name if p.category else '-' }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ p.unit }}</td>
+          <td class="text-end text-muted small">
+            {{ "{:,.0f}".format(p.cost_price) if p.cost_price else '—' }}
+          </td>
+          <td class="text-end text-muted small">
+            {{ "฿{:,.2f}".format(p.price_thb) if p.price_thb else '—' }}
+          </td>
+          <td class="text-end fw-bold text-primary">
+            {{ "{:,.0f}".format(p.sell_price) }}
+          </td>
+          <td class="text-end">
+            <span class="stock-badge {{ stock_cls }}">
+              {{ "{:,.0f}".format(p.stock_qty) }}
+            </span>
+          </td>
+          <td class="pe-3">
             <div class="d-flex gap-1 justify-content-end">
-              <a href="{{ url_for('products.edit_product', pid=p.id, back_q=q, back_cat=cat_id) }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pencil"></i>
+              <a href="{{ url_for('products.edit_product', pid=p.id, back_q=q, back_cat=cat_id) }}"
+                 class="action-btn btn-edit" title="ແກ້ໄຂ">
+                <i class="bi bi-pencil-fill"></i>
               </a>
               <form method="POST" action="{{ url_for('products.delete_product', pid=p.id) }}"
                     onsubmit="return confirm('ລຶບ {{ p.name }}?')">
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                  <i class="bi bi-trash"></i>
+                <button type="submit" class="action-btn btn-del" title="ລຶບ">
+                  <i class="bi bi-trash-fill"></i>
                 </button>
               </form>
             </div>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="10" class="text-center text-muted py-4">ບໍ່ພົບສິນຄ້າ</td></tr>
+        <tr>
+          <td colspan="10" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>ບໍ່ພົບສິນຄ້າ
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex align-items-center justify-content-between">
+
+  <!-- Pagination footer -->
+  <div class="card-footer d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:var(--bs-tertiary-bg);border-top:1px solid var(--bs-border-color);">
     <small class="text-muted">
-      ໜ້າ {{ pagination.page }}/{{ pagination.pages }} · ທັງໝົດ {{ pagination.total }} ລາຍການ
+      ໜ້າ <strong>{{ pagination.page }}</strong> / {{ pagination.pages }}
+      &nbsp;·&nbsp; ທັງໝົດ <strong>{{ pagination.total }}</strong> ລາຍການ
     </small>
     {% if pagination.pages > 1 %}
     <nav>
       <ul class="pagination pagination-sm mb-0">
         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
-          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.prev_num, q=q, cat=cat_id, stock=stock_filter) }}">‹</a>
+          <a class="page-link rounded-start-pill" href="{{ url_for('products.list_products', page=pagination.prev_num, q=q, cat=cat_id, stock=stock_filter) }}">‹</a>
         </li>
         {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
           {% if p %}
@@ -154,7 +231,7 @@
           {% endif %}
         {% endfor %}
         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
-          <a class="page-link" href="{{ url_for('products.list_products', page=pagination.next_num, q=q, cat=cat_id, stock=stock_filter) }}">›</a>
+          <a class="page-link rounded-end-pill" href="{{ url_for('products.list_products', page=pagination.next_num, q=q, cat=cat_id, stock=stock_filter) }}">›</a>
         </li>
       </ul>
     </nav>
@@ -165,7 +242,6 @@
 
 {% block scripts %}
 <script>
-// ──── Bulk actions ────
 function getSelected() {
   return [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.value));
 }
@@ -199,9 +275,7 @@ function bulkCategory() {
   }).then(r => r.json()).then(d => { if (d.ok) location.reload(); else alert(d.error); });
 }
 
-// ──── Search: Enter key or button click ────
 const searchInput = document.getElementById('liveSearch');
-
 function doSearch() {
   const params = new URLSearchParams();
   const q = searchInput.value.trim();
@@ -210,9 +284,7 @@ function doSearch() {
   if (cat) params.set('cat', cat);
   window.location.href = '/products' + (params.toString() ? '?' + params.toString() : '');
 }
-
 searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
-document.getElementById('searchBtn')?.addEventListener('click', doSearch);
 
 document.getElementById('catFilter').addEventListener('change', function() {
   const params = new URLSearchParams();
@@ -222,7 +294,6 @@ document.getElementById('catFilter').addEventListener('change', function() {
   window.location.href = '/products' + (params.toString() ? '?' + params.toString() : '');
 });
 
-// Focus search input on page load (cursor at end)
 searchInput.focus();
 const v = searchInput.value;
 searchInput.value = '';
