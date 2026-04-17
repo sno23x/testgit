@@ -610,12 +610,12 @@ function addToCart(p) {
   renderCart();
 }
 
-function renderCart() {
+function renderCart(silent = false) {
   const div = document.getElementById('billItems');
   if (!cart.length) {
     div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>';
     recalc();
-    socket.emit('cart_update', { items: [], total: 0 });
+    if (!silent) socket.emit('cart_update', { items: [], total: 0 });
     return;
   }
   div.innerHTML = cart.map((it, idx) => {
@@ -897,7 +897,6 @@ function doSubmit(type, paidAmount) {
     note: document.getElementById('noteInput').value,
     paid_amount: paidAmount ?? null,
   };
-  socket.emit('cart_update', { items: [], total: 0 });
   fetch('/pos/sale', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -910,7 +909,11 @@ function doSubmit(type, paidAmount) {
     document.getElementById('saleNoDisplay').textContent = saleMsg;
     document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
     if (type === 'debt') {
-      clearBill(); clearSearch();
+      cart = [];
+      document.getElementById('noteInput').value = '';
+      clearCustomer();
+      renderCart(true);
+      clearSearch();
     } else {
       socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
       successModal.show();
