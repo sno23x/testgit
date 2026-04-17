@@ -23,6 +23,8 @@ def list_quotations():
     query = Quotation.query
     if status:
         query = query.filter_by(status=status)
+    else:
+        query = query.filter(Quotation.status != "cancelled")
     if q:
         query = query.filter(Quotation.quote_no.ilike(f"%{q}%") |
                              Quotation.customer_name.ilike(f"%{q}%"))

@@ -3,101 +3,180 @@
 {% block page_title %}ລາຍຊື່ລູກຄ້າ{% endblock %}
 
 {% block content %}
+<style>
+.action-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .85rem; border: none; transition: all .18s;
+}
+.action-btn:hover { transform: scale(1.12); }
+.btn-edit  { background: #e0f2fe; color: #0369a1; }
+.btn-edit:hover  { background: #0369a1; color: #fff; }
+
+.toolbar-btn {
+  border-radius: 10px; font-weight: 600; font-size: .82rem;
+  padding: 6px 14px; display: inline-flex; align-items: center; gap: 5px;
+  transition: all .18s; border: none; white-space: nowrap;
+}
+.toolbar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+
+.pill-filter {
+  border-radius: 20px; font-size: .78rem; font-weight: 600;
+  padding: 4px 14px; border-width: 1.5px; transition: all .18s;
+}
+.pill-filter:hover { transform: translateY(-1px); }
+
+.debt-badge {
+  display: inline-block; min-width: 80px; text-align: right;
+  padding: 2px 10px; border-radius: 20px; font-weight: 700; font-size: .82rem;
+}
+.debt-has  { background:#fee2e2; color:#991b1b; }
+.debt-none { background:#f1f5f9; color:#64748b; }
+</style>
+
+<!-- ─── Toolbar ─── -->
 <div class="sticky-toolbar mb-3">
-  <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
-    <a href="{{ url_for('customers.add_customer') }}" class="btn btn-primary btn-sm rounded-pill px-3">
-      <i class="bi bi-person-plus me-1"></i>ເພີ່ມລູກຄ້າ
+  <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+    <a href="{{ url_for('customers.add_customer') }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#ec4899,#f43f5e);">
+      <i class="bi bi-person-plus-fill"></i>ເພີ່ມລູກຄ້າ
     </a>
-    <a href="{{ url_for('customers.import_excel') }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
-      <i class="bi bi-file-earmark-excel me-1"></i>ນໍາເຂົ້າ Excel
+    <a href="{{ url_for('customers.import_excel') }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#10b981,#34d399);">
+      <i class="bi bi-file-earmark-arrow-up-fill"></i>ນໍາເຂົ້າ Excel
     </a>
-    <a href="{{ url_for('customers.export_excel', q=q, debt=debt_filter) }}" class="btn btn-outline-info btn-sm rounded-pill px-3">
-      <i class="bi bi-download me-1"></i>Export Excel
+    <a href="{{ url_for('customers.export_excel', q=q, debt=debt_filter) }}"
+       class="toolbar-btn"
+       style="background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;">
+      <i class="bi bi-download"></i>Export Excel
     </a>
   </div>
 
   <form class="d-flex gap-2 flex-wrap align-items-center" method="GET">
-    <div class="input-group input-group-sm" style="max-width:240px;">
-      <input type="text" name="q" class="form-control"
+    <div class="input-group shadow-sm" style="min-width:240px;max-width:340px;">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="bi bi-search"></i>
+      </span>
+      <input type="text" name="q" class="form-control border-start-0 ps-0"
              placeholder="ຊື່ / CID / ເບີໂທ..." value="{{ q }}" autofocus/>
-      <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
       {% if q %}
-      <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary" title="ລ້າງ"><i class="bi bi-x-lg"></i></a>
+      <a href="{{ url_for('customers.list_customers') }}"
+         class="btn btn-outline-secondary border-start-0" title="ລ້າງ">
+        <i class="bi bi-x-lg"></i>
+      </a>
       {% endif %}
     </div>
 
-    <!-- Debt filter -->
     <div class="d-flex gap-1">
-      <a href="{{ url_for('customers.list_customers', q=q, debt='all') }}"
-         class="btn btn-sm rounded-pill px-3 {% if debt_filter=='all' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">ທຸກລາຍການ</a>
-      <a href="{{ url_for('customers.list_customers', q=q, debt='has') }}"
-         class="btn btn-sm rounded-pill px-3"
-         style="{% if debt_filter=='has' %}background:#ef4444;border-color:#ef4444;color:#fff;{% else %}border-color:#ef4444;color:#ef4444;background:transparent;{% endif %}">
-        <i class="bi bi-exclamation-circle-fill me-1" style="font-size:.75rem;"></i>ມີໜີ້
-      </a>
-      <a href="{{ url_for('customers.list_customers', q=q, debt='none') }}"
-         class="btn btn-sm rounded-pill px-3"
-         style="{% if debt_filter=='none' %}background:#16a34a;border-color:#16a34a;color:#fff;{% else %}border-color:#16a34a;color:#16a34a;background:transparent;{% endif %}">
-        <i class="bi bi-check-circle-fill me-1" style="font-size:.75rem;"></i>ບໍ່ມີໜີ້
-      </a>
+      <button type="submit" name="debt" value="all"
+              class="btn pill-filter {{ 'btn-secondary text-white' if debt_filter=='all' else 'btn-outline-secondary' }}">
+        ທຸກລາຍການ
+      </button>
+      <button type="submit" name="debt" value="has"
+              class="btn pill-filter {{ '' if debt_filter!='has' else 'text-white' }}"
+              style="{{ 'background:#ef4444;border-color:#ef4444;' if debt_filter=='has' else 'border-color:#ef4444;color:#dc2626;' }}">
+        <i class="bi bi-exclamation-circle-fill me-1"></i>ມີໜີ້
+      </button>
+      <button type="submit" name="debt" value="none"
+              class="btn pill-filter {{ '' if debt_filter!='none' else 'text-white' }}"
+              style="{{ 'background:#16a34a;border-color:#16a34a;' if debt_filter=='none' else 'border-color:#16a34a;color:#16a34a;' }}">
+        <i class="bi bi-check-circle-fill me-1"></i>ບໍ່ມີໜີ້
+      </button>
     </div>
   </form>
 </div>
 
-<div class="card shadow-sm border-0">
+<!-- ─── Table card ─── -->
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#ec4899,#f43f5e);">
+    <span class="text-white fw-bold">
+      <i class="bi bi-people-fill me-2"></i>ລາຍຊື່ລູກຄ້າ
+    </span>
+    <span class="badge bg-white fw-semibold" style="color:#e11d48;">
+      {{ pagination.total }} ລາຍການ
+    </span>
+  </div>
+
   <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
+    <table class="table table-hover align-middle mb-0">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th class="ps-3" style="width:40px;">#</th>
           <th>CID</th>
-          <th>ຊື່</th>
+          <th>ຊື່ລູກຄ້າ</th>
           <th>ເບີໂທ</th>
           <th>ທີ່ຢູ່</th>
-          <th class="text-end">ໜີ້ຄ້າງ</th>
-          <th></th>
+          <th class="text-end">ໜີ້ຄ້າງ (ກີບ)</th>
+          <th style="width:60px;"></th>
         </tr>
       </thead>
       <tbody>
         {% for c in customers %}
         <tr>
-          <td class="text-muted small">{{ (pagination.page - 1) * 50 + loop.index }}</td>
+          <td class="ps-3 text-muted small">{{ (pagination.page - 1) * 50 + loop.index }}</td>
           <td>
             {% if c.cust_code %}
-            <span class="badge bg-secondary">{{ c.cust_code }}</span>
-            {% else %}-{% endif %}
+            <span class="badge rounded-pill"
+                  style="background:rgba(236,72,153,.12);color:#be185d;font-weight:600;">
+              {{ c.cust_code }}
+            </span>
+            {% else %}<span class="text-muted">—</span>{% endif %}
           </td>
           <td>
             <a href="{{ url_for('customers.customer_detail', cid=c.id) }}"
-               class="fw-semibold text-decoration-none">{{ c.name }}</a>
+               class="fw-semibold text-decoration-none text-body">
+              {{ c.name }}
+            </a>
+            {% if c.map_url %}
+            <a href="{{ c.map_url }}" target="_blank" class="ms-1 text-danger" title="Google Maps" style="font-size:.75rem;">
+              <i class="bi bi-geo-alt-fill"></i>
+            </a>
+            {% endif %}
           </td>
-          <td>{{ c.phone or '-' }}</td>
-          <td class="text-muted small">{{ c.address or '-' }}</td>
-          <td class="text-end {{ 'text-danger fw-bold' if c.total_debt > 0 else 'text-muted' }}">
-            {{ "{:,.0f}".format(c.total_debt) }}
+          <td class="text-muted small">{{ c.phone or '—' }}</td>
+          <td class="text-muted small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ c.address or '—' }}
           </td>
-          <td>
+          <td class="text-end">
+            {% if c.total_debt > 0 %}
+            <span class="debt-badge debt-has">{{ "{:,.0f}".format(c.total_debt) }}</span>
+            {% else %}
+            <span class="debt-badge debt-none">0</span>
+            {% endif %}
+          </td>
+          <td class="pe-3">
             <a href="{{ url_for('customers.edit_customer', cid=c.id) }}"
-               class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-pencil"></i>
+               class="action-btn btn-edit" title="ແກ້ໄຂ">
+              <i class="bi bi-pencil-fill"></i>
             </a>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center text-muted py-4">ບໍ່ພົບລູກຄ້າ</td></tr>
+        <tr>
+          <td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-person-x fs-2 d-block mb-2"></i>ບໍ່ພົບລູກຄ້າ
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex align-items-center justify-content-between">
+
+  <div class="card-footer d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:var(--bs-tertiary-bg);border-top:1px solid var(--bs-border-color);">
     <small class="text-muted">
-      ໜ້າ {{ pagination.page }}/{{ pagination.pages }} · ທັງໝົດ {{ pagination.total }} ລາຍການ
+      ໜ້າ <strong>{{ pagination.page }}</strong> / {{ pagination.pages }}
+      &nbsp;·&nbsp; ທັງໝົດ <strong>{{ pagination.total }}</strong> ລາຍການ
     </small>
     {% if pagination.pages > 1 %}
     <nav>
       <ul class="pagination pagination-sm mb-0">
         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
-          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.prev_num, q=q, debt=debt_filter) }}">‹</a>
+          <a class="page-link rounded-start-pill"
+             href="{{ url_for('customers.list_customers', page=pagination.prev_num, q=q, debt=debt_filter) }}">‹</a>
         </li>
         {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
           {% if p %}
@@ -109,7 +188,8 @@
           {% endif %}
         {% endfor %}
         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
-          <a class="page-link" href="{{ url_for('customers.list_customers', page=pagination.next_num, q=q, debt=debt_filter) }}">›</a>
+          <a class="page-link rounded-end-pill"
+             href="{{ url_for('customers.list_customers', page=pagination.next_num, q=q, debt=debt_filter) }}">›</a>
         </li>
       </ul>
     </nav>
