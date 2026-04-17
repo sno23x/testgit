@@ -10,7 +10,7 @@
     <div class="card shadow-sm border-0">
       <div class="card-header fw-semibold"><i class="bi bi-shop me-1"></i>ຂໍ້ມູນຮ້ານ &amp; ອັດຕາແລກປ່ຽນ</div>
       <div class="card-body">
-        <form method="POST" action="{{ url_for('settings.save') }}">
+        <form method="POST" action="{{ url_for('settings.save') }}" enctype="multipart/form-data">
           <div class="mb-3">
             <label class="form-label fw-semibold">ຊື່ຮ້ານ</label>
             <input type="text" name="shop_name" class="form-control" value="{{ s.shop_name }}"/>
@@ -24,10 +24,26 @@
             <input type="text" name="shop_phone" class="form-control" value="{{ s.shop_phone }}"/>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">URL ຮູບ QR ຮ້ານ (ໃສ່ຖ້າມີ)</label>
-            <input type="text" name="shop_qr" class="form-control"
-                   value="{{ s.shop_qr }}" placeholder="https://... ຫຼື ເສັ້ນທາງໄຟລ໌"/>
-            <div class="form-text">ຈະສະແດງໃນໃບບິນ ແລະ ໜ້າ QR ໂອນເງິນ</div>
+            <label class="form-label fw-semibold"><i class="bi bi-qr-code me-1"></i>QR ໂອນເງິນ (ກີບ ₭)</label>
+            <div class="d-flex align-items-start gap-3">
+              {% if s.shop_qr %}
+              <img src="{{ s.shop_qr }}" id="previewShopQr"
+                   style="width:80px;height:80px;object-fit:contain;border-radius:8px;"
+                   class="border bg-white p-1"/>
+              {% else %}
+              <div id="previewShopQr" class="border rounded d-flex align-items-center justify-content-center bg-body-secondary"
+                   style="width:80px;height:80px;color:#94a3b8;">
+                <i class="bi bi-qr-code fs-3"></i>
+              </div>
+              {% endif %}
+              <div class="flex-grow-1">
+                <input type="file" name="shop_qr_file" class="form-control form-control-sm mb-1"
+                       accept="image/*" onchange="previewQr(this,'previewShopQr')"/>
+                <input type="text" name="shop_qr" class="form-control form-control-sm"
+                       value="{{ s.shop_qr }}" placeholder="https://... (ຫຼື upload ຮູບຂ້າງເທິງ)"/>
+                <div class="form-text">Upload ຮູບ QR ຫຼື ໃສ່ URL ໂດຍກົງ</div>
+              </div>
+            </div>
           </div>
 
           <hr/>
@@ -53,9 +69,25 @@
           <hr/>
           <p class="fw-semibold mb-2"><i class="bi bi-bank me-1 text-warning"></i>ຂໍ້ມູນໂອນເງິນ (ບາດ ฿)</p>
           <div class="mb-2">
-            <label class="form-label small">URL ຮູບ QR ໄທ (PromptPay / Thai bank)</label>
-            <input type="text" name="thb_qr" class="form-control form-control-sm"
-                   value="{{ s.thb_qr }}" placeholder="https://..."/>
+            <label class="form-label small fw-semibold"><i class="bi bi-qr-code me-1"></i>QR ໂອນເງິນ (ບາດ ฿)</label>
+            <div class="d-flex align-items-start gap-3">
+              {% if s.thb_qr %}
+              <img src="{{ s.thb_qr }}" id="previewThbQr"
+                   style="width:70px;height:70px;object-fit:contain;border-radius:8px;"
+                   class="border bg-white p-1"/>
+              {% else %}
+              <div id="previewThbQr" class="border rounded d-flex align-items-center justify-content-center bg-body-secondary"
+                   style="width:70px;height:70px;color:#94a3b8;">
+                <i class="bi bi-qr-code fs-4"></i>
+              </div>
+              {% endif %}
+              <div class="flex-grow-1">
+                <input type="file" name="thb_qr_file" class="form-control form-control-sm mb-1"
+                       accept="image/*" onchange="previewQr(this,'previewThbQr')"/>
+                <input type="text" name="thb_qr" class="form-control form-control-sm"
+                       value="{{ s.thb_qr }}" placeholder="https://... (ຫຼື upload ຮູບຂ້າງເທິງ)"/>
+              </div>
+            </div>
           </div>
           <div class="row g-2 mb-3">
             <div class="col-md-4">
@@ -310,6 +342,26 @@
 
 {% block scripts %}
 <script>
+function previewQr(input, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const el = document.getElementById(previewId);
+    if (el.tagName === 'IMG') {
+      el.src = e.target.result;
+    } else {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.id = previewId;
+      img.style = 'width:80px;height:80px;object-fit:contain;border-radius:8px;';
+      img.className = 'border bg-white p-1';
+      el.replaceWith(img);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 function previewCalc() {
   const rate = parseFloat(document.getElementById('rateInput').value) || 0;
   if (rate > 0) {

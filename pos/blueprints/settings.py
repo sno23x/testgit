@@ -1,6 +1,10 @@
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from models import db, Setting, Product, round_price
+
+QR_UPLOAD_DIR = os.path.join("static", "uploads", "qr")
 
 settings_bp = Blueprint("settings", __name__)
 
@@ -43,9 +47,24 @@ def save():
     if not current_user.is_admin():
         flash("ສິດທິ admin ເທົ່ານັ້ນ", "danger")
         return redirect(url_for("pos.dashboard"))
+    # Handle QR image uploads (takes priority over text URL)
+    os.makedirs(QR_UPLOAD_DIR, exist_ok=True)
+    for qr_key, file_field in [("shop_qr", "shop_qr_file"), ("thb_qr", "thb_qr_file")]:
+        f = request.files.get(file_field)
+        if f and f.filename:
+            ext = os.path.splitext(secure_filename(f.filename))[1].lower() or ".jpg"
+            save_path = os.path.join(QR_UPLOAD_DIR, f"{qr_key}{ext}")
+            f.save(save_path)
+            Setting.set(qr_key, "/" + save_path.replace("\\", "/"))
+
     for key in DEFAULT_SETTINGS:
         if key in request.form:
-            # checkbox (receipt_auto_print) only sent when checked
+            # Skip QR keys if a file was uploaded (already handled above)
+            if key in ("shop_qr", "thb_qr"):
+                file_field = "shop_qr_file" if key == "shop_qr" else "thb_qr_file"
+                f = request.files.get(file_field)
+                if f and f.filename:
+                    continue
             Setting.set(key, request.form.get(key, "").strip())
     # Handle unchecked checkboxes explicitly
     if "receipt_auto_print" not in request.form and "receipt_rows" in request.form:
