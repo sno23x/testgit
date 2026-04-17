@@ -599,7 +599,9 @@ function renderCart() {
   const div = document.getElementById('billItems');
   if (!cart.length) {
     div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>';
-    recalc(); return;
+    recalc();
+    socket.emit('cart_update', { items: [], total: 0 });
+    return;
   }
   div.innerHTML = cart.map((it, idx) => {
     const lineTotal = it.unit_price * it.qty;
@@ -637,6 +639,11 @@ function renderCart() {
     </div>`;
   }).join('');
   recalc();
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  socket.emit('cart_update', {
+    items: cart.map(i => ({ name: i.name, unit: i.unit, qty: i.qty, unit_price: i.unit_price })),
+    total: total,
+  });
 }
 
 function updateQty(idx, val) {
