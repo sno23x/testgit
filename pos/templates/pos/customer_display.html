@@ -318,7 +318,7 @@
       document.getElementById('cd-confirm-total').textContent = Number(data.total).toLocaleString() + ' ₭';
       show('confirmed');
       clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(() => show('idle'), 7000);
+      confirmTimer = setTimeout(() => show('idle'), 3000);
     });
 
     socket.on('cart_cleared', () => show('idle'));
