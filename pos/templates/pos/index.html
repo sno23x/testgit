@@ -320,6 +320,10 @@
 <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
 <script>
 const LAK_RATE = parseFloat("{{ rate }}") || 830;
+const SHOP_QR       = "{{ shop_qr }}";
+const BANK_NAME     = "{{ bank_name }}";
+const BANK_ACC_NAME = "{{ bank_account_name }}";
+const BANK_ACC_NO   = "{{ bank_account_no }}";
 let cart = [];
 let rateVal = LAK_RATE;
 const successModal  = new bootstrap.Modal(document.getElementById('successModal'));
@@ -812,9 +816,17 @@ function submitSale(type) {
   // ໂອນເງິນ: ສະແດງ QR modal ກ່ອນ
   if (type === 'transfer') {
     window._transferTotalLak = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+    const total = window._transferTotalLak;
+    socket.emit('transfer_show', {
+      total, qr: SHOP_QR,
+      bank_name: BANK_NAME, account_name: BANK_ACC_NAME, account_no: BANK_ACC_NO,
+    });
     setQrCurrency('LAK');
     transferModal.show();
     return;
+  }
+  if (type === 'debt') {
+    socket.emit('delivery_show', {});
   }
   doSubmit(type);
 }

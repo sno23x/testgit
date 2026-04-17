@@ -160,6 +160,53 @@
       font-size: .75rem; color: #1e293b;
       flex-shrink: 0;
     }
+
+    /* ── Transfer screen ── */
+    #screen-transfer {
+      flex: 1; display: none; flex-direction: column;
+      align-items: center; gap: 1.5rem;
+      padding-top: 1rem;
+      animation: fadeUp .4s ease;
+    }
+    .tr-label { font-size: 1.2rem; font-weight: 700; color: #60a5fa; letter-spacing: .05em; }
+    .tr-body  { display: flex; gap: 3rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .tr-qr-wrap { position: relative; }
+    .tr-qr-img  { width: 220px; height: 220px; object-fit: contain; border-radius: 1rem; border: 3px solid #334155; background: #fff; padding: 8px; display: none; }
+    .tr-qr-placeholder { width: 220px; height: 220px; border-radius: 1rem; border: 3px dashed #334155; display: flex; align-items: center; justify-content: center; }
+    .tr-info { display: flex; flex-direction: column; gap: .75rem; }
+    .tr-amount-label { font-size: 1rem; color: #64748b; font-weight: 600; }
+    .tr-amount { font-size: 3.2rem; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums; line-height: 1; }
+    .tr-bank { font-size: 1rem; color: #94a3b8; }
+    .tr-blink { font-size: 1.1rem; color: #fbbf24; font-weight: 600; animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Delivery screen ── */
+    #screen-delivery {
+      flex: 1; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2rem;
+      animation: fadeUp .4s ease;
+    }
+    .dv-title { font-size: 2rem; font-weight: 800; color: #fb923c; }
+    .dv-road  {
+      width: 100%; max-width: 700px; position: relative;
+      height: 90px; overflow: hidden;
+    }
+    .dv-truck {
+      position: absolute; bottom: 18px; left: -80px;
+      font-size: 4rem; line-height: 1;
+      animation: drive 3s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @keyframes drive {
+      0%   { left: -80px; }
+      60%  { left: calc(100% - 80px); }
+      100% { left: calc(100% + 10px); }
+    }
+    .dv-road-line {
+      position: absolute; bottom: 10px; left: 0; right: 0;
+      height: 4px; border-radius: 2px;
+      background: repeating-linear-gradient(90deg, #334155 0px, #334155 30px, transparent 30px, transparent 50px);
+    }
+    .dv-sub { font-size: 1.2rem; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -198,6 +245,35 @@
       <div class="confirm-total" id="cd-confirm-total"></div>
       <div class="confirm-sub"><i class="bi bi-heart-fill me-1"></i>ສຳເລັດການຊຳລະ — ຂໍໃຫ້ໂຊກດີ</div>
     </div>
+
+    <!-- Transfer QR screen -->
+    <div id="screen-transfer">
+      <div class="tr-label"><i class="bi bi-qr-code-scan me-2"></i>ສະແກນ QR ເພື່ອໂອນເງິນ</div>
+      <div class="tr-body">
+        <div class="tr-qr-wrap">
+          <img id="cd-qr-img" src="" alt="QR" class="tr-qr-img"/>
+          <div id="cd-qr-placeholder" class="tr-qr-placeholder">
+            <i class="bi bi-qr-code" style="font-size:5rem;color:#475569;"></i>
+          </div>
+        </div>
+        <div class="tr-info">
+          <div class="tr-amount-label">ຍອດທີ່ຕ້ອງໂອນ</div>
+          <div class="tr-amount" id="cd-tr-amount">0 ₭</div>
+          <div class="tr-bank" id="cd-tr-bank"></div>
+          <div class="tr-blink"><i class="bi bi-phone-vibrate me-1"></i>ກະລຸນາໂອນ ແລ້ວແຈ້ງພະນັກງານ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery animation screen -->
+    <div id="screen-delivery">
+      <div class="dv-title"><i class="bi bi-box-seam me-2"></i>ກຳລັງຈັດສົ່ງ</div>
+      <div class="dv-road">
+        <div class="dv-truck" id="cd-truck">🚛</div>
+        <div class="dv-road-line"></div>
+      </div>
+      <div class="dv-sub">ລູກຄ້າຈະໄດ້ຮັບສິນຄ້າໃນໄວໆນີ້</div>
+    </div>
   </main>
 
   <footer>vannahome.shop</footer>
@@ -211,14 +287,16 @@
     }
     setInterval(tick, 1000); tick();
 
+    const ALL_SCREENS = ['idle','cart','confirmed','transfer','delivery'];
     function show(name) {
-      ['idle','cart','confirmed'].forEach(s => {
+      ALL_SCREENS.forEach(s => {
         document.getElementById('screen-' + s).style.display = s === name ? 'flex' : 'none';
       });
     }
     show('idle');
 
     let confirmTimer = null;
+    let deliveryTimer = null;
     const socket = io();
 
     socket.on('cart_update', function(data) {
@@ -244,6 +322,33 @@
     });
 
     socket.on('cart_cleared', () => show('idle'));
+
+    socket.on('transfer_show', function(data) {
+      document.getElementById('cd-tr-amount').textContent = Number(data.total || 0).toLocaleString() + ' ₭';
+      const bankParts = [data.bank_name, data.account_name, data.account_no].filter(Boolean);
+      document.getElementById('cd-tr-bank').textContent = bankParts.join('  |  ');
+      const img = document.getElementById('cd-qr-img');
+      const placeholder = document.getElementById('cd-qr-placeholder');
+      if (data.qr) {
+        img.src = data.qr;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+      show('transfer');
+    });
+
+    socket.on('delivery_show', function() {
+      // Reset truck animation by re-cloning the element
+      const oldTruck = document.getElementById('cd-truck');
+      const newTruck = oldTruck.cloneNode(true);
+      oldTruck.parentNode.replaceChild(newTruck, oldTruck);
+      show('delivery');
+      clearTimeout(deliveryTimer);
+      deliveryTimer = setTimeout(() => show('idle'), 4000);
+    });
 
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

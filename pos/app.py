@@ -22,6 +22,16 @@ def handle_cart_confirmed(data):
 @socketio.on("cart_cleared")
 def handle_cart_cleared(data):
     emit("cart_cleared", {}, broadcast=True, include_self=False)
+
+
+@socketio.on("transfer_show")
+def handle_transfer_show(data):
+    emit("transfer_show", data, broadcast=True, include_self=False)
+
+
+@socketio.on("delivery_show")
+def handle_delivery_show(data):
+    emit("delivery_show", data, broadcast=True, include_self=False)
 from blueprints.auth import auth_bp
 from blueprints.pos import pos_bp
 from blueprints.products import products_bp
