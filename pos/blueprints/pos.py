@@ -416,7 +416,7 @@ def api_daily_summary():
     else:
         debt_section = ""
 
-    divider = "─" * 18
+    divider = "─" * 17
     msg = (
         f"📊 *ສະຫຼຸບຍອດ {d.strftime('%d/%m/%Y')}*\n"
         f"{divider}\n"
