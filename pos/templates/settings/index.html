@@ -100,6 +100,58 @@
     </div>
   </div>
 
+  <!-- Cashback daily quota -->
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-cash-coin me-1 text-success"></i>ຕັ້ງຄ່າ Cashback (ເງິນທອນ)
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <!-- preserve other fields -->
+          <input type="hidden" name="shop_name"          value="{{ s.shop_name }}"/>
+          <input type="hidden" name="shop_address"       value="{{ s.shop_address }}"/>
+          <input type="hidden" name="shop_phone"         value="{{ s.shop_phone }}"/>
+          <input type="hidden" name="shop_qr"            value="{{ s.shop_qr }}"/>
+          <input type="hidden" name="thb_to_lak"         value="{{ s.thb_to_lak }}"/>
+          <input type="hidden" name="receipt_rows"       value="{{ s.receipt_rows }}"/>
+          <input type="hidden" name="receipt_auto_print" value="{{ s.receipt_auto_print }}"/>
+          <input type="hidden" name="receipt_footer"     value="{{ s.receipt_footer }}"/>
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">ວົງເງິນທອນສູງສຸດ / ວັນ (ກີບ)</label>
+              <div class="input-group" style="max-width:320px;">
+                <input type="number" name="cashback_daily_quota" class="form-control fw-bold"
+                       value="{{ s.cashback_daily_quota }}" min="0" step="1000"
+                       id="quotaInput" oninput="previewQuota()"/>
+                <span class="input-group-text">ກີບ</span>
+              </div>
+              <div class="form-text" id="quotaPreview">
+                {% if s.cashback_daily_quota == '0' %}
+                  ປັດຈຸບັນ: <strong>ບໍ່ຈຳກັດ</strong>
+                {% else %}
+                  ປັດຈຸບັນ: <strong>{{ "{:,.0f}".format(s.cashback_daily_quota | float) }} ກີບ / ວັນ</strong>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-5">
+              <p class="text-muted small mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                ໃສ່ <strong>0</strong> = ບໍ່ຈຳກັດ.<br/>
+                ເມື່ອເງິນທອນສະສົມໃນວັນນີ້ໃກ້ຈະເກີນວົງເງິນ, ລະບົບຈະສະແດງຄຳເຕືອນຕອນຊໍາລະ.
+              </p>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-save me-1"></i>ບັນທຶກ
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Recalculate prices -->
   <div class="col-lg-5">
     <div class="card shadow-sm border-0 border-start border-warning border-3">
@@ -163,5 +215,12 @@ function previewCalc() {
   }
 }
 previewCalc();
+
+function previewQuota() {
+  const q = parseFloat(document.getElementById('quotaInput').value) || 0;
+  document.getElementById('quotaPreview').innerHTML = q === 0
+    ? 'ປັດຈຸບັນ: <strong>ບໍ່ຈຳກັດ</strong>'
+    : `ປັດຈຸບັນ: <strong>${q.toLocaleString()} ກີບ / ວັນ</strong>`;
+}
 </script>
 {% endblock %}

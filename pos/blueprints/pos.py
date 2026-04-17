@@ -7,6 +7,20 @@ from models import db, Product, Customer, Sale, SaleItem, Employee, Setting, rou
 pos_bp = Blueprint("pos", __name__)
 
 
+# ──────────────── Cashback status ────────────────
+@pos_bp.route("/cashback-status")
+@login_required
+def cashback_status():
+    today = date.today()
+    used = db.session.query(func.sum(Sale.change_amount)).filter(
+        db.func.date(Sale.created_at) == today,
+        Sale.payment_type == "cash",
+    ).scalar() or 0.0
+    quota = float(Setting.get("cashback_daily_quota", "0"))
+    remaining = max(0.0, quota - used) if quota > 0 else None
+    return jsonify({"used": used, "quota": quota, "remaining": remaining})
+
+
 def next_sale_no():
     today = date.today().strftime("%Y%m%d")
     last = Sale.query.filter(Sale.sale_no.like(f"S{today}%")).order_by(Sale.id.desc()).first()
@@ -119,6 +133,7 @@ def create_sale():
     customer_id  = data.get("customer_id") or None
     discount     = float(data.get("discount", 0))
     note         = data.get("note", "")
+    paid_amount_input = data.get("paid_amount")
 
     if payment_type == "debt" and not customer_id:
         return jsonify({"error": "ຕ້ອງເລືອກລູກຄ້າເມື່ອຕິດໜີ້"}), 400
@@ -142,7 +157,14 @@ def create_sale():
 
     total_kip = max(0, subtotal - discount)
 
-    # ຖ້າຊໍາລະເປັນ THB ຄຳນວນຍອດ LAK ຄືເດີມ, ແຕ່ record currency
+    if payment_type == "cash":
+        paid = float(paid_amount_input) if paid_amount_input is not None else total_kip
+        paid = max(paid, total_kip)
+        change = paid - total_kip
+    else:
+        paid = 0.0
+        change = 0.0
+
     sale = Sale(
         sale_no=next_sale_no(),
         customer_id=customer_id,
@@ -152,7 +174,8 @@ def create_sale():
         total=total_kip,
         payment_type=payment_type,
         currency=currency,
-        paid_amount=total_kip if payment_type == "cash" else 0,
+        paid_amount=paid,
+        change_amount=change,
         note=note,
     )
     db.session.add(sale)
@@ -170,7 +193,7 @@ def create_sale():
             cust.total_debt += total_kip
 
     db.session.commit()
-    return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})
+    return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no, "change_amount": change})
 
 
 # ──────────────── Customer display ────────────────

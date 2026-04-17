@@ -10,9 +10,10 @@ DEFAULT_SETTINGS = {
     "shop_phone": "020-XXXXXXXX",
     "shop_qr": "",
     "thb_to_lak": "830",
-    "receipt_rows": "15",        # ຈໍານວນແຖວໃນຕາຕະລາງໃບບິນ
-    "receipt_auto_print": "1",   # 1=ພິມອັດຕະໂນມັດ, 0=ບໍ່
-    "receipt_footer": "",        # ຂໍ້ຄວາມທ້າຍໃບບິນ
+    "receipt_rows": "15",
+    "receipt_auto_print": "1",
+    "receipt_footer": "",
+    "cashback_daily_quota": "0",  # 0 = ບໍ່ຈຳກັດ
 }
 
 
