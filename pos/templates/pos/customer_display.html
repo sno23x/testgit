@@ -324,15 +324,16 @@
     socket.on('cart_cleared', () => show('idle'));
 
     socket.on('transfer_show', function(data) {
-      document.getElementById('cd-tr-amount').textContent = Number(data.total || 0).toLocaleString() + ' ₭';
+      const symbol = data.currency === 'THB' ? ' ฿' : ' ₭';
+      document.getElementById('cd-tr-amount').textContent = Number(data.total || 0).toLocaleString() + symbol;
       const bankParts = [data.bank_name, data.account_name, data.account_no].filter(Boolean);
       document.getElementById('cd-tr-bank').textContent = bankParts.join('  |  ');
       const img = document.getElementById('cd-qr-img');
       const placeholder = document.getElementById('cd-qr-placeholder');
       if (data.qr) {
+        img.onload  = () => { img.style.display = 'block'; placeholder.style.display = 'none'; };
+        img.onerror = () => { img.style.display = 'none';  placeholder.style.display = 'flex'; };
         img.src = data.qr;
-        img.style.display = 'block';
-        placeholder.style.display = 'none';
       } else {
         img.style.display = 'none';
         placeholder.style.display = 'flex';

@@ -324,6 +324,16 @@ const SHOP_QR       = "{{ shop_qr }}";
 const BANK_NAME     = "{{ bank_name }}";
 const BANK_ACC_NAME = "{{ bank_account_name }}";
 const BANK_ACC_NO   = "{{ bank_account_no }}";
+const THB_QR        = "{{ thb_qr }}";
+const THB_BANK_NAME = "{{ thb_bank_name }}";
+const THB_BANK_ACC_NAME = "{{ thb_bank_account_name }}";
+const THB_BANK_ACC_NO   = "{{ thb_bank_account_no }}";
+
+function absUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return window.location.origin + (path.startsWith('/') ? '' : '/') + path;
+}
 let cart = [];
 let rateVal = LAK_RATE;
 const successModal  = new bootstrap.Modal(document.getElementById('successModal'));
@@ -818,7 +828,7 @@ function submitSale(type) {
     window._transferTotalLak = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
     const total = window._transferTotalLak;
     socket.emit('transfer_show', {
-      total, qr: SHOP_QR,
+      total, currency: 'LAK', qr: absUrl(SHOP_QR),
       bank_name: BANK_NAME, account_name: BANK_ACC_NAME, account_no: BANK_ACC_NO,
     });
     setQrCurrency('LAK');
@@ -849,6 +859,10 @@ function setQrCurrency(cur) {
     thbSec.classList.remove('d-none');
     btnLak.classList.remove('active'); btnLak.className = 'btn btn-outline-dark fw-bold';
     btnThb.classList.add('active');    btnThb.className = 'btn btn-dark fw-bold active';
+    socket.emit('transfer_show', {
+      total: Math.ceil(total / rate), currency: 'THB', qr: absUrl(THB_QR),
+      bank_name: THB_BANK_NAME, account_name: THB_BANK_ACC_NAME, account_no: THB_BANK_ACC_NO,
+    });
   } else {
     amtEl.textContent = Number(total).toLocaleString() + ' ກີບ';
     amtEl.className = 'fw-bold text-primary';
@@ -856,6 +870,10 @@ function setQrCurrency(cur) {
     thbSec.classList.add('d-none');
     btnLak.className = 'btn btn-dark fw-bold active';
     btnThb.className = 'btn btn-outline-dark fw-bold';
+    socket.emit('transfer_show', {
+      total, currency: 'LAK', qr: absUrl(SHOP_QR),
+      bank_name: BANK_NAME, account_name: BANK_ACC_NAME, account_no: BANK_ACC_NO,
+    });
   }
 }
 
@@ -891,8 +909,12 @@ function doSubmit(type, paidAmount) {
     if (changeAmt > 0) saleMsg += `  |  ເງິນທອນ: ${Number(changeAmt).toLocaleString()} ກີບ`;
     document.getElementById('saleNoDisplay').textContent = saleMsg;
     document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
-    socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
-    successModal.show();
+    if (type === 'debt') {
+      clearBill(); clearSearch();
+    } else {
+      socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
+      successModal.show();
+    }
   }).catch(() => alert('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່'));
 }
 
