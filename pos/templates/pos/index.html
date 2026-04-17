@@ -153,11 +153,22 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
 <script>
 const LAK_RATE = parseFloat("{{ rate }}") || 830;
 let cart = [];
 let rateVal = LAK_RATE;
 const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
+const socket = io();
+
+function emitCartUpdate() {
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  socket.emit('cart_update', {
+    items: cart.map(i => ({ name: i.name, qty: i.qty, unit: i.unit, unit_price: i.unit_price })),
+    total: total
+  });
+}
 
 // ─── Barcode / search ───
 let searchTimer, barcodeBuffer = '', barcodeTimer;
@@ -249,7 +260,7 @@ function renderCart() {
   const div = document.getElementById('billItems');
   if (!cart.length) {
     div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>';
-    recalc(); return;
+    recalc(); emitCartUpdate(); return;
   }
   div.innerHTML = cart.map((it, idx) => {
     const lineTotal = it.unit_price * it.qty;
@@ -287,6 +298,7 @@ function renderCart() {
     </div>`;
   }).join('');
   recalc();
+  emitCartUpdate();
 }
 
 function updateQty(idx, val) {
@@ -307,6 +319,7 @@ function clearBill() {
   document.getElementById('noteInput').value = '';
   clearCustomer();
   renderCart();
+  socket.emit('cart_cleared', {});
 }
 
 function recalc() {
@@ -413,6 +426,8 @@ function submitSale(type) {
     if (data.error) { alert(data.error); return; }
     document.getElementById('saleNoDisplay').textContent = 'ເລກບິນ: ' + data.sale_no;
     document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
+    const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+    socket.emit('cart_confirmed', { sale_no: data.sale_no, total: total });
     successModal.show();
   }).catch(() => alert('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່'));
 }

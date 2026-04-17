@@ -173,6 +173,13 @@ def create_sale():
     return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})
 
 
+# ──────────────── Customer display ────────────────
+@pos_bp.route("/customer-display")
+def customer_display():
+    shop_name = Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ")
+    return render_template("pos/customer_display.html", shop_name=shop_name)
+
+
 # ──────────────── Receipt ────────────────
 @pos_bp.route("/receipt/<int:sale_id>")
 @login_required

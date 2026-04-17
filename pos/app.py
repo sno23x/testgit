@@ -2,6 +2,7 @@ import os
 import sqlalchemy as sa
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
+from flask_socketio import SocketIO, emit
 from config import Config
 from models import db, Employee
 from blueprints.auth import auth_bp
@@ -17,6 +18,22 @@ from blueprints.import_data import import_bp
 from blueprints.payroll import payroll_bp
 
 login_manager = LoginManager()
+socketio = SocketIO()
+
+
+@socketio.on("cart_update")
+def handle_cart_update(data):
+    emit("cart_update", data, broadcast=True, include_self=False)
+
+
+@socketio.on("cart_confirmed")
+def handle_cart_confirmed(data):
+    emit("cart_confirmed", data, broadcast=True, include_self=False)
+
+
+@socketio.on("cart_cleared")
+def handle_cart_cleared(data):
+    emit("cart_cleared", {}, broadcast=True, include_self=False)
 
 
 def create_app():
@@ -24,6 +41,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message = "ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນ"
@@ -78,4 +96,4 @@ def run_migrations(app):
 if __name__ == "__main__":
     app = create_app()
     run_migrations(app)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
