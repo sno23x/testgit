@@ -692,14 +692,14 @@ function renderResults(products) {
         <div class="col-6 col-md-4">
           <div class="card product-tile h-100 ${cQty > 0 ? 'product-in-cart' : ''}" onclick='addToCart(${JSON.stringify(p)})'>
             ${img ? `<img src="${img}" class="card-img-top" style="height:80px;object-fit:cover;border-radius:8px 8px 0 0;"/>` : ''}
-            <div class="card-body p-2 text-center">
+            <div class="card-body p-2 text-center d-flex flex-column align-items-center">
               ${!img ? '<i class="bi bi-box-seam text-primary fs-4"></i>' : ''}
-              <p class="small fw-semibold mb-0 mt-1 text-truncate" title="${p.name}">${p.name}</p>
+              <p class="small fw-semibold mb-0 mt-1 text-truncate w-100" title="${p.name}">${p.name}</p>
               <p class="small text-muted mb-1">${p.code}</p>
               <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
               ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb).toLocaleString()}</small><br/>` : ''}
-              <small class="text-muted">Stock: ${p.stock_qty} ${p.unit}</small>
-              ${tileAction}
+              <small class="text-muted mb-1">Stock: ${p.stock_qty} ${p.unit}</small>
+              <div class="mt-auto pt-1 w-100 text-center">${tileAction}</div>
             </div>
           </div>
         </div>`;

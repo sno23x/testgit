@@ -674,7 +674,6 @@ a { transition: color 0.15s ease; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 6px;
 }
 .tile-step-btn {
   width: 30px; height: 30px;
@@ -693,19 +692,21 @@ a { transition: color 0.15s ease; }
 .tile-step-plus  { background: #dcfce7; color: #16a34a; }
 .tile-step-qty   { font-weight: 800; font-size: 1.1rem; min-width: 24px; text-align: center; }
 .tile-add-btn {
-  background: linear-gradient(135deg,#f43f5e,#c0392b);
-  color: white;
-  border: none;
+  background: linear-gradient(135deg,#f43f5e,#c0392b) !important;
+  color: #fff !important;
+  border: none !important;
   border-radius: 20px;
-  padding: 4px 16px;
-  font-size: .75rem;
+  padding: 5px 0;
+  font-size: .78rem;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 5px;
   transition: opacity .18s;
-  display: inline-block;
+  display: block;
+  width: 100%;
+  text-align: center;
 }
-.tile-add-btn:active { opacity: .75; }
+.tile-add-btn:hover { opacity: .88; }
+.tile-add-btn:active { opacity: .72; }
 
 /* ── In-cart tile highlight ── */
 .product-in-cart { border: 2px solid rgba(99,102,241,.5) !important; }
