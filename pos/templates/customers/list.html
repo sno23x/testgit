@@ -104,11 +104,11 @@
     <table class="table table-hover align-middle mb-0">
       <thead style="background:var(--bs-tertiary-bg);">
         <tr class="small text-muted">
-          <th class="ps-3" style="width:40px;">#</th>
-          <th>CID</th>
+          <th class="ps-3 col-hide-mobile" style="width:40px;">#</th>
+          <th class="col-hide-mobile">CID</th>
           <th>ຊື່ລູກຄ້າ</th>
           <th>ເບີໂທ</th>
-          <th>ທີ່ຢູ່</th>
+          <th class="col-hide-mobile">ທີ່ຢູ່</th>
           <th class="text-end">ໜີ້ຄ້າງ (ກີບ)</th>
           <th style="width:60px;"></th>
         </tr>
@@ -116,8 +116,8 @@
       <tbody>
         {% for c in customers %}
         <tr>
-          <td class="ps-3 text-muted small">{{ (pagination.page - 1) * 50 + loop.index }}</td>
-          <td>
+          <td class="ps-3 text-muted small col-hide-mobile">{{ (pagination.page - 1) * 50 + loop.index }}</td>
+          <td class="col-hide-mobile">
             {% if c.cust_code %}
             <span class="badge rounded-pill"
                   style="background:rgba(236,72,153,.12);color:#be185d;font-weight:600;">
@@ -137,7 +137,7 @@
             {% endif %}
           </td>
           <td class="text-muted small">{{ c.phone or '—' }}</td>
-          <td class="text-muted small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          <td class="text-muted small col-hide-mobile" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
             {{ c.address or '—' }}
           </td>
           <td class="text-end">

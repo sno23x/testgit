@@ -519,6 +519,95 @@ a { transition: color 0.15s ease; }
 [data-bs-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); }
 [data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.28); }
 
+/* ================================================================
+   Mobile – POS page
+   ================================================================ */
+.pos-mobile-tabs {
+  position: sticky;
+  top: 56px;
+  z-index: 150;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.pos-mobile-tabs .btn {
+  border-radius: 0;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.5rem;
+}
+
+/* Desktop: normal heights */
+.pos-products-body { max-height: 58vh; }
+.pos-bill-items    { max-height: 36vh; min-height: 80px; }
+
+@media (max-width: 991.98px) {
+  /* Tighter padding on mobile */
+  main { padding: 0.5rem !important; }
+
+  /* POS columns */
+  .pos-main-row { min-height: unset !important; }
+  .pos-col-hidden-mobile { display: none !important; }
+
+  /* Full height product list on mobile */
+  .pos-products-body {
+    max-height: calc(100svh - 220px);
+    max-height: calc(100vh - 220px);
+  }
+
+  /* Bill items taller on mobile (no right-column constraint) */
+  .pos-bill-items {
+    max-height: calc(100svh - 420px);
+    max-height: calc(100vh - 420px);
+    min-height: 120px;
+  }
+
+  /* Pay buttons slightly compact */
+  .pay-btn { padding: 0.6rem 0.75rem; }
+  .pay-btn .pay-icon { width: 32px; height: 32px; font-size: 1rem; }
+  .pay-btn .pay-label { font-size: 0.82rem; }
+  .pay-btn .pay-desc  { font-size: 0.65rem; }
+
+  /* Toolbar buttons */
+  .toolbar-btn { padding: 5px 10px !important; font-size: 0.78rem !important; }
+  .sticky-toolbar { padding: 5px 0 3px 0; }
+
+  /* Bigger touch targets for action buttons */
+  .action-btn { width: 36px !important; height: 36px !important; }
+
+  /* Tables: hide low-priority columns */
+  .col-hide-mobile { display: none !important; }
+}
+
+@media (max-width: 575.98px) {
+  main { padding: 0.35rem !important; }
+
+  /* Stack payment buttons 2-up instead of 3 */
+  .d-grid.gap-2 .pay-btn + .pay-btn { }
+
+  /* Reduce font in table cells */
+  .table td, .table th { font-size: 0.82rem; }
+
+  /* Product tiles smaller */
+  .product-tile .card-body { padding: 0.5rem !important; }
+}
+
+/* ================================================================
+   Mobile – Dashboard stat cards
+   ================================================================ */
+@media (max-width: 991.98px) {
+  .stat-card .stat-value { font-size: 1.25rem; }
+  .stat-card .stat-icon  { width: 40px; height: 40px; font-size: 1.1rem; }
+}
+
+/* ================================================================
+   Mobile – General forms & buttons
+   ================================================================ */
+@media (max-width: 575.98px) {
+  .pill-filter  { padding: 3px 10px !important; font-size: 0.73rem !important; }
+  .toolbar-btn  { padding: 4px 8px !important; font-size: 0.73rem !important; }
+  h5, .fs-5     { font-size: 1rem !important; }
+}
+
 /* Barcode scanner line animation */
 @keyframes scanMove {
   0%   { top: 4%;  opacity: 0.6; }

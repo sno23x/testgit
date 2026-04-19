@@ -3,10 +3,26 @@
 {% block page_title %}ໜ້າຂາຍ POS{% endblock %}
 
 {% block content %}
-<div class="row g-3" style="min-height:82vh;">
+<!-- Mobile tab bar (hidden on desktop) -->
+<div class="d-lg-none pos-mobile-tabs mb-2">
+  <div class="btn-group w-100">
+    <button type="button" id="tabBtnProducts" class="btn btn-primary fw-bold"
+            onclick="mobileTab('products')">
+      <i class="bi bi-grid-3x3-gap me-1"></i>ສິນຄ້າ
+    </button>
+    <button type="button" id="tabBtnCart" class="btn btn-outline-primary fw-bold"
+            onclick="mobileTab('cart')">
+      <i class="bi bi-receipt me-1"></i>ໃບບິນ
+      <span class="badge ms-1" id="cartTabBadge"
+            style="background:#6366f1;display:none;"></span>
+    </button>
+  </div>
+</div>
+
+<div class="row g-3 pos-main-row">
 
   <!-- ═══ Left: Search + Product Grid ═══ -->
-  <div class="col-lg-7 d-flex flex-column gap-3">
+  <div class="col-12 col-lg-7 d-flex flex-column gap-3" id="posColProducts">
 
     <!-- Search bar -->
     <div class="card">
@@ -60,14 +76,14 @@
           </button>
         </div>
       </div>
-      <div class="card-body p-2 overflow-auto flex-grow-1" style="max-height:58vh;">
+      <div class="card-body p-2 overflow-auto flex-grow-1 pos-products-body">
         <div id="searchResults"></div>
       </div>
     </div>
   </div>
 
   <!-- ═══ Right: Bill / Cart ═══ -->
-  <div class="col-lg-5 d-flex flex-column">
+  <div class="col-12 col-lg-5 d-flex flex-column pos-col-hidden-mobile" id="posColCart">
     <div class="card flex-grow-1 d-flex flex-column" style="min-height:0;">
 
       <!-- Cart header -->
@@ -88,7 +104,7 @@
       </div>
 
       <!-- Bill items -->
-      <div class="flex-grow-1 overflow-auto px-2 pt-2" id="billItems" style="max-height:36vh; min-height:80px;">
+      <div class="flex-grow-1 overflow-auto px-2 pt-2 pos-bill-items" id="billItems">
         <p class="text-muted text-center mt-4 small" id="emptyMsg">
           <i class="bi bi-cart d-block fs-2 mb-2 opacity-25"></i>ຍັງບໍ່ມີລາຍການ
         </p>
@@ -678,6 +694,7 @@ function addToCart(p) {
                 unit_price: p.sell_price, orig_price: p.sell_price, qty: 1 });
   }
   renderCart();
+  _autoSwitchCart();
 }
 
 function renderCart(silent = false) {
@@ -686,6 +703,7 @@ function renderCart(silent = false) {
     div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>';
     recalc();
     if (!silent) socket.emit('cart_update', { items: [], total: 0 });
+    _updateCartTabBadge();
     return;
   }
   div.innerHTML = cart.map((it, idx) => {
@@ -729,6 +747,7 @@ function renderCart(silent = false) {
     items: cart.map(i => ({ name: i.name, unit: i.unit, qty: i.qty, unit_price: i.unit_price })),
     total: total,
   });
+  _updateCartTabBadge();
 }
 
 function updateQty(idx, val) {
@@ -1004,5 +1023,38 @@ function newBill() {
 
 // Load best sellers on page load
 loadSuggestions('bestseller', document.querySelector('#suggestTabs .nav-link'));
+
+// ── Mobile tab switching ──
+function mobileTab(tab) {
+  const prod  = document.getElementById('posColProducts');
+  const cart  = document.getElementById('posColCart');
+  const bProd = document.getElementById('tabBtnProducts');
+  const bCart = document.getElementById('tabBtnCart');
+  if (tab === 'cart') {
+    prod.classList.add('pos-col-hidden-mobile');
+    cart.classList.remove('pos-col-hidden-mobile');
+    bProd.className = 'btn btn-outline-primary fw-bold';
+    bCart.className = 'btn btn-primary fw-bold';
+  } else {
+    cart.classList.add('pos-col-hidden-mobile');
+    prod.classList.remove('pos-col-hidden-mobile');
+    bProd.className = 'btn btn-primary fw-bold';
+    bCart.className = 'btn btn-outline-primary fw-bold';
+  }
+}
+function _updateCartTabBadge() {
+  const badge = document.getElementById('cartTabBadge');
+  if (!badge) return;
+  if (cart.length > 0) {
+    badge.textContent = cart.length;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+// Auto-switch to cart on mobile when first item added
+function _autoSwitchCart() {
+  if (window.innerWidth < 992 && cart.length === 1) mobileTab('cart');
+}
 </script>
 {% endblock %}

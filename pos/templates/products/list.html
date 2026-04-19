@@ -142,10 +142,10 @@
           </th>
           <th>ລະຫັດ</th>
           <th>ຊື່ສິນຄ້າ</th>
-          <th>ໝວດ</th>
-          <th>ໜ່ວຍ</th>
-          <th class="text-end">ຕົ້ນທຶນ</th>
-          <th class="text-end">ລາຄາ (฿)</th>
+          <th class="col-hide-mobile">ໝວດ</th>
+          <th class="col-hide-mobile">ໜ່ວຍ</th>
+          <th class="text-end col-hide-mobile">ຕົ້ນທຶນ</th>
+          <th class="text-end col-hide-mobile">ລາຄາ (฿)</th>
           <th class="text-end">ລາຄາຂາຍ</th>
           <th class="text-end">Stock</th>
           <th style="width:80px;"></th>
@@ -161,17 +161,17 @@
           </td>
           <td><code class="small">{{ p.code }}</code></td>
           <td class="fw-semibold">{{ p.name }}</td>
-          <td>
+          <td class="col-hide-mobile">
             <span class="badge rounded-pill"
                   style="background:rgba(99,102,241,.15);color:#4f46e5;font-weight:600;">
               {{ p.category.name if p.category else '-' }}
             </span>
           </td>
-          <td class="text-muted small">{{ p.unit }}</td>
-          <td class="text-end text-muted small">
+          <td class="text-muted small col-hide-mobile">{{ p.unit }}</td>
+          <td class="text-end text-muted small col-hide-mobile">
             {{ "{:,.0f}".format(p.cost_price) if p.cost_price else '—' }}
           </td>
-          <td class="text-end text-muted small">
+          <td class="text-end text-muted small col-hide-mobile">
             {{ "฿{:,.2f}".format(p.price_thb) if p.price_thb else '—' }}
           </td>
           <td class="text-end fw-bold text-primary">
