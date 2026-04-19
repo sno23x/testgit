@@ -3,22 +3,6 @@
 {% block page_title %}ໜ້າຂາຍ POS{% endblock %}
 
 {% block content %}
-<!-- Mobile tab bar (hidden on desktop) -->
-<div class="d-lg-none pos-mobile-tabs mb-2">
-  <div class="btn-group w-100">
-    <button type="button" id="tabBtnProducts" class="btn btn-primary fw-bold"
-            onclick="mobileTab('products')">
-      <i class="bi bi-grid-3x3-gap me-1"></i>ສິນຄ້າ
-    </button>
-    <button type="button" id="tabBtnCart" class="btn btn-outline-primary fw-bold"
-            onclick="mobileTab('cart')">
-      <i class="bi bi-receipt me-1"></i>ໃບບິນ
-      <span class="badge ms-1" id="cartTabBadge"
-            style="background:#6366f1;display:none;"></span>
-    </button>
-  </div>
-</div>
-
 <div class="row g-3 pos-main-row">
 
   <!-- ═══ Left: Search + Product Grid ═══ -->
@@ -83,12 +67,22 @@
   </div>
 
   <!-- ═══ Right: Bill / Cart ═══ -->
-  <div class="col-12 col-lg-5 d-flex flex-column pos-col-hidden-mobile" id="posColCart">
+  <div class="col-12 col-lg-5 d-flex flex-column pos-cart-col" id="posColCart">
+    <!-- Mobile drag pill -->
+    <div class="d-lg-none cart-sheet-pill-wrap">
+      <div class="cart-sheet-pill"></div>
+    </div>
     <div class="card flex-grow-1 d-flex flex-column" style="min-height:0;">
 
       <!-- Cart header -->
       <div class="card-header cart-header-gradient d-flex justify-content-between align-items-center py-2 px-3">
-        <span class="fw-bold"><i class="bi bi-receipt me-2"></i>ໃບບິນ</span>
+        <div class="d-flex align-items-center gap-2">
+          <button class="d-lg-none btn btn-sm btn-outline-light rounded-circle p-0"
+                  onclick="closeCartSheet()" title="ປິດ" style="width:30px;height:30px;">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <span class="fw-bold"><i class="bi bi-receipt me-1"></i>ໃບບິນ</span>
+        </div>
         <div class="d-flex align-items-center gap-2">
           <!-- Currency toggle -->
           <div class="btn-group btn-group-sm">
@@ -183,6 +177,20 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Mobile: cart sheet backdrop -->
+<div id="cartSheetOverlay" onclick="closeCartSheet()"></div>
+
+<!-- Mobile: View Cart floating bar -->
+<div id="viewCartBar" class="pos-view-cart-bar d-lg-none" style="display:none;">
+  <div class="vcb-info">
+    <span class="vcb-badge" id="vcb-count">0 ລາຍການ</span>
+    <span class="vcb-total" id="vcb-total">0 ກີບ</span>
+  </div>
+  <button class="vcb-btn" onclick="openCartSheet()">
+    ໃບບິນ <i class="bi bi-chevron-up ms-1"></i>
+  </button>
 </div>
 
 <!-- Transfer QR modal -->
@@ -640,8 +648,17 @@ function renderResults(products) {
     div.innerHTML = `<div class="list-group list-group-flush">` +
       products.map(p => {
         const img = imgUrl(p);
+        const cItem = cart.find(ci => ci.product_id === p.id);
+        const cQty  = cItem ? cItem.qty : 0;
+        const listAction = cQty > 0
+          ? `<div class="tile-stepper ms-1" style="flex-shrink:0;">
+               <button class="tile-step-btn tile-step-minus" onclick="event.stopPropagation();stepCart(${p.id},-1)">−</button>
+               <span class="tile-step-qty">${Number.isInteger(cQty) ? cQty : cQty.toFixed(1)}</span>
+               <button class="tile-step-btn tile-step-plus" onclick="event.stopPropagation();stepCart(${p.id},+1)">+</button>
+             </div>`
+          : `<button class="tile-add-btn" onclick='event.stopPropagation();addToCart(${JSON.stringify(p)})'>+</button>`;
         return `
-        <div class="list-group-item list-group-item-action px-2 py-2 d-flex align-items-center gap-2"
+        <div class="list-group-item list-group-item-action px-2 py-2 d-flex align-items-center gap-2 ${cQty > 0 ? 'product-in-cart' : ''}"
              onclick='addToCart(${JSON.stringify(p)})' style="cursor:pointer;">
           ${img
             ? `<img src="${img}" class="rounded" style="width:48px;height:48px;object-fit:cover;flex-shrink:0;"/>`
@@ -655,15 +672,25 @@ function renderResults(products) {
             <div class="fw-bold text-success small">${Number(p.sell_price).toLocaleString()}</div>
             ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb)}</small>` : ''}
           </div>
+          ${listAction}
         </div>`;
       }).join('') + `</div>`;
   } else {
     div.innerHTML = `<div class="row g-2">` +
       products.map(p => {
         const img = imgUrl(p);
+        const cItem = cart.find(ci => ci.product_id === p.id);
+        const cQty  = cItem ? cItem.qty : 0;
+        const tileAction = cQty > 0
+          ? `<div class="tile-stepper">
+               <button class="tile-step-btn tile-step-minus" onclick="event.stopPropagation();stepCart(${p.id},-1)">−</button>
+               <span class="tile-step-qty">${Number.isInteger(cQty) ? cQty : cQty.toFixed(1)}</span>
+               <button class="tile-step-btn tile-step-plus" onclick="event.stopPropagation();stepCart(${p.id},+1)">+</button>
+             </div>`
+          : `<button class="tile-add-btn" onclick='event.stopPropagation();addToCart(${JSON.stringify(p)})'>+ ADD</button>`;
         return `
         <div class="col-6 col-md-4">
-          <div class="card product-tile h-100" onclick='addToCart(${JSON.stringify(p)})'>
+          <div class="card product-tile h-100 ${cQty > 0 ? 'product-in-cart' : ''}" onclick='addToCart(${JSON.stringify(p)})'>
             ${img ? `<img src="${img}" class="card-img-top" style="height:80px;object-fit:cover;border-radius:8px 8px 0 0;"/>` : ''}
             <div class="card-body p-2 text-center">
               ${!img ? '<i class="bi bi-box-seam text-primary fs-4"></i>' : ''}
@@ -672,6 +699,7 @@ function renderResults(products) {
               <p class="fw-bold text-success mb-0">${Number(p.sell_price).toLocaleString()} ກີບ</p>
               ${p.price_thb > 0 ? `<small class="text-warning">฿${Number(p.price_thb).toLocaleString()}</small><br/>` : ''}
               <small class="text-muted">Stock: ${p.stock_qty} ${p.unit}</small>
+              ${tileAction}
             </div>
           </div>
         </div>`;
@@ -694,7 +722,7 @@ function addToCart(p) {
                 unit_price: p.sell_price, orig_price: p.sell_price, qty: 1 });
   }
   renderCart();
-  _autoSwitchCart();
+  if (lastProducts.length) renderResults(lastProducts);
 }
 
 function renderCart(silent = false) {
@@ -703,7 +731,7 @@ function renderCart(silent = false) {
     div.innerHTML = '<p class="text-muted text-center mt-4" id="emptyMsg">ຍັງບໍ່ມີລາຍການ</p>';
     recalc();
     if (!silent) socket.emit('cart_update', { items: [], total: 0 });
-    _updateCartTabBadge();
+    _updateViewCartBar();
     return;
   }
   div.innerHTML = cart.map((it, idx) => {
@@ -747,7 +775,7 @@ function renderCart(silent = false) {
     items: cart.map(i => ({ name: i.name, unit: i.unit, qty: i.qty, unit_price: i.unit_price })),
     total: total,
   });
-  _updateCartTabBadge();
+  _updateViewCartBar();
 }
 
 function updateQty(idx, val) {
@@ -762,12 +790,17 @@ function resetPrice(idx) {
   cart[idx].unit_price = cart[idx].orig_price;
   renderCart();
 }
-function removeItem(idx) { cart.splice(idx, 1); renderCart(); }
+function removeItem(idx) {
+  cart.splice(idx, 1);
+  renderCart();
+  if (lastProducts.length) renderResults(lastProducts);
+}
 function clearBill() {
   cart = [];
   document.getElementById('noteInput').value = '';
   clearCustomer();
   renderCart();
+  if (lastProducts.length) renderResults(lastProducts);
   socket.emit('cart_cleared', {});
 }
 
@@ -1024,37 +1057,48 @@ function newBill() {
 // Load best sellers on page load
 loadSuggestions('bestseller', document.querySelector('#suggestTabs .nav-link'));
 
-// ── Mobile tab switching ──
-function mobileTab(tab) {
-  const prod  = document.getElementById('posColProducts');
-  const cart  = document.getElementById('posColCart');
-  const bProd = document.getElementById('tabBtnProducts');
-  const bCart = document.getElementById('tabBtnCart');
-  if (tab === 'cart') {
-    prod.classList.add('pos-col-hidden-mobile');
-    cart.classList.remove('pos-col-hidden-mobile');
-    bProd.className = 'btn btn-outline-primary fw-bold';
-    bCart.className = 'btn btn-primary fw-bold';
-  } else {
-    cart.classList.add('pos-col-hidden-mobile');
-    prod.classList.remove('pos-col-hidden-mobile');
-    bProd.className = 'btn btn-primary fw-bold';
-    bCart.className = 'btn btn-outline-primary fw-bold';
-  }
+// ── Mobile: cart bottom sheet ──
+function openCartSheet() {
+  document.getElementById('posColCart').classList.add('show');
+  document.getElementById('cartSheetOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
-function _updateCartTabBadge() {
-  const badge = document.getElementById('cartTabBadge');
-  if (!badge) return;
+function closeCartSheet() {
+  document.getElementById('posColCart').classList.remove('show');
+  document.getElementById('cartSheetOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function _updateViewCartBar() {
+  const bar = document.getElementById('viewCartBar');
+  if (!bar) return;
+  if (window.innerWidth >= 992) { bar.style.display = 'none'; return; }
+  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  const total    = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
   if (cart.length > 0) {
-    badge.textContent = cart.length;
-    badge.style.display = '';
+    bar.style.display = 'flex';
+    document.getElementById('vcb-count').textContent =
+      (Number.isInteger(totalQty) ? totalQty : totalQty.toFixed(1)) + ' ລາຍການ';
+    document.getElementById('vcb-total').textContent =
+      Number(total).toLocaleString() + ' ກີບ';
   } else {
-    badge.style.display = 'none';
+    bar.style.display = 'none';
+    closeCartSheet();
   }
 }
-// Auto-switch to cart on mobile when first item added
-function _autoSwitchCart() {
-  if (window.innerWidth < 992 && cart.length === 1) mobileTab('cart');
+// Step cart qty directly from product tile
+function stepCart(productId, delta) {
+  const idx = cart.findIndex(i => i.product_id === productId);
+  if (idx < 0) {
+    if (delta > 0) {
+      const p = lastProducts.find(lp => lp.id === productId);
+      if (p) { addToCart(p); return; }
+    }
+    return;
+  }
+  cart[idx].qty = Math.max(0, Math.round((cart[idx].qty + delta) * 100) / 100);
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  renderCart();
+  if (lastProducts.length) renderResults(lastProducts);
 }
 </script>
 {% endblock %}
