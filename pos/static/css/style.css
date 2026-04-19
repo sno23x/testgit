@@ -528,7 +528,7 @@ a { transition: color 0.15s ease; }
 
 @media (max-width: 991.98px) {
   /* Tighter padding on mobile */
-  main { padding: 0.5rem !important; }
+  main { padding: 0.5rem 0.5rem calc(68px + env(safe-area-inset-bottom, 0px)) !important; }
 
   /* POS columns */
   .pos-main-row { min-height: unset !important; }
@@ -559,7 +559,7 @@ a { transition: color 0.15s ease; }
 }
 
 @media (max-width: 575.98px) {
-  main { padding: 0.35rem !important; }
+  main { padding: 0.35rem 0.35rem calc(68px + env(safe-area-inset-bottom, 0px)) !important; }
 
   /* Stack payment buttons 2-up instead of 3 */
   .d-grid.gap-2 .pay-btn + .pay-btn { }
@@ -610,7 +610,7 @@ a { transition: color 0.15s ease; }
 .pos-view-cart-bar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  z-index: 1030;
+  z-index: 1031;
   background: linear-gradient(135deg,#f43f5e 0%,#c0392b 100%);
   color: white;
   padding: 13px 20px;
@@ -730,6 +730,65 @@ a { transition: color 0.15s ease; }
   .pill-filter  { padding: 3px 10px !important; font-size: 0.73rem !important; }
   .toolbar-btn  { padding: 4px 8px !important; font-size: 0.73rem !important; }
   h5, .fs-5     { font-size: 1rem !important; }
+}
+
+/* ================================================================
+   Mobile – Bottom Navigation Bar
+   ================================================================ */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 1029;
+  background: var(--bs-body-bg);
+  border-top: 1px solid var(--bs-border-color);
+  display: flex;
+  align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -2px 20px rgba(0,0,0,.09);
+  min-height: 60px;
+}
+[data-bs-theme="dark"] .mobile-bottom-nav {
+  background: #161b22;
+  border-top-color: rgba(255,255,255,.07);
+  box-shadow: 0 -2px 20px rgba(0,0,0,.35);
+}
+
+.mbn-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 2px 6px;
+  text-decoration: none !important;
+  color: var(--bs-secondary-color);
+  font-size: .6rem;
+  font-weight: 600;
+  gap: 3px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: color .18s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  letter-spacing: .02em;
+  line-height: 1;
+}
+.mbn-item i {
+  font-size: 1.3rem;
+  transition: transform .18s, color .18s;
+}
+.mbn-item:active i { transform: scale(.88); }
+
+.mbn-item.active { color: #6366f1; }
+.mbn-item.active i { color: #6366f1; }
+.mbn-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 18%; right: 18%;
+  height: 3px;
+  background: linear-gradient(90deg,#6366f1,#8b5cf6);
+  border-radius: 0 0 4px 4px;
 }
 
 /* Barcode scanner line animation */
