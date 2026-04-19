@@ -537,8 +537,9 @@ a { transition: color 0.15s ease; }
   .pos-products-body {
     max-height: calc(100svh - 180px);
     max-height: calc(100vh - 180px);
-    padding-bottom: 72px;
   }
+  /* Padding must be on child, not overflow container (iOS Safari bug) */
+  #searchResults { padding-bottom: 80px; }
 
   /* Pay buttons slightly compact */
   .pay-btn { padding: 0.6rem 0.75rem; }
