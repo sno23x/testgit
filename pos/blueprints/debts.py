@@ -83,6 +83,7 @@ def pay_debt(sale_id):
         paid_at=datetime.now(timezone.utc),
     )
     db.session.add(payment)
+    sale.paid_amount = (sale.paid_amount or 0) + amount
 
     customer = Customer.query.get(sale.customer_id)
     if customer:

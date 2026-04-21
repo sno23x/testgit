@@ -1031,20 +1031,14 @@ function doSubmit(type, paidAmount) {
     if (changeAmt > 0) saleMsg += `  |  ເງິນທອນ: ${Number(changeAmt).toLocaleString()} ກີບ`;
     document.getElementById('saleNoDisplay').textContent = saleMsg;
     document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
-    if (type === 'debt') {
-      cart = [];
-      document.getElementById('noteInput').value = '';
-      clearCustomer();
-      renderCart(true);
-      clearSearch();
-    } else {
+    if (type !== 'debt') {
       socket.emit('cart_confirmed', {
         sale_no: data.sale_no, total: total,
         paid: paidAmount ?? total,
         change: changeAmt,
       });
-      successModal.show();
     }
+    successModal.show();
   }).catch(() => alert('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່'));
 }
 
