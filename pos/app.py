@@ -58,7 +58,7 @@ def handle_connect():
 @socketio.on("disconnect")
 def handle_disconnect():
     _online_users.pop(flask_request.sid, None)
-    emit("users_online", _unique_online(), broadcast=True)
+    socketio.emit("users_online", _unique_online())
 
 
 @socketio.on("chat_join")
@@ -170,6 +170,7 @@ def run_migrations(app):
         os.makedirs("instance", exist_ok=True)
         os.makedirs(os.path.join("static", "img"), exist_ok=True)
         os.makedirs(os.path.join("static", "uploads", "products"), exist_ok=True)
+        os.makedirs(os.path.join("static", "uploads", "chat"), exist_ok=True)
         db.create_all()
         migrations = [
             "ALTER TABLE products ADD COLUMN price_thb FLOAT",
