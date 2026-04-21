@@ -85,8 +85,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('chat.index') }}" class="nav-link {{ 'active' if 'chat' in request.endpoint }}">
-          <i class="bi bi-chat-dots"></i>ແຊັດທີມ
+        <a href="{{ url_for('chat.index') }}" class="nav-link {{ 'active' if 'chat' in request.endpoint }} d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-chat-dots me-2"></i>ແຊັດທີມ</span>
+          <span id="chatBadge" class="badge bg-danger rounded-pill" style="display:none;min-width:20px;"></span>
         </a>
       </li>
       {% if current_user.is_accountant() %}
@@ -466,6 +467,38 @@
   applyDark(localStorage.getItem('darkMode') === '1');
 </script>
 <script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+// Global socket — shared across all pages (chat page reuses window._globalSocket)
+window._globalSocket = io({ transports: ['websocket', 'polling'] });
+
+function updateChatBadge(count) {
+  const badge = document.getElementById('chatBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'inline-flex';
+    badge.style.alignItems = 'center';
+    badge.style.justifyContent = 'center';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// Load saved unread count
+(function() {
+  const n = parseInt(localStorage.getItem('chatUnread') || '0');
+  if (n > 0) updateChatBadge(n);
+})();
+
+// Increment badge when new chat message arrives and we're NOT on the chat page
+window._globalSocket.on('chat_receive', function() {
+  if (window.location.pathname.startsWith('/chat')) return;
+  const n = parseInt(localStorage.getItem('chatUnread') || '0') + 1;
+  localStorage.setItem('chatUnread', String(n));
+  updateChatBadge(n);
+});
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

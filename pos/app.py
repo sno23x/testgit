@@ -72,18 +72,32 @@ def handle_chat_send(data):
         return
     from models import ChatMessage
     text = (data.get("message") or "").strip()
-    if not text or len(text) > 1000:
+    file_path = (data.get("file_path") or "").strip()
+    file_name = (data.get("file_name") or "").strip()
+    if not text and not file_path:
         return
-    msg = ChatMessage(employee_id=current_user.id, message=text,
-                      created_at=datetime.now(timezone.utc))
+    if len(text) > 1000:
+        return
+    msg = ChatMessage(
+        employee_id=current_user.id,
+        message=text,
+        file_path=file_path,
+        file_name=file_name,
+        created_at=datetime.now(timezone.utc),
+    )
     db.session.add(msg)
     db.session.commit()
     now_lao = datetime.now(timezone.utc).astimezone(_TZ_LAO)
+    ext = file_path.rsplit(".", 1)[-1].lower() if file_path and "." in file_path else ""
+    IMAGE_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
     emit("chat_receive", {
         "id": msg.id,
         "user_id": current_user.id,
         "name": current_user.name,
         "message": text,
+        "file_url": f"/static/uploads/chat/{file_path}" if file_path else "",
+        "file_name": file_name,
+        "is_image": ext in IMAGE_EXT,
         "time": now_lao.strftime("%H:%M"),
     }, broadcast=True)
 
@@ -210,9 +224,13 @@ def run_migrations(app):
             """CREATE TABLE IF NOT EXISTS chat_messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 employee_id INTEGER NOT NULL REFERENCES employees(id),
-                message TEXT NOT NULL,
+                message TEXT DEFAULT '',
+                file_path VARCHAR(300) DEFAULT '',
+                file_name VARCHAR(300) DEFAULT '',
                 created_at DATETIME
             )""",
+            "ALTER TABLE chat_messages ADD COLUMN file_path VARCHAR(300) DEFAULT ''",
+            "ALTER TABLE chat_messages ADD COLUMN file_name VARCHAR(300) DEFAULT ''",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:

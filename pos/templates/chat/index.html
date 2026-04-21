@@ -27,14 +27,29 @@
       <div class="flex-grow-1 overflow-auto p-3" id="msgBox" style="display:flex;flex-direction:column;gap:10px;">
         {% for m in messages %}
         {% set is_me = m.employee_id == current_user.id %}
-        <div class="d-flex {{ 'justify-content-end' if is_me else 'justify-content-start' }}" data-msg-id="{{ m.id }}">
-          <div style="max-width:70%;">
+        {% set ext = m.file_path.rsplit('.',1)[-1].lower() if m.file_path and '.' in m.file_path else '' %}
+        <div class="d-flex {{ 'justify-content-end' if is_me else 'justify-content-start' }}">
+          <div style="max-width:72%;">
             {% if not is_me %}
             <div class="small text-muted mb-1 ms-1">{{ m.employee.name }}</div>
             {% endif %}
-            <div class="px-3 py-2 rounded-3 {{ 'text-white' if is_me else '' }}"
-                 style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if is_me else 'background:var(--bs-tertiary-bg);' }}">
-              {{ m.message }}
+            <div class="px-3 py-2 rounded-3 {{ 'text-white' if is_me and not m.file_path else '' }}"
+                 style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if is_me and not m.file_path else 'background:var(--bs-tertiary-bg);' }}">
+              {% if m.file_path %}
+                {% if ext in IMAGE_EXT %}
+                  <img src="{{ url_for('static', filename='uploads/chat/' ~ m.file_path) }}"
+                       class="rounded" style="max-width:240px;max-height:240px;display:block;cursor:pointer;"
+                       onclick="window.open(this.src,'_blank')"/>
+                {% else %}
+                  <a href="{{ url_for('static', filename='uploads/chat/' ~ m.file_path) }}"
+                     target="_blank" class="d-flex align-items-center gap-2 text-decoration-none"
+                     style="color:inherit;">
+                    <i class="bi bi-file-earmark-fill fs-4"></i>
+                    <span class="small">{{ m.file_name or m.file_path }}</span>
+                  </a>
+                {% endif %}
+              {% endif %}
+              {% if m.message %}<div class="{{ 'mt-1' if m.file_path else '' }}">{{ m.message }}</div>{% endif %}
             </div>
             <div class="small text-muted mt-1 {{ 'text-end me-1' if is_me else 'ms-1' }}">
               {{ (m.created_at.replace(tzinfo=timezone.utc).astimezone(lao_tz)).strftime('%H:%M') if m.created_at else '' }}
@@ -44,74 +59,111 @@
         {% endfor %}
       </div>
 
+      <!-- File preview -->
+      <div id="filePreview" class="px-3 pt-2 d-none">
+        <div class="d-flex align-items-center gap-2 p-2 rounded-3 border"
+             style="background:var(--bs-tertiary-bg);">
+          <div id="filePreviewContent" class="flex-grow-1"></div>
+          <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-0"
+                  style="width:28px;height:28px;" onclick="clearFile()">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Input -->
       <div class="border-top p-3">
-        <div class="input-group">
-          <input type="text" id="msgInput" class="form-control rounded-pill me-2 border"
+        <div class="d-flex gap-2 align-items-center">
+          <label class="btn btn-outline-secondary rounded-circle p-0 mb-0 flex-shrink-0"
+                 style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;"
+                 title="ແນບໄຟລ໌/ຮູບ">
+            <i class="bi bi-paperclip"></i>
+            <input type="file" id="fileInput" class="d-none"
+                   accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.txt,.zip"
+                   onchange="onFileSelected(this)"/>
+          </label>
+          <input type="text" id="msgInput" class="form-control"
                  placeholder="ພິມຂໍ້ຄວາມ... (Enter ສົ່ງ)" autocomplete="off"
-                 style="border-radius:50px!important;"/>
-          <button class="btn btn-primary rounded-pill px-4" onclick="sendMsg()">
+                 style="border-radius:50px;"/>
+          <button class="btn btn-primary rounded-circle flex-shrink-0 p-0"
+                  style="width:38px;height:38px;" onclick="sendMsg()">
             <i class="bi bi-send-fill"></i>
           </button>
         </div>
       </div>
     </div>
   </div>
-
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
 const ME_ID = {{ current_user.id }};
-const ME_NAME = {{ current_user.name | tojson }};
-const socket = io();
+const socket = window._globalSocket;
 const msgBox = document.getElementById('msgBox');
 const msgInput = document.getElementById('msgInput');
 
+// Clear unread badge since we're on the chat page
+localStorage.setItem('chatUnread', '0');
+if (window.updateChatBadge) updateChatBadge(0);
+
 // Scroll to bottom
-function scrollBottom() {
-  msgBox.scrollTop = msgBox.scrollHeight;
-}
+function scrollBottom() { msgBox.scrollTop = msgBox.scrollHeight; }
 scrollBottom();
 
-// Build message bubble HTML
+// File state
+let _pendingFile = null;  // {file_path, file_name, file_url, is_image}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildFileHtml(data) {
+  if (!data.file_url) return '';
+  if (data.is_image) {
+    return `<img src="${escHtml(data.file_url)}" class="rounded"
+              style="max-width:240px;max-height:240px;display:block;cursor:pointer;"
+              onclick="window.open(this.src,'_blank')"/>`;
+  }
+  return `<a href="${escHtml(data.file_url)}" target="_blank"
+             class="d-flex align-items-center gap-2 text-decoration-none" style="color:inherit;">
+            <i class="bi bi-file-earmark-fill fs-4"></i>
+            <span class="small">${escHtml(data.file_name || data.file_url)}</span>
+          </a>`;
+}
+
 function buildBubble(data) {
   const isMe = data.user_id === ME_ID;
+  const hasFile = data.file_url;
+  const bg = (isMe && !hasFile) ? 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' : 'background:var(--bs-tertiary-bg);';
+  const txtClass = (isMe && !hasFile) ? 'text-white' : '';
+  const fileHtml = buildFileHtml(data);
+  const msgHtml = data.message ? `<div class="${fileHtml ? 'mt-1' : ''}">${escHtml(data.message)}</div>` : '';
   return `
     <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}">
-      <div style="max-width:70%;">
+      <div style="max-width:72%;">
         ${!isMe ? `<div class="small text-muted mb-1 ms-1">${escHtml(data.name)}</div>` : ''}
-        <div class="px-3 py-2 rounded-3 ${isMe ? 'text-white' : ''}"
-             style="${isMe ? 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' : 'background:var(--bs-tertiary-bg);'}">
-          ${escHtml(data.message)}
+        <div class="px-3 py-2 rounded-3 ${txtClass}" style="${bg}">
+          ${fileHtml}${msgHtml}
         </div>
         <div class="small text-muted mt-1 ${isMe ? 'text-end me-1' : 'ms-1'}">${data.time}</div>
       </div>
     </div>`;
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// Receive messages
 socket.on('chat_receive', function(data) {
   msgBox.insertAdjacentHTML('beforeend', buildBubble(data));
   scrollBottom();
 });
 
-// Online users
 socket.on('users_online', function(users) {
   const list = document.getElementById('onlineList');
   const count = document.getElementById('onlineCount');
+  count.textContent = users.length;
   if (!users.length) {
     list.innerHTML = '<li class="list-group-item text-muted small py-2">ບໍ່ມີໃຜ online</li>';
-    count.textContent = '0';
     return;
   }
-  count.textContent = users.length;
   list.innerHTML = users.map(u => `
     <li class="list-group-item py-2 d-flex align-items-center gap-2 small">
       <span class="rounded-circle" style="width:8px;height:8px;background:#22c55e;flex-shrink:0;"></span>
@@ -119,19 +171,59 @@ socket.on('users_online', function(users) {
     </li>`).join('');
 });
 
-// Send message
+socket.emit('chat_join');
+
+// File selection
+function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('filePreview');
+  const content = document.getElementById('filePreviewContent');
+  const isImage = file.type.startsWith('image/');
+  if (isImage) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      content.innerHTML = `<img src="${e.target.result}" style="height:60px;border-radius:8px;object-fit:cover;"/>
+        <span class="small text-muted ms-2">${escHtml(file.name)}</span>`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    content.innerHTML = `<i class="bi bi-file-earmark fs-4 me-2"></i>
+      <span class="small">${escHtml(file.name)}</span>`;
+  }
+  preview.classList.remove('d-none');
+  // Upload immediately
+  const fd = new FormData();
+  fd.append('file', file);
+  fetch('/chat/upload', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) { alert(d.error); clearFile(); return; }
+      _pendingFile = d;
+    })
+    .catch(() => { alert('Upload ລົ້ມເຫລວ'); clearFile(); });
+}
+
+function clearFile() {
+  _pendingFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('filePreview').classList.add('d-none');
+}
+
 function sendMsg() {
   const text = msgInput.value.trim();
-  if (!text) return;
-  socket.emit('chat_send', { message: text });
+  if (!text && !_pendingFile) return;
+  socket.emit('chat_send', {
+    message: text,
+    file_path: _pendingFile?.file_path || '',
+    file_name: _pendingFile?.file_name || '',
+  });
   msgInput.value = '';
+  clearFile();
 }
 
 msgInput.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 });
-
-// Join chat room to get current online list
-socket.emit('chat_join');
 </script>
 {% endblock %}

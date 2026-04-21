@@ -293,6 +293,8 @@ class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, default="")
+    file_path = db.Column(db.String(300), default="")
+    file_name = db.Column(db.String(300), default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     employee = db.relationship("Employee", backref="chat_messages")
