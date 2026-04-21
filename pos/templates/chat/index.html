@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row g-3" style="height:calc(100vh - 160px);min-height:400px;">
 
-  <!-- Online users sidebar -->
+  <!-- Online users sidebar (desktop) -->
   <div class="col-lg-3 d-none d-lg-flex flex-column">
     <div class="card border-0 shadow-sm flex-grow-1" style="border-radius:16px;overflow:hidden;">
       <div class="card-header fw-bold py-2 px-3"
@@ -22,6 +22,26 @@
   <!-- Chat area -->
   <div class="col-lg-9 d-flex flex-column">
     <div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column" style="border-radius:16px;overflow:hidden;">
+
+      <!-- Mobile: online bar -->
+      <div class="d-lg-none px-3 py-2 d-flex align-items-center gap-2 border-bottom"
+           style="background:var(--bs-tertiary-bg);flex-wrap:wrap;">
+        <span class="small fw-semibold text-muted"><i class="bi bi-circle-fill me-1" style="color:#22c55e;font-size:.5rem;"></i>Online</span>
+        <span class="badge rounded-pill" style="background:#6366f1;color:#fff;" id="onlineCountMobile">0</span>
+        <span id="onlineNamesMobile" class="small text-muted"></span>
+      </div>
+
+      <!-- Chat header -->
+      <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+        <span class="fw-bold small"><i class="bi bi-chat-dots me-2" style="color:#6366f1;"></i>ໂຊທີມ</span>
+        {% if current_user.is_admin() %}
+        <button class="btn btn-sm rounded-pill px-3"
+                style="background:#fee2e2;color:#991b1b;font-size:.78rem;font-weight:600;border:none;"
+                onclick="clearChat()">
+          <i class="bi bi-trash me-1"></i>ລ້າງໂຊ
+        </button>
+        {% endif %}
+      </div>
 
       <!-- Messages -->
       <div class="flex-grow-1 overflow-auto p-3" id="msgBox" style="display:flex;flex-direction:column;gap:10px;">
@@ -157,18 +177,28 @@ socket.on('chat_receive', function(data) {
 });
 
 socket.on('users_online', function(users) {
+  // Desktop sidebar
   const list = document.getElementById('onlineList');
   const count = document.getElementById('onlineCount');
   count.textContent = users.length;
   if (!users.length) {
     list.innerHTML = '<li class="list-group-item text-muted small py-2">ບໍ່ມີໃຜ online</li>';
-    return;
+  } else {
+    list.innerHTML = users.map(u => `
+      <li class="list-group-item py-2 d-flex align-items-center gap-2 small">
+        <span class="rounded-circle" style="width:8px;height:8px;background:#22c55e;flex-shrink:0;"></span>
+        <span>${escHtml(u.name)}</span>
+      </li>`).join('');
   }
-  list.innerHTML = users.map(u => `
-    <li class="list-group-item py-2 d-flex align-items-center gap-2 small">
-      <span class="rounded-circle" style="width:8px;height:8px;background:#22c55e;flex-shrink:0;"></span>
-      <span>${escHtml(u.name)}</span>
-    </li>`).join('');
+  // Mobile bar
+  const countM = document.getElementById('onlineCountMobile');
+  const namesM = document.getElementById('onlineNamesMobile');
+  if (countM) countM.textContent = users.length;
+  if (namesM) namesM.textContent = users.map(u => u.name).join(', ');
+});
+
+socket.on('chat_cleared', function() {
+  document.getElementById('msgBox').innerHTML = '';
 });
 
 socket.emit('chat_join');
@@ -208,6 +238,13 @@ function clearFile() {
   _pendingFile = null;
   document.getElementById('fileInput').value = '';
   document.getElementById('filePreview').classList.add('d-none');
+}
+
+function clearChat() {
+  if (!confirm('ລ້າງຂໍ້ຄວາມທັງໝົດ?')) return;
+  fetch('/chat/clear', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (d.ok) socket.emit('chat_clear_notify'); });
 }
 
 function sendMsg() {

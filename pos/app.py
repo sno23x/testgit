@@ -66,6 +66,13 @@ def handle_chat_join():
     emit("users_online", _unique_online())
 
 
+@socketio.on("chat_clear_notify")
+def handle_chat_clear_notify():
+    if not current_user.is_authenticated or not current_user.is_admin():
+        return
+    emit("chat_cleared", {}, broadcast=True)
+
+
 @socketio.on("chat_send")
 def handle_chat_send(data):
     if not current_user.is_authenticated:

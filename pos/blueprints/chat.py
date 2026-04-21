@@ -1,5 +1,5 @@
 import os, uuid
-from flask import Blueprint, render_template, request, jsonify, current_app, url_for
+from flask import Blueprint, render_template, request, jsonify, current_app, url_for, abort
 from flask_login import login_required, current_user
 from models import db, ChatMessage
 from datetime import timezone, timedelta
@@ -40,3 +40,13 @@ def upload():
         "file_url": url_for("static", filename=f"uploads/chat/{fname}"),
         "is_image": ext in _IMAGE_EXT,
     })
+
+
+@chat_bp.route("/clear", methods=["POST"])
+@login_required
+def clear():
+    if not current_user.is_admin():
+        abort(403)
+    ChatMessage.query.delete()
+    db.session.commit()
+    return jsonify({"ok": True})
