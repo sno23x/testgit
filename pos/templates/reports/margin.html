@@ -1,16 +1,32 @@
 {% extends "base.html" %}
-{% block title %}ລາຍງານກຳໄລ (Margin){% endblock %}
-{% block page_title %}ລາຍງານຕ້ນທຶນ vs ລາຄາຂາຍ{% endblock %}
+{% block title %}ລາຍງານກຳໄລ{% endblock %}
+{% block page_title %}ລາຍງານຕົ້ນທຶນ vs ລາຄາຂາຍ{% endblock %}
 
 {% block content %}
+<style>
+.toolbar-btn{
+  border-radius:10px;font-weight:600;font-size:.82rem;
+  padding:6px 14px;display:inline-flex;align-items:center;gap:5px;
+  transition:all .18s;border:none;white-space:nowrap;
+}
+.toolbar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+</style>
+
+<!-- Toolbar -->
 <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
   <form class="d-flex gap-2 flex-wrap" method="GET">
-    <div class="input-group input-group-sm" style="max-width:240px;">
-      <input type="text" name="q" class="form-control" placeholder="ຊື່ສິນຄ້າ..." value="{{ q }}"/>
-      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
-      {% if q %}<a href="{{ url_for('reports.margin_report') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>{% endif %}
+    <div class="input-group shadow-sm" style="max-width:260px;">
+      <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-search"></i></span>
+      <input type="text" name="q" class="form-control border-start-0 ps-0"
+             placeholder="ຊື່ສິນຄ້າ..." value="{{ q }}" autocomplete="off"/>
+      {% if q %}
+      <a href="{{ url_for('reports.margin_report') }}" class="btn btn-outline-secondary border-start-0">
+        <i class="bi bi-x-lg"></i>
+      </a>
+      {% endif %}
     </div>
-    <select name="cat" class="form-select form-select-sm" style="max-width:180px;" onchange="this.form.submit()">
+    <select name="cat" class="form-select form-select-sm rounded-pill shadow-sm"
+            style="width:auto;" onchange="this.form.submit()">
       <option value="">ທຸກໝວດ</option>
       {% for c in categories %}
       <option value="{{ c.id }}" {{ 'selected' if cat_id|string == c.id|string }}>{{ c.name }}</option>
@@ -18,8 +34,9 @@
     </select>
   </form>
   <a href="{{ url_for('reports.margin_report') }}?export=1&q={{ q }}&cat={{ cat_id }}"
-     class="btn btn-outline-success btn-sm rounded-pill ms-auto">
-    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+     class="toolbar-btn text-white ms-auto"
+     style="background:linear-gradient(135deg,#10b981,#059669);">
+    <i class="bi bi-file-earmark-excel-fill"></i>Export Excel
   </a>
 </div>
 
@@ -28,108 +45,105 @@
 {% if has_margin %}
 {% set avg_margin = (has_margin | sum(attribute='margin_pct')) / has_margin|length %}
 {% set high_margin = has_margin | sort(attribute='margin_pct', reverse=True) | first %}
-{% set low_margin = has_margin | sort(attribute='margin_pct') | first %}
+{% set low_margin  = has_margin | sort(attribute='margin_pct') | first %}
 <div class="row g-3 mb-3">
   <div class="col-sm-4">
-    <div class="card border-0 shadow-sm text-center py-3">
-      <div class="fs-2 fw-bold text-success">{{ "{:.1f}".format(avg_margin) }}%</div>
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-success" style="font-size:1.8rem;">{{ "{:.1f}".format(avg_margin) }}%</div>
       <div class="small text-muted">Margin ສະເລ່ຍ</div>
     </div>
   </div>
   <div class="col-sm-4">
-    <div class="card border-0 shadow-sm text-center py-3">
-      <div class="fs-5 fw-bold text-primary">{{ high_margin.product.name }}</div>
-      <div class="text-success fw-semibold">{{ "{:.1f}".format(high_margin.margin_pct) }}%</div>
-      <div class="small text-muted">Margin ສູງສຸດ</div>
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-primary small mb-1">{{ high_margin.product.name }}</div>
+      <div class="fw-bold text-success" style="font-size:1.2rem;">{{ "{:.1f}".format(high_margin.margin_pct) }}%</div>
+      <div class="small text-muted"><i class="bi bi-arrow-up-circle-fill text-success me-1"></i>Margin ສູງສຸດ</div>
     </div>
   </div>
   <div class="col-sm-4">
-    <div class="card border-0 shadow-sm text-center py-3">
-      <div class="fs-5 fw-bold text-primary">{{ low_margin.product.name }}</div>
-      <div class="text-danger fw-semibold">{{ "{:.1f}".format(low_margin.margin_pct) }}%</div>
-      <div class="small text-muted">Margin ຕ່ຳສຸດ</div>
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-primary small mb-1">{{ low_margin.product.name }}</div>
+      <div class="fw-bold text-danger" style="font-size:1.2rem;">{{ "{:.1f}".format(low_margin.margin_pct) }}%</div>
+      <div class="small text-muted"><i class="bi bi-arrow-down-circle-fill text-danger me-1"></i>Margin ຕ່ຳສຸດ</div>
     </div>
   </div>
 </div>
 {% endif %}
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <span class="text-white fw-bold"><i class="bi bi-graph-up-arrow me-2"></i>ຕາຕະລາງ Margin</span>
+    <span class="badge bg-white text-primary fw-semibold">{{ rows|length }} ລາຍການ</span>
+  </div>
   <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>ສິນຄ້າ</th>
-          <th class="text-end">ຕ້ນທຶນ (ກີບ)</th>
-          <th class="text-end">ລາຄາຂາຍ (ສະເລ່ຍ)</th>
-          <th class="text-end">ກຳໄລ/ຫົວໜ່ວຍ</th>
-          <th class="text-center" style="min-width:130px;">Margin %</th>
-          <th class="text-end">ຍອດຂາຍ (ກີບ)</th>
+    <table class="table align-middle mb-0 table-hover">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th class="ps-3">ສິນຄ້າ</th>
+          <th class="text-end col-hide-mobile">ຕົ້ນທຶນ</th>
+          <th class="text-end col-hide-mobile">ລາຄາຂາຍ</th>
+          <th class="text-end col-hide-mobile">ກຳໄລ/ຫົວ</th>
+          <th class="text-center" style="min-width:140px;">Margin %</th>
+          <th class="text-end pe-3">ຍອດຂາຍ</th>
         </tr>
       </thead>
       <tbody>
         {% for r in rows %}
         <tr>
-          <td>
+          <td class="ps-3">
             <div class="fw-semibold">{{ r.product.name }}</div>
-            <small class="text-muted">{{ r.product.unit }} {% if r.product.category %}· {{ r.product.category.name }}{% endif %}</small>
+            <small class="text-muted">
+              {{ r.product.unit }}{% if r.product.category %} · {{ r.product.category.name }}{% endif %}
+            </small>
           </td>
-          <td class="text-end small">
-            {% if r.cost_price %}
-              {{ "{:,.0f}".format(r.cost_price) }}
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+          <td class="text-end small col-hide-mobile">
+            {{ "{:,.0f}".format(r.cost_price) if r.cost_price else '<span class="text-muted">—</span>'|safe }}
           </td>
-          <td class="text-end small">
-            {% if r.avg_sale_price %}
-              {{ "{:,.0f}".format(r.avg_sale_price) }}
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+          <td class="text-end small col-hide-mobile">
+            {{ "{:,.0f}".format(r.avg_sale_price) if r.avg_sale_price else '<span class="text-muted">—</span>'|safe }}
           </td>
-          <td class="text-end small">
+          <td class="text-end small col-hide-mobile">
             {% if r.margin_lak is not none %}
               <span class="{{ 'text-success' if r.margin_lak >= 0 else 'text-danger' }} fw-semibold">
                 {{ "{:,.0f}".format(r.margin_lak) }}
               </span>
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+            {% else %}<span class="text-muted">—</span>{% endif %}
           </td>
           <td class="text-center">
             {% if r.margin_pct is not none %}
               {% set pct = r.margin_pct %}
-              {% set bar_color = 'success' if pct >= 20 else ('warning' if pct >= 5 else 'danger') %}
+              {% if pct >= 20 %}{% set bar = '#22c55e' %}{% set txt = '#15803d' %}
+              {% elif pct >= 5 %}{% set bar = '#f59e0b' %}{% set txt = '#92400e' %}
+              {% else %}{% set bar = '#ef4444' %}{% set txt = '#991b1b' %}{% endif %}
               <div class="d-flex align-items-center gap-2">
-                <div class="progress flex-grow-1" style="height:8px;">
-                  <div class="progress-bar bg-{{ bar_color }}" style="width:{{ [pct, 100]|min }}%"></div>
+                <div class="flex-grow-1 rounded-pill overflow-hidden" style="height:8px;background:var(--bs-tertiary-bg);">
+                  <div style="width:{{ [pct,100]|min }}%;height:100%;background:{{ bar }};border-radius:999px;"></div>
                 </div>
-                <span class="small fw-semibold text-{{ bar_color }}" style="min-width:42px;">{{ "{:.1f}".format(pct) }}%</span>
+                <span class="small fw-bold" style="min-width:44px;color:{{ txt }};">{{ "{:.1f}".format(pct) }}%</span>
               </div>
             {% else %}
-              <span class="text-muted small">ບໍ່ມີຂໍ້ມູນ</span>
+              <span class="text-muted small">ບໍ່ມີ</span>
             {% endif %}
           </td>
-          <td class="text-end small">
-            {% if r.total_revenue %}
-              {{ "{:,.0f}".format(r.total_revenue) }}
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+          <td class="text-end small pe-3">
+            {{ "{:,.0f}".format(r.total_revenue) if r.total_revenue else '<span class="text-muted">—</span>'|safe }}
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center py-4 text-muted">ບໍ່ພົບຂໍ້ມູນ</td></tr>
+        <tr><td colspan="6" class="text-center py-5 text-muted">
+          <i class="bi bi-inbox fs-2 d-block mb-2"></i>ບໍ່ພົບຂໍ້ມູນ
+        </td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer">
-    <small class="text-muted">
-      ທັງໝົດ {{ rows|length }} ລາຍການ ·
-      <span class="text-success">≥20% ດີ</span> ·
-      <span class="text-warning">5–20% ປານກາງ</span> ·
-      <span class="text-danger">&lt;5% ຕ່ຳ</span>
+  <div class="card-footer py-2 px-3">
+    <small class="text-muted d-flex gap-3 flex-wrap">
+      <span>ທັງໝົດ <strong>{{ rows|length }}</strong> ລາຍການ</span>
+      <span><i class="bi bi-circle-fill me-1" style="color:#22c55e;font-size:.5rem;"></i>≥20% ດີ</span>
+      <span><i class="bi bi-circle-fill me-1" style="color:#f59e0b;font-size:.5rem;"></i>5–20% ປານກາງ</span>
+      <span><i class="bi bi-circle-fill me-1" style="color:#ef4444;font-size:.5rem;"></i>&lt;5% ຕ່ຳ</span>
     </small>
   </div>
 </div>

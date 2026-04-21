@@ -3,53 +3,143 @@
 {% block page_title %}ຈັດການພະນັກງານ{% endblock %}
 
 {% block content %}
+<style>
+.action-btn {
+  width:32px;height:32px;border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.85rem;border:none;transition:all .18s;
+}
+.action-btn:hover{transform:scale(1.12);}
+.btn-edit {background:#e0f2fe;color:#0369a1;}
+.btn-edit:hover{background:#0369a1;color:#fff;}
+.btn-del  {background:#fee2e2;color:#dc2626;}
+.btn-del:hover{background:#dc2626;color:#fff;}
+.toolbar-btn{
+  border-radius:10px;font-weight:600;font-size:.82rem;
+  padding:6px 14px;display:inline-flex;align-items:center;gap:5px;
+  transition:all .18s;border:none;white-space:nowrap;
+}
+.toolbar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.role-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;
+}
+</style>
+
 {% if current_user.is_admin() %}
-<div class="d-flex gap-2 mb-3">
-  <a href="{{ url_for('employees.add_employee') }}" class="btn btn-primary">
-    <i class="bi bi-person-plus me-1"></i>ເພີ່ມພະນັກງານ
+<div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+  <a href="{{ url_for('employees.add_employee') }}"
+     class="toolbar-btn text-white"
+     style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <i class="bi bi-person-plus-fill"></i>ເພີ່ມພະນັກງານ
   </a>
 </div>
 {% endif %}
 
-<div class="card shadow-sm border-0">
+<!-- Stat cards -->
+<div class="row g-3 mb-3">
+  {% set role_counts = {} %}
+  {% for emp in employees %}{% set _ = role_counts.update({emp.role: role_counts.get(emp.role,0)+1}) %}{% endfor %}
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;">
+      <div class="fw-bold fs-3" style="color:#6366f1;">{{ employees|length }}</div>
+      <div class="small text-muted">ທັງໝົດ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;">
+      <div class="fw-bold fs-3 text-danger">{{ role_counts.get('admin',0) + role_counts.get('accountant',0) }}</div>
+      <div class="small text-muted">ຜູ້ຈັດການ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;">
+      <div class="fw-bold fs-3 text-primary">{{ role_counts.get('cashier',0) }}</div>
+      <div class="small text-muted">ແຄັດເຊຍ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm text-center py-3" style="border-radius:14px;">
+      <div class="fw-bold fs-3 text-warning">{{ role_counts.get('driver',0) + role_counts.get('porter',0) }}</div>
+      <div class="small text-muted">ໂຊເຟີ / ຂົນສົ່ງ</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <span class="text-white fw-bold"><i class="bi bi-people-fill me-2"></i>ລາຍຊື່ພະນັກງານ</span>
+    <span class="badge bg-white text-primary fw-semibold">{{ employees|length }} ຄົນ</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead class="table-light">
-        <tr><th>#</th><th>ຊື່</th><th>Username</th><th>ສິດທິ</th><th></th></tr>
+    <table class="table table-hover align-middle mb-0">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th class="ps-3">#</th>
+          <th>ຊື່</th>
+          <th class="col-hide-mobile">Username</th>
+          <th>ສິດທິ</th>
+          <th class="col-hide-mobile text-end">ເງິນເດືອນ</th>
+          {% if current_user.is_admin() %}<th style="width:80px;"></th>{% endif %}
+        </tr>
       </thead>
       <tbody>
         {% for emp in employees %}
+        {% set role_map = {
+          'admin':     ('background:#fee2e2;color:#991b1b;', 'bi-shield-fill',       'ຜູ້ດູແລລະບົບ'),
+          'cashier':   ('background:#dbeafe;color:#1e40af;', 'bi-cash-register',     'ແຄັດເຊຍ'),
+          'accountant':('background:#dcfce7;color:#14532d;', 'bi-calculator-fill',   'ບັນຊີ'),
+          'driver':    ('background:#fef9c3;color:#713f12;', 'bi-truck',             'ໂຊເຟີລົດ'),
+          'porter':    ('background:#f1f5f9;color:#475569;', 'bi-person-fill',       'ພະນັກງານ'),
+        } %}
+        {% set style, icon, lbl = role_map.get(emp.role, ('background:#f1f5f9;color:#475569;','bi-person-fill', emp.role)) %}
         <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ emp.name }}</td>
-          <td><code>{{ emp.username }}</code></td>
+          <td class="ps-3 text-muted small">{{ loop.index }}</td>
           <td>
-            {% set role_map = {
-              'admin': ('bg-danger', 'ຜູ້ດູແລລະບົບ'),
-              'cashier': ('bg-primary', 'ແຄັດເຊຍ'),
-              'accountant': ('bg-success', 'ບັນຊີ'),
-              'driver': ('bg-warning text-dark', 'ໂຊເຟີລົດ'),
-              'porter': ('bg-secondary', 'ພະນັກງານແບກຫາມ'),
-            } %}
-            {% set cls, lbl = role_map.get(emp.role, ('bg-secondary', emp.role)) %}
-            <span class="badge {{ cls }}">{{ lbl }}</span>
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                   style="{{ style }}width:36px;height:36px;font-size:.8rem;flex-shrink:0;">
+                {{ emp.name[0]|upper }}
+              </div>
+              <div>
+                <div class="fw-semibold">{{ emp.name }}</div>
+                <div class="small text-muted d-lg-none"><code>{{ emp.username }}</code></div>
+              </div>
+            </div>
           </td>
+          <td class="col-hide-mobile"><code class="small">{{ emp.username }}</code></td>
           <td>
-            {% if current_user.is_admin() %}
-            <div class="d-flex gap-1">
-              <a href="{{ url_for('employees.edit_employee', eid=emp.id) }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pencil"></i>
+            <span class="role-badge" style="{{ style }}">
+              <i class="bi {{ icon }}"></i>{{ lbl }}
+            </span>
+          </td>
+          <td class="col-hide-mobile text-end small">
+            {{ "{:,.0f}".format(emp.base_salary) if emp.base_salary else '—' }}
+          </td>
+          {% if current_user.is_admin() %}
+          <td class="pe-3">
+            <div class="d-flex gap-1 justify-content-end">
+              <a href="{{ url_for('employees.edit_employee', eid=emp.id) }}"
+                 class="action-btn btn-edit" title="ແກ້ໄຂ">
+                <i class="bi bi-pencil-fill"></i>
               </a>
               {% if emp.id != current_user.id %}
               <form method="POST" action="{{ url_for('employees.delete_employee', eid=emp.id) }}"
                     onsubmit="return confirm('ລຶບ {{ emp.name }}?')">
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                  <i class="bi bi-trash"></i>
+                <button type="submit" class="action-btn btn-del" title="ລຶບ">
+                  <i class="bi bi-trash-fill"></i>
                 </button>
               </form>
               {% endif %}
             </div>
-            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-5">
+            <i class="bi bi-people fs-2 d-block mb-2"></i>ຍັງບໍ່ມີພະນັກງານ
           </td>
         </tr>
         {% endfor %}

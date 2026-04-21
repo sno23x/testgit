@@ -3,108 +3,159 @@
 {% block page_title %}ລາຍງານຍອດຂາຍ{% endblock %}
 
 {% block content %}
-<!-- View tabs -->
-<ul class="nav nav-tabs mb-3">
-  <li class="nav-item">
-    <a class="nav-link {{ 'active' if view == 'daily' }}" href="{{ url_for('reports.index', view='daily') }}">ລາຍວັນ</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link {{ 'active' if view == 'monthly' }}" href="{{ url_for('reports.index', view='monthly') }}">ລາຍເດືອນ</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link {{ 'active' if view == 'yearly' }}" href="{{ url_for('reports.index', view='yearly') }}">ລາຍປີ</a>
-  </li>
-</ul>
+<style>
+.toolbar-btn{
+  border-radius:10px;font-weight:600;font-size:.82rem;
+  padding:6px 14px;display:inline-flex;align-items:center;gap:5px;
+  transition:all .18s;border:none;white-space:nowrap;
+}
+.toolbar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.view-pill{
+  border-radius:20px;font-size:.78rem;font-weight:600;
+  padding:5px 16px;border-width:1.5px;transition:all .18s;
+  text-decoration:none;display:inline-block;
+}
+.view-pill:hover{transform:translateY(-1px);}
+.view-pill.active{color:#fff;border-color:transparent;}
+</style>
 
-<!-- Filter + export -->
-<div class="d-flex gap-2 align-items-center mb-3 flex-wrap">
-  <form class="d-flex gap-2 align-items-center flex-wrap" id="filterForm">
-    <input type="hidden" name="view" value="{{ view }}"/>
-    <input type="hidden" name="show_voided" value="{{ '1' if show_voided else '0' }}"/>
-    {% if view == 'daily' %}
-    <input type="date" name="date" class="form-control w-auto" value="{{ sel_date }}" onchange="this.form.submit()"/>
-    {% elif view == 'monthly' %}
-    <input type="month" name="month" class="form-control w-auto" value="{{ sel_month }}" onchange="this.form.submit()"/>
-    {% else %}
-    <input type="number" name="year" class="form-control w-auto" value="{{ sel_year }}" min="2020" max="2099" style="width:100px;" onchange="this.form.submit()"/>
-    {% endif %}
-  </form>
-  <!-- Toggle show voided -->
-  <a href="?view={{ view }}&show_voided={{ '0' if show_voided else '1' }}
-    {%- if view == 'daily' %}&date={{ sel_date }}
-    {%- elif view == 'monthly' %}&month={{ sel_month }}
-    {%- else %}&year={{ sel_year }}{% endif %}"
-     class="btn btn-sm {{ 'btn-danger' if show_voided else 'btn-outline-danger' }}">
-    <i class="bi bi-trash me-1"></i>{{ 'ເຊື່ອງຍົກເລີກ' if show_voided else 'ສະແດງຍົກເລີກ' }}
+<!-- View tabs -->
+<div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+  <a href="{{ url_for('reports.index', view='daily') }}"
+     class="view-pill {{ 'active' if view == 'daily' else 'btn-outline-secondary' }}"
+     style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if view == 'daily' else '' }}">
+    <i class="bi bi-calendar-day me-1"></i>ລາຍວັນ
   </a>
-  <a href="{{ url_for('reports.export_excel', view=view,
-    **({'date': sel_date} if view == 'daily' else {'month': sel_month} if view == 'monthly' else {'year': sel_year})) }}"
-     class="btn btn-success btn-sm">
-    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+  <a href="{{ url_for('reports.index', view='monthly') }}"
+     class="view-pill {{ 'active' if view == 'monthly' else 'btn-outline-secondary' }}"
+     style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if view == 'monthly' else '' }}">
+    <i class="bi bi-calendar-month me-1"></i>ລາຍເດືອນ
   </a>
+  <a href="{{ url_for('reports.index', view='yearly') }}"
+     class="view-pill {{ 'active' if view == 'yearly' else 'btn-outline-secondary' }}"
+     style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if view == 'yearly' else '' }}">
+    <i class="bi bi-calendar-range me-1"></i>ລາຍປີ
+  </a>
+
+  <div class="ms-auto d-flex gap-2 flex-wrap align-items-center">
+    <form class="d-flex gap-2 align-items-center" id="filterForm">
+      <input type="hidden" name="view" value="{{ view }}"/>
+      <input type="hidden" name="show_voided" value="{{ '1' if show_voided else '0' }}"/>
+      {% if view == 'daily' %}
+      <input type="date" name="date" class="form-control form-control-sm rounded-pill shadow-sm w-auto"
+             value="{{ sel_date }}" onchange="this.form.submit()"/>
+      {% elif view == 'monthly' %}
+      <input type="month" name="month" class="form-control form-control-sm rounded-pill shadow-sm w-auto"
+             value="{{ sel_month }}" onchange="this.form.submit()"/>
+      {% else %}
+      <input type="number" name="year" class="form-control form-control-sm rounded-pill shadow-sm"
+             style="width:100px;" value="{{ sel_year }}" min="2020" max="2099" onchange="this.form.submit()"/>
+      {% endif %}
+    </form>
+    <a href="?view={{ view }}&show_voided={{ '0' if show_voided else '1' }}{%- if view == 'daily' %}&date={{ sel_date }}{%- elif view == 'monthly' %}&month={{ sel_month }}{%- else %}&year={{ sel_year }}{% endif %}"
+       class="toolbar-btn {{ 'text-white' if show_voided else '' }}"
+       style="{{ 'background:linear-gradient(135deg,#ef4444,#dc2626);' if show_voided else 'background:var(--bs-tertiary-bg);color:var(--bs-body-color);border:1.5px solid #fca5a5;' }}">
+      <i class="bi bi-trash"></i>{{ 'ເຊື່ອງຍົກເລີກ' if show_voided else 'ສະແດງຍົກເລີກ' }}
+    </a>
+    <a href="{{ url_for('reports.export_excel', view=view, **({'date': sel_date} if view == 'daily' else {'month': sel_month} if view == 'monthly' else {'year': sel_year})) }}"
+       class="toolbar-btn text-white"
+       style="background:linear-gradient(135deg,#10b981,#059669);">
+      <i class="bi bi-file-earmark-excel-fill"></i>Export Excel
+    </a>
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold fs-4" style="color:#6366f1;">{{ sales|length }}</div>
+      <div class="small text-muted">ບິນທັງໝົດ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-primary" style="font-size:1rem;">{{ "{:,.0f}".format(total) }}</div>
+      <div class="small text-muted">ຍອດຂາຍ (ກີບ)</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold {{ 'text-success' if total_profit >= 0 else 'text-danger' }}" style="font-size:1rem;">
+        {{ "{:,.0f}".format(total_profit) }}
+      </div>
+      <div class="small text-muted">
+        ກຳໄລ (ກີບ)
+        {% if total and total_profit %}<span class="badge bg-success ms-1">{{ "{:.1f}".format(total_profit/total*100) }}%</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-warning" style="font-size:1rem;">
+        {{ "{:,.0f}".format(sales|selectattr('payment_type','eq','debt')|list|sum(attribute='total')) }}
+      </div>
+      <div class="small text-muted">ຄ້າງຊຳລະ (ກີບ)</div>
+    </div>
+  </div>
 </div>
 
 <div class="row g-3">
   <div class="col-lg-8">
-    <!-- Summary stats -->
-    <div class="row g-2 mb-3">
-      <div class="col-6">
-        <div class="card border-0 shadow-sm text-center py-2">
-          <div class="small text-muted">ຍອດຂາຍລວມ</div>
-          <div class="fw-bold text-primary">{{ "{:,.0f}".format(total) }} ກີບ</div>
-        </div>
+    <div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+      <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+           style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+        <span class="text-white fw-bold"><i class="bi bi-receipt me-2"></i>{{ label }}</span>
+        <span class="badge bg-white text-primary fw-semibold">{{ sales|length }} ບິນ</span>
       </div>
-      <div class="col-6">
-        <div class="card border-0 shadow-sm text-center py-2">
-          <div class="small text-muted">ກຳໄລລວມ (ຄ.ປ.)</div>
-          <div class="fw-bold {{ 'text-success' if total_profit >= 0 else 'text-danger' }}">
-            {{ "{:,.0f}".format(total_profit) }} ກີບ
-            {% if total and total_profit %}
-            <small class="fs-6">({{ "{:.1f}".format(total_profit/total*100) }}%)</small>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card shadow-sm border-0">
-      <div class="card-header fw-semibold">{{ label }}</div>
       <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-          <thead class="table-light">
-            <tr><th>ເລກບິນ</th><th class="col-hide-mobile">ວັນທີ</th><th class="col-hide-mobile">ລູກຄ້າ</th><th>ປະເພດ</th><th class="text-end">ລວມ</th><th class="text-end col-hide-mobile">ກຳໄລ</th><th></th></tr>
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead style="background:var(--bs-tertiary-bg);">
+            <tr class="small text-muted">
+              <th class="ps-3">ເລກບິນ</th>
+              <th class="col-hide-mobile">ວັນທີ</th>
+              <th class="col-hide-mobile">ລູກຄ້າ</th>
+              <th>ປະເພດ</th>
+              <th class="text-end">ລວມ</th>
+              <th class="text-end col-hide-mobile">ກຳໄລ</th>
+              <th class="pe-3"></th>
+            </tr>
           </thead>
           <tbody>
             {% for s in sales %}
             {% set profit = profit_map.get(s.id) %}
             <tr class="{{ 'table-danger opacity-75' if s.voided else '' }}">
-              <td>
+              <td class="ps-3">
                 <a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank"
-                   class="{{ 'text-decoration-line-through text-muted' if s.voided else '' }}">{{ s.sale_no }}</a>
-                {% if s.voided %}<span class="badge bg-danger ms-1">ຍົກເລີກ</span>{% endif %}
+                   class="{{ 'text-decoration-line-through text-muted' if s.voided else 'fw-semibold' }}">{{ s.sale_no }}</a>
+                {% if s.voided %}<span class="badge ms-1" style="background:#fee2e2;color:#991b1b;">ຍົກເລີກ</span>{% endif %}
               </td>
               <td class="small text-muted col-hide-mobile">{{ s.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-              <td class="small col-hide-mobile">{{ s.customer.name if s.customer else '-' }}</td>
+              <td class="small col-hide-mobile">{{ s.customer.name if s.customer else '—' }}</td>
               <td>
-                <span class="badge {% if s.payment_type == 'cash' %}bg-success{% elif s.payment_type == 'transfer' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
-                  {% if s.payment_type == 'cash' %}ເງິນສົດ{% elif s.payment_type == 'transfer' %}ໂອນເງິນ{% else %}ຄ້າງຊຳລະ{% endif %}
-                </span>
+                {% if s.payment_type == 'cash' %}
+                  <span class="badge rounded-pill" style="background:#dcfce7;color:#15803d;">ເງິນສົດ</span>
+                {% elif s.payment_type == 'transfer' %}
+                  <span class="badge rounded-pill" style="background:#dbeafe;color:#1e40af;">ໂອນເງິນ</span>
+                {% else %}
+                  <span class="badge rounded-pill" style="background:#fef9c3;color:#854d0e;">ຄ້າງຊຳລະ</span>
+                {% endif %}
               </td>
-              <td class="text-end fw-semibold {{ 'text-decoration-line-through text-muted' if s.voided else '' }}">{{ "{:,.0f}".format(s.total) }}</td>
+              <td class="text-end fw-semibold {{ 'text-decoration-line-through text-muted' if s.voided else '' }}">
+                {{ "{:,.0f}".format(s.total) }}
+              </td>
               <td class="text-end small col-hide-mobile">
                 {% if not s.voided and profit is not none %}
                   <span class="{{ 'text-success' if profit >= 0 else 'text-danger' }} fw-semibold">
                     {{ "{:,.0f}".format(profit) }}
                   </span>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
+                {% else %}<span class="text-muted">—</span>{% endif %}
               </td>
-              <td class="text-end">
+              <td class="pe-3 text-end">
                 {% if not s.voided %}
                 <form method="POST" action="/pos/void/{{ s.id }}" style="display:inline;"
-                      onsubmit="return confirm('ຍົກເລີກບິນ {{ s.sale_no }}?\nສິນຄ້າຈະກັບຄືນ stock ແລະ ບໍ່ໄລ່ເປັນລາຍຮັບ')">
-                  <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-1">
+                      onsubmit="return confirm('ຍົກເລີກບິນ {{ s.sale_no }}?\nສິນຄ້າຈະກັບຄືນ stock')">
+                  <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-1 rounded">
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>
@@ -112,7 +163,9 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="7" class="text-center text-muted py-3">ບໍ່ມີຂໍ້ມູນ</td></tr>
+            <tr><td colspan="7" class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>ບໍ່ມີຂໍ້ມູນ
+            </td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -120,8 +173,11 @@
     </div>
 
     {% if view == 'yearly' and chart_labels %}
-    <div class="card shadow-sm border-0 mt-3">
-      <div class="card-header fw-semibold">ກຣາຟຍອດຂາຍ {{ sel_year }}</div>
+    <div class="card border-0 mt-3" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+      <div class="card-header py-2 px-3 fw-bold"
+           style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;">
+        <i class="bi bi-bar-chart-fill me-2"></i>ກຣາຟຍອດຂາຍ {{ sel_year }}
+      </div>
       <div class="card-body">
         <canvas id="yearChart" height="100"></canvas>
       </div>
@@ -131,19 +187,27 @@
 
   <!-- Top 10 products -->
   <div class="col-lg-4">
-    <div class="card shadow-sm border-0">
-      <div class="card-header fw-semibold">ສິນຄ້າຂາຍດີ Top 10</div>
+    <div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+      <div class="card-header py-2 px-3 fw-bold"
+           style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;">
+        <i class="bi bi-trophy-fill me-2"></i>ສິນຄ້າຂາຍດີ Top 10
+      </div>
       <ul class="list-group list-group-flush">
         {% for p in top_products %}
-        <li class="list-group-item py-1 d-flex justify-content-between">
-          <div>
-            <span class="badge bg-secondary me-1">{{ loop.index }}</span>
-            <span class="small">{{ p.name }}</span>
+        <li class="list-group-item py-2 px-3 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill fw-bold"
+                  style="background:{% if loop.index == 1 %}#fbbf24{% elif loop.index == 2 %}#94a3b8{% elif loop.index == 3 %}#d97706{% else %}rgba(99,102,241,.15){% endif %};color:{% if loop.index <= 3 %}#1e293b{% else %}#4f46e5{% endif %};">
+              {{ loop.index }}
+            </span>
+            <span class="small fw-semibold">{{ p.name }}</span>
           </div>
           <span class="small text-muted">{{ "{:,.0f}".format(p.revenue) }}</span>
         </li>
         {% else %}
-        <li class="list-group-item text-muted text-center py-3">ບໍ່ມີຂໍ້ມູນ</li>
+        <li class="list-group-item text-muted text-center py-4">
+          <i class="bi bi-inbox d-block mb-1"></i>ບໍ່ມີຂໍ້ມູນ
+        </li>
         {% endfor %}
       </ul>
     </div>
@@ -162,8 +226,8 @@ new Chart(document.getElementById('yearChart'), {
     datasets: [{
       label: 'ຍອດຂາຍ (ກີບ)',
       data: {{ chart_data | tojson }},
-      backgroundColor: 'rgba(13,110,253,0.7)',
-      borderRadius: 4,
+      backgroundColor: 'rgba(99,102,241,0.75)',
+      borderRadius: 6,
     }]
   },
   options: {

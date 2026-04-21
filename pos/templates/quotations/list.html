@@ -3,71 +3,127 @@
 {% block page_title %}ໃບສະເໜີລາຄາ{% endblock %}
 
 {% block content %}
+<style>
+.toolbar-btn{
+  border-radius:10px;font-weight:600;font-size:.82rem;
+  padding:6px 14px;display:inline-flex;align-items:center;gap:5px;
+  transition:all .18s;border:none;white-space:nowrap;
+}
+.toolbar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.status-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;
+}
+</style>
+
+<!-- Toolbar -->
 <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-  <a href="{{ url_for('quotations.create_form') }}" class="btn btn-primary rounded-pill px-3">
-    <i class="bi bi-plus-circle me-1"></i>ສ້າງໃບສະເໜີໃໝ່
+  <a href="{{ url_for('quotations.create_form') }}"
+     class="toolbar-btn text-white"
+     style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <i class="bi bi-plus-circle-fill"></i>ສ້າງໃບສະເໜີໃໝ່
   </a>
-  <form class="d-flex gap-2" method="GET">
-    <div class="input-group input-group-sm" style="max-width:260px;">
-      <input type="text" name="q" class="form-control" placeholder="ຄົ້ນຫາເລກ/ລູກຄ້າ..." value="{{ q }}"/>
-      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
-      {% if q %}<a href="{{ url_for('quotations.list_quotations') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>{% endif %}
+  <form class="d-flex gap-2 flex-wrap" method="GET">
+    <div class="input-group shadow-sm" style="max-width:260px;">
+      <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-search"></i></span>
+      <input type="text" name="q" class="form-control border-start-0 ps-0"
+             placeholder="ຄົ້ນຫາເລກ/ລູກຄ້າ..." value="{{ q }}" autocomplete="off"/>
+      {% if q %}
+      <a href="{{ url_for('quotations.list_quotations') }}" class="btn btn-outline-secondary border-start-0">
+        <i class="bi bi-x-lg"></i>
+      </a>
+      {% endif %}
     </div>
-    <select name="status" class="form-select form-select-sm" style="max-width:140px;" onchange="this.form.submit()">
+    <select name="status" class="form-select form-select-sm rounded-pill shadow-sm"
+            style="width:auto;" onchange="this.form.submit()">
       <option value="" {{ 'selected' if not status }}>ທຸກສະຖານະ</option>
-      <option value="draft" {{ 'selected' if status=='draft' }}>ຮ່າງ</option>
-      <option value="sent" {{ 'selected' if status=='sent' }}>ສົ່ງແລ້ວ</option>
-      <option value="accepted" {{ 'selected' if status=='accepted' }}>ອະນຸມັດ</option>
-      <option value="rejected" {{ 'selected' if status=='rejected' }}>ປະຕິເສດ</option>
+      <option value="draft"     {{ 'selected' if status=='draft'     }}>ຮ່າງ</option>
+      <option value="sent"      {{ 'selected' if status=='sent'      }}>ສົ່ງແລ້ວ</option>
+      <option value="accepted"  {{ 'selected' if status=='accepted'  }}>ອະນຸມັດ</option>
+      <option value="rejected"  {{ 'selected' if status=='rejected'  }}>ປະຕິເສດ</option>
       <option value="cancelled" {{ 'selected' if status=='cancelled' }}>ຍົກເລີກ</option>
     </select>
   </form>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <span class="text-white fw-bold"><i class="bi bi-file-earmark-text-fill me-2"></i>ລາຍການໃບສະເໜີ</span>
+    <span class="badge bg-white text-primary fw-semibold">{{ pagination.total }} ລາຍການ</span>
+  </div>
   <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>ເລກໃບສະເໜີ</th>
+    <table class="table table-hover align-middle mb-0">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th class="ps-3">ເລກໃບສະເໜີ</th>
           <th class="col-hide-mobile">ວັນທີ</th>
           <th>ລູກຄ້າ</th>
           <th class="text-end">ລວມ (ກີບ)</th>
           <th>ສະຖານະ</th>
           <th class="col-hide-mobile">ຜູ້ສ້າງ</th>
-          <th></th>
+          <th class="pe-3"></th>
         </tr>
       </thead>
       <tbody>
         {% for qt in quotations %}
         <tr>
-          <td><a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}" class="fw-semibold text-decoration-none">{{ qt.quote_no }}</a></td>
-          <td class="text-muted small col-hide-mobile">{{ qt.date.strftime('%d/%m/%Y') if qt.date else '-' }}</td>
-          <td>{{ qt.customer_name or '-' }}</td>
-          <td class="text-end fw-semibold">{{ "{:,.0f}".format(qt.total) }}</td>
-          <td>
-            {% if qt.status == 'draft' %}<span class="badge bg-secondary">ຮ່າງ</span>
-            {% elif qt.status == 'sent' %}<span class="badge bg-primary">ສົ່ງແລ້ວ</span>
-            {% elif qt.status == 'accepted' %}<span class="badge bg-success">ອະນຸມັດ</span>
-            {% elif qt.status == 'rejected' %}<span class="badge bg-danger">ປະຕິເສດ</span>
-            {% elif qt.status == 'cancelled' %}<span class="badge bg-dark">ຍົກເລີກ</span>
-            {% else %}<span class="badge bg-secondary">{{ qt.status }}</span>{% endif %}
+          <td class="ps-3">
+            <a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}"
+               class="fw-semibold text-decoration-none" style="color:#6366f1;">
+              {{ qt.quote_no }}
+            </a>
           </td>
-          <td class="small col-hide-mobile">{{ qt.creator.name if qt.creator else '-' }}</td>
+          <td class="text-muted small col-hide-mobile">{{ qt.date.strftime('%d/%m/%Y') if qt.date else '—' }}</td>
+          <td class="small">{{ qt.customer_name or '—' }}</td>
+          <td class="text-end fw-bold" style="color:#6366f1;">{{ "{:,.0f}".format(qt.total) }}</td>
           <td>
-            <a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
-              <i class="bi bi-eye"></i>
+            {% if qt.status == 'draft' %}
+              <span class="status-badge" style="background:#f1f5f9;color:#475569;">
+                <i class="bi bi-pencil"></i>ຮ່າງ
+              </span>
+            {% elif qt.status == 'sent' %}
+              <span class="status-badge" style="background:#dbeafe;color:#1e40af;">
+                <i class="bi bi-send-fill"></i>ສົ່ງແລ້ວ
+              </span>
+            {% elif qt.status == 'accepted' %}
+              <span class="status-badge" style="background:#dcfce7;color:#15803d;">
+                <i class="bi bi-check-circle-fill"></i>ອະນຸມັດ
+              </span>
+            {% elif qt.status == 'rejected' %}
+              <span class="status-badge" style="background:#fee2e2;color:#991b1b;">
+                <i class="bi bi-x-circle-fill"></i>ປະຕິເສດ
+              </span>
+            {% elif qt.status == 'cancelled' %}
+              <span class="status-badge" style="background:#f1f5f9;color:#64748b;">
+                <i class="bi bi-slash-circle"></i>ຍົກເລີກ
+              </span>
+            {% else %}
+              <span class="status-badge" style="background:#f1f5f9;color:#475569;">{{ qt.status }}</span>
+            {% endif %}
+          </td>
+          <td class="small col-hide-mobile">{{ qt.creator.name if qt.creator else '—' }}</td>
+          <td class="pe-3 text-end">
+            <a href="{{ url_for('quotations.view_quotation', qid=qt.id) }}"
+               class="btn btn-sm rounded-pill px-3"
+               style="background:rgba(99,102,241,.12);color:#4f46e5;font-weight:600;border:none;">
+              <i class="bi bi-eye me-1"></i>ເບິ່ງ
             </a>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center py-4 text-muted">ຍັງບໍ່ມີໃບສະເໜີ</td></tr>
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i>ຍັງບໍ່ມີໃບສະເໜີ
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-between align-items-center">
-    <small class="text-muted">ທັງໝົດ {{ pagination.total }} ລາຍການ</small>
+  <div class="card-footer d-flex justify-content-between align-items-center py-2 px-3"
+       style="background:var(--bs-tertiary-bg);border-top:1px solid var(--bs-border-color);">
+    <small class="text-muted">ທັງໝົດ <strong>{{ pagination.total }}</strong> ລາຍການ</small>
     {% if pagination.pages > 1 %}
     <nav><ul class="pagination pagination-sm mb-0">
       {% for p in pagination.iter_pages() %}

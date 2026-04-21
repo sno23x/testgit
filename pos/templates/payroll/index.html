@@ -3,87 +3,152 @@
 {% block page_title %}ລະບົບເງິນເດືອນ{% endblock %}
 
 {% block content %}
+<style>
+.toolbar-btn{
+  border-radius:10px;font-weight:600;font-size:.82rem;
+  padding:6px 14px;display:inline-flex;align-items:center;gap:5px;
+  transition:all .18s;border:none;white-space:nowrap;
+}
+.toolbar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.action-btn{
+  width:32px;height:32px;border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.85rem;border:none;transition:all .18s;
+}
+.action-btn:hover{transform:scale(1.12);}
+.btn-edit{background:#e0f2fe;color:#0369a1;}
+.btn-edit:hover{background:#0369a1;color:#fff;}
+.btn-pay{background:#dcfce7;color:#15803d;}
+.btn-pay:hover{background:#15803d;color:#fff;}
+</style>
+
+<!-- Toolbar -->
 <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-  <a href="{{ url_for('payroll.attendance') }}" class="btn btn-outline-primary">
-    <i class="bi bi-calendar-check me-1"></i>ບັນທຶກການເຂົ້າວຽກ
+  <a href="{{ url_for('payroll.attendance') }}"
+     class="toolbar-btn text-white"
+     style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">
+    <i class="bi bi-calendar-check-fill"></i>ບັນທຶກການເຂົ້າວຽກ
   </a>
 
-  <!-- Month selector -->
-  <form class="d-flex gap-2 align-items-center ms-auto" method="GET">
-    <select name="month" class="form-select form-select-sm" style="width:auto;">
+  <form method="POST" action="{{ url_for('payroll.generate') }}"
+        onsubmit="return confirm('ສ້າງໃບເງິນເດືອນ {{ month }}/{{ year }}?')"
+        class="d-inline">
+    <input type="hidden" name="year" value="{{ year }}"/>
+    <input type="hidden" name="month" value="{{ month }}"/>
+    <button type="submit" class="toolbar-btn text-white"
+            style="background:linear-gradient(135deg,#10b981,#059669);">
+      <i class="bi bi-plus-circle-fill"></i>ສ້າງໃບເງິນເດືອນ
+    </button>
+  </form>
+
+  <form class="d-flex gap-2 align-items-center ms-auto flex-wrap" method="GET">
+    <select name="month" class="form-select form-select-sm rounded-pill shadow-sm" style="width:auto;">
       {% for m in range(1,13) %}
       <option value="{{ m }}" {{ 'selected' if m == month }}>ເດືອນ {{ m }}</option>
       {% endfor %}
     </select>
-    <input type="number" name="year" class="form-control form-control-sm" style="width:90px;"
-           value="{{ year }}" min="2020" max="2099"/>
-    <button type="submit" class="btn btn-sm btn-outline-secondary">
+    <input type="number" name="year" class="form-control form-control-sm rounded-pill shadow-sm"
+           style="width:90px;" value="{{ year }}" min="2020" max="2099"/>
+    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill">
       <i class="bi bi-search"></i>
-    </button>
-  </form>
-
-  <!-- Generate payroll -->
-  <form method="POST" action="{{ url_for('payroll.generate') }}"
-        onsubmit="return confirm('ສ້າງໃບເງິນເດືອນ {{ month }}/{{ year }}?')">
-    <input type="hidden" name="year" value="{{ year }}"/>
-    <input type="hidden" name="month" value="{{ month }}"/>
-    <button type="submit" class="btn btn-success btn-sm">
-      <i class="bi bi-plus-circle me-1"></i>ສ້າງໃບເງິນເດືອນ
     </button>
   </form>
 </div>
 
-<div class="card shadow-sm border-0">
-  <div class="card-header fw-semibold">
-    ເງິນເດືອນ ເດືອນ {{ month }} / {{ year }}
-    <span class="badge bg-secondary ms-2">{{ records|length }} ຄົນ</span>
+<!-- Stat cards -->
+{% set total_net    = records|sum(attribute='net_salary') %}
+{% set total_paid   = records|selectattr('paid')|list|length %}
+{% set total_unpaid = records|rejectattr('paid')|list|length %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold fs-4" style="color:#6366f1;">{{ records|length }}</div>
+      <div class="small text-muted">ພະນັກງານ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold text-primary" style="font-size:1.1rem;">{{ "{:,.0f}".format(total_net) }}</div>
+      <div class="small text-muted">ລວມສຸທິ (ກີບ)</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold fs-4 text-success">{{ total_paid }}</div>
+      <div class="small text-muted">ຈ່າຍແລ້ວ</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm py-3 text-center" style="border-radius:14px;">
+      <div class="fw-bold fs-4 text-warning">{{ total_unpaid }}</div>
+      <div class="small text-muted">ຍັງບໍ່ຈ່າຍ</div>
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+    <span class="text-white fw-bold">
+      <i class="bi bi-wallet2 me-2"></i>ເງິນເດືອນ ເດືອນ {{ month }} / {{ year }}
+    </span>
+    <span class="badge bg-white text-primary fw-semibold">{{ records|length }} ຄົນ</span>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>ພະນັກງານ</th>
-          <th class="text-end">ເງິນເດືອນພື້ນຖານ</th>
-          <th class="text-center">ຂາດ (ວັນ)</th>
-          <th class="text-center">OT (ຊມ)</th>
-          <th class="text-end">ໂບນັດ</th>
-          <th class="text-end">ສຸທິ</th>
+    <table class="table table-hover align-middle mb-0">
+      <thead style="background:var(--bs-tertiary-bg);">
+        <tr class="small text-muted">
+          <th class="ps-3">ພະນັກງານ</th>
+          <th class="text-end col-hide-mobile">ເງິນເດືອນ</th>
+          <th class="text-center col-hide-mobile">ຂາດ</th>
+          <th class="text-center col-hide-mobile">OT</th>
+          <th class="text-end col-hide-mobile">ໂບນັດ</th>
+          <th class="text-end">ສຸທິ (ກີບ)</th>
           <th class="text-center">ສະຖານະ</th>
-          <th></th>
+          <th class="pe-3" style="width:80px;"></th>
         </tr>
       </thead>
       <tbody>
         {% for r in records %}
         <tr>
-          <td>
-            <span class="fw-semibold">{{ r.employee.name }}</span>
-            <small class="text-muted d-block">{{ r.employee.username }}</small>
+          <td class="ps-3">
+            <div class="fw-semibold">{{ r.employee.name }}</div>
+            <small class="text-muted"><code>{{ r.employee.username }}</code></small>
           </td>
-          <td class="text-end">{{ "{:,.0f}".format(r.base_salary) }}</td>
-          <td class="text-center">
+          <td class="text-end small col-hide-mobile">{{ "{:,.0f}".format(r.base_salary) }}</td>
+          <td class="text-center col-hide-mobile">
             {% if r.absent_days > 0 %}
-            <span class="badge bg-danger">{{ r.absent_days }}</span>
-            {% else %}-{% endif %}
+            <span class="badge rounded-pill" style="background:#fee2e2;color:#991b1b;">{{ r.absent_days }} ວັນ</span>
+            {% else %}<span class="text-muted">—</span>{% endif %}
           </td>
-          <td class="text-center">{{ "{:,.1f}".format(r.ot_hours) if r.ot_hours else '-' }}</td>
-          <td class="text-end">{{ "{:,.0f}".format(r.bonus) if r.bonus else '-' }}</td>
-          <td class="text-end fw-bold text-primary">{{ "{:,.0f}".format(r.net_salary) }}</td>
+          <td class="text-center small col-hide-mobile">
+            {{ "{:,.1f}".format(r.ot_hours) if r.ot_hours else '—' }}
+          </td>
+          <td class="text-end small col-hide-mobile">
+            {{ "{:,.0f}".format(r.bonus) if r.bonus else '—' }}
+          </td>
+          <td class="text-end fw-bold" style="color:#6366f1;">{{ "{:,.0f}".format(r.net_salary) }}</td>
           <td class="text-center">
             {% if r.paid %}
-            <span class="badge bg-success">ຈ່າຍແລ້ວ</span>
+            <span class="badge rounded-pill" style="background:#dcfce7;color:#15803d;font-weight:600;">
+              <i class="bi bi-check-circle-fill me-1"></i>ຈ່າຍແລ້ວ
+            </span>
             {% else %}
-            <span class="badge bg-warning text-dark">ຍັງບໍ່ຈ່າຍ</span>
+            <span class="badge rounded-pill" style="background:#fef9c3;color:#854d0e;font-weight:600;">
+              <i class="bi bi-clock-fill me-1"></i>ລໍຖ້າ
+            </span>
             {% endif %}
           </td>
-          <td>
-            <div class="d-flex gap-1">
-              <a href="{{ url_for('payroll.edit', rid=r.id) }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pencil"></i>
+          <td class="pe-3">
+            <div class="d-flex gap-1 justify-content-end">
+              <a href="{{ url_for('payroll.edit', rid=r.id) }}" class="action-btn btn-edit" title="ແກ້ໄຂ">
+                <i class="bi bi-pencil-fill"></i>
               </a>
               {% if not r.paid %}
               <form method="POST" action="{{ url_for('payroll.mark_paid', rid=r.id) }}"
-                    onsubmit="return confirm('ຢືນຢັນການຈ່າຍເງິນ {{ r.employee.name }}?')">
-                <button type="submit" class="btn btn-sm btn-success">
+                    onsubmit="return confirm('ຢືນຢັນການຈ່າຍ {{ r.employee.name }}?')">
+                <button type="submit" class="action-btn btn-pay" title="ຈ່າຍແລ້ວ">
                   <i class="bi bi-check-lg"></i>
                 </button>
               </form>
@@ -93,20 +158,21 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="8" class="text-center text-muted py-4">
-            ຍັງບໍ່ມີຂໍ້ມູນເງິນເດືອນ – ກົດ "ສ້າງໃບເງິນເດືອນ" ເພື່ອເລີ່ມ
+          <td colspan="8" class="text-center text-muted py-5">
+            <i class="bi bi-wallet2 fs-2 d-block mb-2"></i>
+            ຍັງບໍ່ມີຂໍ້ມູນ — ກົດ "ສ້າງໃບເງິນເດືອນ" ເພື່ອເລີ່ມ
           </td>
         </tr>
         {% endfor %}
       </tbody>
       {% if records %}
-      <tfoot class="table-light fw-semibold">
-        <tr>
-          <td>ລວມ</td>
-          <td class="text-end">{{ "{:,.0f}".format(records|sum(attribute='base_salary')) }}</td>
-          <td></td><td></td>
-          <td class="text-end">{{ "{:,.0f}".format(records|sum(attribute='bonus')) }}</td>
-          <td class="text-end text-primary">{{ "{:,.0f}".format(records|sum(attribute='net_salary')) }}</td>
+      <tfoot style="background:var(--bs-tertiary-bg);">
+        <tr class="fw-semibold">
+          <td class="ps-3">ລວມ</td>
+          <td class="text-end col-hide-mobile">{{ "{:,.0f}".format(records|sum(attribute='base_salary')) }}</td>
+          <td class="col-hide-mobile"></td><td class="col-hide-mobile"></td>
+          <td class="text-end col-hide-mobile">{{ "{:,.0f}".format(records|sum(attribute='bonus')) }}</td>
+          <td class="text-end" style="color:#6366f1;">{{ "{:,.0f}".format(records|sum(attribute='net_salary')) }}</td>
           <td colspan="2"></td>
         </tr>
       </tfoot>
