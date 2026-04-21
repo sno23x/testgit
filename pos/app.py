@@ -134,7 +134,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", async_mode="eventlet")
+    socketio.init_app(app, cors_allowed_origins="*", async_mode="gevent")
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message = "ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນ"
