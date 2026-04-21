@@ -470,7 +470,7 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
 // Global socket — shared across all pages (chat page reuses window._globalSocket)
-window._globalSocket = io({ transports: ['websocket', 'polling'] });
+window._globalSocket = io({ transports: ['polling'] });
 
 function updateChatBadge(count) {
   const badge = document.getElementById('chatBadge');
