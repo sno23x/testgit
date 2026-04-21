@@ -46,8 +46,11 @@
             <!-- Name -->
             <div class="col-12">
               <label class="form-label fw-semibold">ຊື່ສິນຄ້າ <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control" required
-                     value="{{ product.name if product else '' }}"/>
+              <input type="text" name="name" id="nameInput" class="form-control" required
+                     value="{{ product.name if product else '' }}" autocomplete="off"/>
+              <div class="form-text text-danger d-none" id="nameDupWarn">
+                <i class="bi bi-exclamation-triangle me-1"></i><span id="nameDupMsg"></span>
+              </div>
             </div>
 
             <!-- Unit + Stock -->
@@ -220,6 +223,30 @@ function previewImg(input) {
     reader.readAsDataURL(input.files[0]);
   }
 }
+
+// ──── Product name duplicate check ────
+const nameInput = document.getElementById('nameInput');
+const nameDupWarn = document.getElementById('nameDupWarn');
+const nameDupMsg = document.getElementById('nameDupMsg');
+let nameTimer;
+const excludeId = {{ product.id if product else 0 }};
+
+nameInput.addEventListener('input', function() {
+  clearTimeout(nameTimer);
+  nameDupWarn.classList.add('d-none');
+  const val = this.value.trim();
+  if (!val) return;
+  nameTimer = setTimeout(() => {
+    fetch(`/products/api/check-name?name=${encodeURIComponent(val)}&exclude_id=${excludeId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.exists) {
+          nameDupMsg.textContent = `ຊື່ນີ້ມີຢູ່ແລ້ວ (ລະຫັດ: ${d.code})`;
+          nameDupWarn.classList.remove('d-none');
+        }
+      });
+  }, 400);
+});
 
 // ──── Product code live search (add form only) ────
 {% if not product %}

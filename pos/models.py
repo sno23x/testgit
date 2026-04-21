@@ -287,3 +287,12 @@ class PayrollRecord(db.Model):
         daily_rate = base / days
         self.net_salary = max(0, base - daily_rate * absent + ot_h * ot_r + bonus - deduct)
         return self.net_salary
+
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    employee = db.relationship("Employee", backref="chat_messages")

@@ -1,12 +1,26 @@
 import os
 import sqlalchemy as sa
-from flask import Flask, redirect, url_for
-from flask_login import LoginManager
+from flask import Flask, redirect, url_for, request as flask_request
+from flask_login import LoginManager, current_user
 from flask_socketio import SocketIO, emit
 from config import Config
 from models import db, Employee
+from datetime import datetime, timezone, timedelta
 
 socketio = SocketIO()
+
+_TZ_LAO = timezone(timedelta(hours=7))
+# {sid: {'id': int, 'name': str}}
+_online_users = {}
+
+
+def _unique_online():
+    seen, result = set(), []
+    for u in _online_users.values():
+        if u['id'] not in seen:
+            seen.add(u['id'])
+            result.append(u)
+    return result
 
 
 @socketio.on("cart_update")
@@ -32,6 +46,48 @@ def handle_transfer_show(data):
 @socketio.on("delivery_show")
 def handle_delivery_show(data):
     emit("delivery_show", data, broadcast=True, include_self=False)
+
+
+@socketio.on("connect")
+def handle_connect():
+    if current_user.is_authenticated:
+        _online_users[flask_request.sid] = {'id': current_user.id, 'name': current_user.name}
+        emit("users_online", _unique_online(), broadcast=True)
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    _online_users.pop(flask_request.sid, None)
+    emit("users_online", _unique_online(), broadcast=True)
+
+
+@socketio.on("chat_join")
+def handle_chat_join():
+    emit("users_online", _unique_online())
+
+
+@socketio.on("chat_send")
+def handle_chat_send(data):
+    if not current_user.is_authenticated:
+        return
+    from models import ChatMessage
+    text = (data.get("message") or "").strip()
+    if not text or len(text) > 1000:
+        return
+    msg = ChatMessage(employee_id=current_user.id, message=text,
+                      created_at=datetime.now(timezone.utc))
+    db.session.add(msg)
+    db.session.commit()
+    now_lao = datetime.now(timezone.utc).astimezone(_TZ_LAO)
+    emit("chat_receive", {
+        "id": msg.id,
+        "user_id": current_user.id,
+        "name": current_user.name,
+        "message": text,
+        "time": now_lao.strftime("%H:%M"),
+    }, broadcast=True)
+
+
 from blueprints.auth import auth_bp
 from blueprints.pos import pos_bp
 from blueprints.products import products_bp
@@ -47,6 +103,7 @@ from blueprints.salary_advance import salary_advance_bp
 from blueprints.stock_in import stock_in_bp
 from blueprints.quotations import quotations_bp
 from blueprints.calculator import calculator_bp
+from blueprints.chat import chat_bp
 
 login_manager = LoginManager()
 
@@ -81,6 +138,7 @@ def create_app():
     app.register_blueprint(stock_in_bp, url_prefix="/stock-in")
     app.register_blueprint(quotations_bp, url_prefix="/quotations")
     app.register_blueprint(calculator_bp, url_prefix="/calculator")
+    app.register_blueprint(chat_bp, url_prefix="/chat")
 
     # Run DB migrations on every startup (safe with gunicorn too)
     run_migrations(app)
@@ -149,6 +207,12 @@ def run_migrations(app):
             )""",
             "ALTER TABLE quotations ADD COLUMN sale_id INTEGER REFERENCES sales(id)",
             "ALTER TABLE sales ADD COLUMN change_amount FLOAT DEFAULT 0",
+            """CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                employee_id INTEGER NOT NULL REFERENCES employees(id),
+                message TEXT NOT NULL,
+                created_at DATETIME
+            )""",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:

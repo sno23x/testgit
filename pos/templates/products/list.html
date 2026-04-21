@@ -14,6 +14,8 @@
 .btn-edit:hover  { background: #0369a1; color: #fff; }
 .btn-del   { background: #fee2e2; color: #dc2626; }
 .btn-del:hover   { background: #dc2626; color: #fff; }
+.btn-clone { background: #ecfdf5; color: #059669; }
+.btn-clone:hover { background: #059669; color: #fff; }
 
 .stock-badge {
   display: inline-block; min-width: 56px; text-align: center;
@@ -188,6 +190,12 @@
                  class="action-btn btn-edit" title="ແກ້ໄຂ">
                 <i class="bi bi-pencil-fill"></i>
               </a>
+              <form method="POST" action="{{ url_for('products.clone_product', pid=p.id) }}"
+                    onsubmit="return confirm('Clone ສິນຄ້າ {{ p.name }}?')">
+                <button type="submit" class="action-btn btn-clone" title="Clone">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </form>
               <form method="POST" action="{{ url_for('products.delete_product', pid=p.id) }}"
                     onsubmit="return confirm('ລຶບ {{ p.name }}?')">
                 <button type="submit" class="action-btn btn-del" title="ລຶບ">

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}ແຊັດ{% endblock %}
+{% block page_title %}ແຊັດໃນທີມ{% endblock %}
+
+{% block content %}
+<div class="row g-3" style="height:calc(100vh - 160px);min-height:400px;">
+
+  <!-- Online users sidebar -->
+  <div class="col-lg-3 d-none d-lg-flex flex-column">
+    <div class="card border-0 shadow-sm flex-grow-1" style="border-radius:16px;overflow:hidden;">
+      <div class="card-header fw-bold py-2 px-3"
+           style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;">
+        <i class="bi bi-people-fill me-2"></i>Online
+        <span class="badge bg-white text-primary ms-1" id="onlineCount">0</span>
+      </div>
+      <ul class="list-group list-group-flush flex-grow-1 overflow-auto" id="onlineList">
+        <li class="list-group-item text-muted small py-2">ກຳລັງໂຫຼດ...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Chat area -->
+  <div class="col-lg-9 d-flex flex-column">
+    <div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column" style="border-radius:16px;overflow:hidden;">
+
+      <!-- Messages -->
+      <div class="flex-grow-1 overflow-auto p-3" id="msgBox" style="display:flex;flex-direction:column;gap:10px;">
+        {% for m in messages %}
+        {% set is_me = m.employee_id == current_user.id %}
+        <div class="d-flex {{ 'justify-content-end' if is_me else 'justify-content-start' }}" data-msg-id="{{ m.id }}">
+          <div style="max-width:70%;">
+            {% if not is_me %}
+            <div class="small text-muted mb-1 ms-1">{{ m.employee.name }}</div>
+            {% endif %}
+            <div class="px-3 py-2 rounded-3 {{ 'text-white' if is_me else '' }}"
+                 style="{{ 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' if is_me else 'background:var(--bs-tertiary-bg);' }}">
+              {{ m.message }}
+            </div>
+            <div class="small text-muted mt-1 {{ 'text-end me-1' if is_me else 'ms-1' }}">
+              {{ (m.created_at.replace(tzinfo=timezone.utc).astimezone(lao_tz)).strftime('%H:%M') if m.created_at else '' }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Input -->
+      <div class="border-top p-3">
+        <div class="input-group">
+          <input type="text" id="msgInput" class="form-control rounded-pill me-2 border"
+                 placeholder="ພິມຂໍ້ຄວາມ... (Enter ສົ່ງ)" autocomplete="off"
+                 style="border-radius:50px!important;"/>
+          <button class="btn btn-primary rounded-pill px-4" onclick="sendMsg()">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const ME_ID = {{ current_user.id }};
+const ME_NAME = {{ current_user.name | tojson }};
+const socket = io();
+const msgBox = document.getElementById('msgBox');
+const msgInput = document.getElementById('msgInput');
+
+// Scroll to bottom
+function scrollBottom() {
+  msgBox.scrollTop = msgBox.scrollHeight;
+}
+scrollBottom();
+
+// Build message bubble HTML
+function buildBubble(data) {
+  const isMe = data.user_id === ME_ID;
+  return `
+    <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}">
+      <div style="max-width:70%;">
+        ${!isMe ? `<div class="small text-muted mb-1 ms-1">${escHtml(data.name)}</div>` : ''}
+        <div class="px-3 py-2 rounded-3 ${isMe ? 'text-white' : ''}"
+             style="${isMe ? 'background:linear-gradient(135deg,#6366f1,#8b5cf6);' : 'background:var(--bs-tertiary-bg);'}">
+          ${escHtml(data.message)}
+        </div>
+        <div class="small text-muted mt-1 ${isMe ? 'text-end me-1' : 'ms-1'}">${data.time}</div>
+      </div>
+    </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Receive messages
+socket.on('chat_receive', function(data) {
+  msgBox.insertAdjacentHTML('beforeend', buildBubble(data));
+  scrollBottom();
+});
+
+// Online users
+socket.on('users_online', function(users) {
+  const list = document.getElementById('onlineList');
+  const count = document.getElementById('onlineCount');
+  if (!users.length) {
+    list.innerHTML = '<li class="list-group-item text-muted small py-2">ບໍ່ມີໃຜ online</li>';
+    count.textContent = '0';
+    return;
+  }
+  count.textContent = users.length;
+  list.innerHTML = users.map(u => `
+    <li class="list-group-item py-2 d-flex align-items-center gap-2 small">
+      <span class="rounded-circle" style="width:8px;height:8px;background:#22c55e;flex-shrink:0;"></span>
+      <span>${escHtml(u.name)}</span>
+    </li>`).join('');
+});
+
+// Send message
+function sendMsg() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  socket.emit('chat_send', { message: text });
+  msgInput.value = '';
+}
+
+msgInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+// Join chat room to get current online list
+socket.emit('chat_join');
+</script>
+{% endblock %}

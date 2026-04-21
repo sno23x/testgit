@@ -84,6 +84,11 @@
           <i class="bi bi-calculator"></i>ຄຳນວນວັດສະດຸ
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{{ url_for('chat.index') }}" class="nav-link {{ 'active' if 'chat' in request.endpoint }}">
+          <i class="bi bi-chat-dots"></i>ແຊັດທີມ
+        </a>
+      </li>
       {% if current_user.is_accountant() %}
       <li class="nav-item">
         <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {{ 'active' if 'expenses' in request.endpoint }}">

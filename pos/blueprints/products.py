@@ -75,6 +75,13 @@ def add_product():
     categories = Category.query.order_by(Category.name).all()
     rate = Setting.get("thb_to_lak", "830")
     if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        dup = Product.query.filter(Product.active == True, Product.name.ilike(name)).first()
+        if dup:
+            flash(f"ຊື່ສິນຄ້າ '{name}' ມີຢູ່ແລ້ວ (ລະຫັດ: {dup.code})", "danger")
+            return render_template("products/form.html", product=None, categories=categories, rate=rate,
+                                   back_q=request.form.get("back_q",""), back_cat=request.form.get("back_cat",""),
+                                   cost_thb_rate=COST_THB_RATE)
         code = request.form.get("code", "").strip()
         if not code:
             last = Product.query.order_by(Product.id.desc()).first()
@@ -87,7 +94,7 @@ def add_product():
         )
         p = Product(
             code=code,
-            name=request.form.get("name", "").strip(),
+            name=name,
             unit=request.form.get("unit", "ອັນ").strip(),
             cost_price=cost_price,
             price_thb=price_thb,
@@ -115,8 +122,15 @@ def edit_product(pid):
     categories = Category.query.order_by(Category.name).all()
     rate = Setting.get("thb_to_lak", "830")
     if request.method == "POST":
+        new_name = request.form.get("name", p.name).strip()
+        dup = Product.query.filter(Product.active == True, Product.name.ilike(new_name), Product.id != p.id).first()
+        if dup:
+            flash(f"ຊື່ສິນຄ້າ '{new_name}' ມີຢູ່ແລ້ວ (ລະຫັດ: {dup.code})", "danger")
+            return render_template("products/form.html", product=p, categories=categories, rate=rate,
+                                   back_q=request.form.get("back_q",""), back_cat=request.form.get("back_cat",""),
+                                   cost_thb_rate=COST_THB_RATE)
         p.code = request.form.get("code", p.code).strip()
-        p.name = request.form.get("name", p.name).strip()
+        p.name = new_name
         p.unit = request.form.get("unit", p.unit).strip()
         p.cost_price = _compute_cost_price(
             request.form.get("cost_price_thb"), request.form.get("cost_price")
@@ -139,6 +153,29 @@ def edit_product(pid):
     back_cat = request.args.get("back_cat", "")
     return render_template("products/form.html", product=p, categories=categories, rate=rate,
                            back_q=back_q, back_cat=back_cat, cost_thb_rate=COST_THB_RATE)
+
+
+@products_bp.route("/<int:pid>/clone", methods=["POST"])
+@login_required
+def clone_product(pid):
+    src = Product.query.get_or_404(pid)
+    last = Product.query.order_by(Product.id.desc()).first()
+    new_code = f"P{(last.id + 1 if last else 1):05d}"
+    clone = Product(
+        code=new_code,
+        name=f"ສຳເນົາ {src.name}",
+        unit=src.unit,
+        cost_price=src.cost_price,
+        price_thb=src.price_thb,
+        sell_price=src.sell_price,
+        stock_qty=0,
+        category_id=src.category_id,
+        image=src.image,
+    )
+    db.session.add(clone)
+    db.session.commit()
+    flash(f"Clone ສໍາເລັດ: {clone.name}", "success")
+    return redirect(url_for("products.edit_product", pid=clone.id))
 
 
 @products_bp.route("/<int:pid>/delete", methods=["POST"])
@@ -204,6 +241,21 @@ def bulk_category():
     Product.query.filter(Product.id.in_(ids)).update({"category_id": cat_id}, synchronize_session=False)
     db.session.commit()
     return jsonify({"ok": True})
+
+
+# --- Name duplicate check API ---
+@products_bp.route("/api/check-name")
+@login_required
+def api_check_name():
+    name = request.args.get("name", "").strip()
+    exclude_id = request.args.get("exclude_id", 0, type=int)
+    if not name:
+        return jsonify({"exists": False})
+    q = Product.query.filter(Product.active == True, Product.name.ilike(name))
+    if exclude_id:
+        q = q.filter(Product.id != exclude_id)
+    existing = q.first()
+    return jsonify({"exists": bool(existing), "code": existing.code if existing else None})
 
 
 # --- Live search API ---
