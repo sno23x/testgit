@@ -239,6 +239,13 @@ def run_migrations(app):
             )""",
             "ALTER TABLE chat_messages ADD COLUMN file_path VARCHAR(300) DEFAULT ''",
             "ALTER TABLE chat_messages ADD COLUMN file_name VARCHAR(300) DEFAULT ''",
+            # Sync sales.paid_amount with DebtPayment records (idempotent)
+            """UPDATE sales
+               SET paid_amount = COALESCE(
+                   (SELECT SUM(amount) FROM debt_payments WHERE debt_payments.sale_id = sales.id),
+                   0
+               )
+               WHERE payment_type = 'debt'""",
         ]
         with db.engine.connect() as conn:
             for stmt in migrations:
