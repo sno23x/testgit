@@ -364,7 +364,14 @@ def void_sale(sale_id):
 @pos_bp.route("/customer-display")
 def customer_display():
     shop_name = Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ")
-    return render_template("pos/customer_display.html", shop_name=shop_name)
+    ads_enabled = Setting.get("ads_enabled", "0") == "1"
+    ads_text = Setting.get("ads_text", "")
+    ads_speed = Setting.get("ads_speed", "30")
+    return render_template("pos/customer_display.html",
+                           shop_name=shop_name,
+                           ads_enabled=ads_enabled,
+                           ads_text=ads_text,
+                           ads_speed=ads_speed)
 
 
 # ──────────────── Cashback quota status ────────────────

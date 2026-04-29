@@ -337,6 +337,49 @@
       </div>
     </div>
   </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header fw-semibold" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;">
+        <i class="bi bi-megaphone-fill me-1"></i>ໂຄສະນາໜ້າຈໍລູກຄ້າ (Customer Display Ads)
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.save') }}">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">ສະຖານະ</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" name="ads_enabled" id="adsEnabled"
+                       value="1" {{ 'checked' if s.ads_enabled == '1' }}/>
+                <label class="form-check-label" for="adsEnabled">ເປີດໃຊ້ງານ</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">ຄວາມໄວ (ວິນາທີ)</label>
+              <input type="number" name="ads_speed" class="form-control"
+                     min="5" max="120" step="1" value="{{ s.ads_speed or '30' }}"/>
+              <div class="form-text">ເວລາ 1 ຮອບ — ໜ້ອຍ = ໄວ, ຫຼາຍ = ຊ້າ</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">ເນື້ອຫາໂຄສະນາ</label>
+              <textarea name="ads_text" class="form-control" rows="4"
+                        placeholder="ຂໍ້ຄວາມລະບັດ — 1 ບັດ / ບັນທັດ&#10;ຕົວຢ່າງ:&#10;ຍິນດີຕ້ອນຮັບສູ່ຮ້ານວັນນາ&#10;ໂປຣໂມຊັ່ນວັນນີ້ ລົດສູງສຸດ 20%&#10;ຮັບສະໝັກສະມາຊິກ ບໍ່ມີຄ່າສະໝັກ">{{ s.ads_text or '' }}</textarea>
+              <div class="form-text">1 ບັດ / ບັນທັດ — ຈະສະແດງເລື່ອນຊ້າຍ ຂວາ ໜ້າຈໍລູກຄ້າ</div>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary fw-bold">
+                <i class="bi bi-save me-1"></i>ບັນທຶກ
+              </button>
+              <a href="{{ url_for('pos.customer_display') }}" target="_blank"
+                 class="btn btn-outline-secondary fw-bold ms-2">
+                <i class="bi bi-eye me-1"></i>ເບິ່ງໜ້າຈໍລູກຄ້າ
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 

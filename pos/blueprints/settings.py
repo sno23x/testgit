@@ -29,6 +29,9 @@ DEFAULT_SETTINGS = {
     "callmebot_phone": "",
     "callmebot_apikey": "",
     "cashback_daily_quota": "0",
+    "ads_enabled": "0",
+    "ads_text": "",
+    "ads_speed": "30",
 }
 
 
@@ -70,6 +73,8 @@ def save():
     # Handle unchecked checkboxes explicitly
     if "receipt_auto_print" not in request.form and "receipt_rows" in request.form:
         Setting.set("receipt_auto_print", "0")
+    if "ads_enabled" not in request.form and "ads_text" in request.form:
+        Setting.set("ads_enabled", "0")
     db.session.commit()
     flash("ບັນທຶກການຕັ້ງຄ່າສໍາເລັດ", "success")
     return redirect(url_for("settings.index"))

@@ -172,6 +172,43 @@
       flex-shrink: 0;
     }
 
+    /* ── Ads marquee bar ── */
+    .ads-bar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, #1d4ed8 0%, #4f46e5 50%, #7c3aed 100%);
+      color: #fff;
+      padding: .55rem 0;
+      display: flex; align-items: center;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.35);
+      z-index: 9999;
+      overflow: hidden;
+    }
+    .ads-track {
+      display: inline-flex; gap: 4rem;
+      white-space: nowrap;
+      animation: ads-scroll var(--ads-speed, 30s) linear infinite;
+      padding-left: 100%;
+    }
+    .ads-item {
+      font-size: 1.05rem; font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .ads-item i { margin-right: .4rem; color: #fde68a; }
+    @keyframes ads-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .ads-close {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(0,0,0,.35); color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: .9rem;
+      z-index: 2;
+    }
+    .ads-close:hover { background: rgba(0,0,0,.6); }
+    body.has-ads main { padding-bottom: 4rem; }
+
     /* ── Transfer screen ── */
     #screen-transfer {
       flex: 1; display: none; flex-direction: column;
@@ -348,6 +385,40 @@
   </main>
 
   <footer>vannahome.shop</footer>
+
+  {% if ads_enabled and ads_text %}
+  <div class="ads-bar" id="adsBar" style="--ads-speed: {{ ads_speed }}s;">
+    <div class="ads-track" id="adsTrack">
+      {% for line in ads_text.splitlines() %}
+        {% if line.strip() %}
+        <span class="ads-item"><i class="bi bi-megaphone-fill"></i>{{ line.strip() }}</span>
+        {% endif %}
+      {% endfor %}
+      {% for line in ads_text.splitlines() %}
+        {% if line.strip() %}
+        <span class="ads-item"><i class="bi bi-megaphone-fill"></i>{{ line.strip() }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <button class="ads-close" id="adsClose" title="ປິດ"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <script>
+    (function() {
+      const bar = document.getElementById('adsBar');
+      const closeBtn = document.getElementById('adsClose');
+      if (localStorage.getItem('cd_ads_closed') === '1') {
+        bar.style.display = 'none';
+      } else {
+        document.body.classList.add('has-ads');
+      }
+      closeBtn.addEventListener('click', () => {
+        bar.style.display = 'none';
+        document.body.classList.remove('has-ads');
+        localStorage.setItem('cd_ads_closed', '1');
+      });
+    })();
+  </script>
+  {% endif %}
 
   <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
   <script>
