@@ -1093,5 +1093,30 @@ function stepCart(productId, delta) {
   renderCart();
   if (lastProducts.length) renderResults(lastProducts);
 }
+
+// Enter key to confirm any open modal
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const active = document.activeElement;
+  // Skip if inside quota-input (Enter there saves quota, not payment)
+  if (active && active.id === 'pm-quota-input') return;
+  // Skip if inside a textarea
+  if (active && active.tagName === 'TEXTAREA') return;
+
+  const pmEl = document.getElementById('paymentModal');
+  const trEl = document.getElementById('transferModal');
+  const suEl = document.getElementById('successModal');
+
+  if (pmEl.classList.contains('show')) {
+    e.preventDefault();
+    confirmPayment();
+  } else if (trEl.classList.contains('show')) {
+    e.preventDefault();
+    confirmTransfer();
+  } else if (suEl.classList.contains('show')) {
+    e.preventDefault();
+    newBill();
+  }
+});
 </script>
 {% endblock %}
