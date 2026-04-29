@@ -361,10 +361,30 @@
               <div class="form-text">ເວລາ 1 ຮອບ — ໜ້ອຍ = ໄວ, ຫຼາຍ = ຊ້າ</div>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">ເນື້ອຫາໂຄສະນາ</label>
+              <label class="form-label fw-semibold">ເນື້ອຫາໂຄສະນາ (ຂໍ້ຄວາມ)</label>
               <textarea name="ads_text" class="form-control" rows="4"
                         placeholder="ຂໍ້ຄວາມລະບັດ — 1 ບັດ / ບັນທັດ&#10;ຕົວຢ່າງ:&#10;ຍິນດີຕ້ອນຮັບສູ່ຮ້ານວັນນາ&#10;ໂປຣໂມຊັ່ນວັນນີ້ ລົດສູງສຸດ 20%&#10;ຮັບສະໝັກສະມາຊິກ ບໍ່ມີຄ່າສະໝັກ">{{ s.ads_text or '' }}</textarea>
-              <div class="form-text">1 ບັດ / ບັນທັດ — ຈະສະແດງເລື່ອນຊ້າຍ ຂວາ ໜ້າຈໍລູກຄ້າ</div>
+              <div class="form-text">1 ບັດ / ບັນທັດ</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">ສິນຄ້າທີ່ຢາກໂຄສະນາລາຄາ</label>
+              <div class="form-text mb-2">ລາຄາຈະສະແດງຮູບແບບ: "ຊື່ - 90,000 ₭/ຫົວໜ່ວຍ" ຜະສົມກັບຂໍ້ຄວາມ</div>
+              <input type="text" class="form-control form-control-sm mb-2" id="adsProductSearch"
+                     placeholder="ຄົ້ນຫາສິນຄ້າ..." autocomplete="off"/>
+              <div class="border rounded p-2" style="max-height:220px;overflow-y:auto;" id="adsProductList">
+                {% set selected_ids = s.ads_product_ids.split(',') if s.ads_product_ids else [] %}
+                {% for p in products %}
+                <div class="form-check ads-prod-item">
+                  <input class="form-check-input" type="checkbox"
+                         name="ads_product_ids" value="{{ p.id }}"
+                         id="adsProd{{ p.id }}"
+                         {{ 'checked' if p.id|string in selected_ids }}>
+                  <label class="form-check-label small" for="adsProd{{ p.id }}">
+                    {{ p.name }} <span class="text-muted">— {{ '{:,.0f}'.format(p.sell_price) }} ₭/{{ p.unit }}</span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
             </div>
             <div class="col-12">
               <button type="submit" class="btn btn-primary fw-bold">
@@ -432,5 +452,13 @@ function testWebhook() {
     res.innerHTML = '<span class="text-danger">ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້</span>';
   });
 }
+
+// Product search filter for ads
+document.getElementById('adsProductSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#adsProductList .ads-prod-item').forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
 </script>
 {% endblock %}

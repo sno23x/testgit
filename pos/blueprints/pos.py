@@ -367,10 +367,20 @@ def customer_display():
     ads_enabled = Setting.get("ads_enabled", "0") == "1"
     ads_text = Setting.get("ads_text", "")
     ads_speed = Setting.get("ads_speed", "30")
+    # Combine custom text lines + selected product price lines
+    lines = [l.strip() for l in ads_text.splitlines() if l.strip()]
+    ids_str = Setting.get("ads_product_ids", "")
+    if ids_str:
+        ids = [int(i) for i in ids_str.split(",") if i.strip().isdigit()]
+        if ids:
+            prods = Product.query.filter(Product.id.in_(ids), Product.active == True).all()
+            for p in prods:
+                lines.append(f"{p.name} - {int(p.sell_price):,} ₭/{p.unit}")
+    ads_combined = "\n".join(lines)
     return render_template("pos/customer_display.html",
                            shop_name=shop_name,
                            ads_enabled=ads_enabled,
-                           ads_text=ads_text,
+                           ads_text=ads_combined,
                            ads_speed=ads_speed)
 
 

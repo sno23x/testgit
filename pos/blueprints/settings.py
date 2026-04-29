@@ -32,6 +32,7 @@ DEFAULT_SETTINGS = {
     "ads_enabled": "0",
     "ads_text": "",
     "ads_speed": "30",
+    "ads_product_ids": "",
 }
 
 
@@ -42,7 +43,8 @@ def index():
         flash("ສິດທິ admin ເທົ່ານັ້ນ", "danger")
         return redirect(url_for("pos.dashboard"))
     vals = {k: Setting.get(k, v) for k, v in DEFAULT_SETTINGS.items()}
-    return render_template("settings/index.html", s=vals)
+    products = Product.query.filter_by(active=True).order_by(Product.name).all()
+    return render_template("settings/index.html", s=vals, products=products)
 
 
 @settings_bp.route("/save", methods=["POST"])
@@ -75,6 +77,10 @@ def save():
         Setting.set("receipt_auto_print", "0")
     if "ads_enabled" not in request.form and "ads_text" in request.form:
         Setting.set("ads_enabled", "0")
+    # ads_product_ids: multi-checkbox — always save (even empty)
+    if "ads_text" in request.form:
+        ids = request.form.getlist("ads_product_ids")
+        Setting.set("ads_product_ids", ",".join(ids))
     db.session.commit()
     flash("ບັນທຶກການຕັ້ງຄ່າສໍາເລັດ", "success")
     return redirect(url_for("settings.index"))
