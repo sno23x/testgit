@@ -209,6 +209,21 @@
     .ads-close:hover { background: rgba(0,0,0,.6); }
     body.has-ads main { padding-bottom: 4rem; }
 
+    /* Reopen button — appears after closing ads */
+    .ads-reopen {
+      position: fixed; right: 16px; bottom: 16px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff; border: none;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      z-index: 9999;
+      transition: transform .2s;
+    }
+    .ads-reopen:hover { transform: scale(1.1); }
+    .ads-reopen.visible { display: flex; }
+
     /* ── Transfer screen ── */
     #screen-transfer {
       flex: 1; display: none; flex-direction: column;
@@ -402,20 +417,31 @@
     </div>
     <button class="ads-close" id="adsClose" title="ປິດ"><i class="bi bi-x-lg"></i></button>
   </div>
+  <button class="ads-reopen" id="adsReopen" title="ເປີດໂຄສະນາ"><i class="bi bi-megaphone-fill"></i></button>
   <script>
     (function() {
       const bar = document.getElementById('adsBar');
       const closeBtn = document.getElementById('adsClose');
-      if (localStorage.getItem('cd_ads_closed') === '1') {
+      const reopenBtn = document.getElementById('adsReopen');
+      function showAds() {
+        bar.style.display = 'flex';
+        reopenBtn.classList.remove('visible');
+        document.body.classList.add('has-ads');
+        localStorage.removeItem('cd_ads_closed');
+      }
+      function hideAds() {
         bar.style.display = 'none';
+        reopenBtn.classList.add('visible');
+        document.body.classList.remove('has-ads');
+        localStorage.setItem('cd_ads_closed', '1');
+      }
+      if (localStorage.getItem('cd_ads_closed') === '1') {
+        hideAds();
       } else {
         document.body.classList.add('has-ads');
       }
-      closeBtn.addEventListener('click', () => {
-        bar.style.display = 'none';
-        document.body.classList.remove('has-ads');
-        localStorage.setItem('cd_ads_closed', '1');
-      });
+      closeBtn.addEventListener('click', hideAds);
+      reopenBtn.addEventListener('click', showAds);
     })();
   </script>
   {% endif %}
