@@ -1,0 +1,13 @@
+{
+  "appId": "com.vannahome.pos",
+  "appName": "Vannahome POS",
+  "webDir": "www",
+  "server": {
+    "url": "https://vannahome.shop",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#080e1a"
+  }
+}
