@@ -1029,7 +1029,8 @@ function doSubmit(type, paidAmount) {
     let saleMsg = 'ເລກບິນ: ' + data.sale_no;
     if (changeAmt > 0) saleMsg += `  |  ເງິນທອນ: ${Number(changeAmt).toLocaleString()} ກີບ`;
     document.getElementById('saleNoDisplay').textContent = saleMsg;
-    document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}`;
+    const isTHBCur = document.querySelector('input[name="currency"]:checked')?.value === 'THB';
+    document.getElementById('receiptLink').href = `/pos/receipt/${data.sale_id}${isTHBCur ? '?currency=THB' : ''}`;
     if (type !== 'debt') {
       socket.emit('cart_confirmed', {
         sale_no: data.sale_no, total: total,

@@ -188,7 +188,9 @@ div.total-section {
     </div>
 </div>
 
-  <div class="bill-title" style="margin-top: -6mm; margin-bottom: 2mm;">ໃບບິນສິນຄ້າ</div>
+  <div class="bill-title" style="margin-top: -6mm; margin-bottom: 2mm;">
+    ໃບບິນສິນຄ້າ{% if currency == 'THB' %} <small style="font-size:10pt;">(ເງິນບາດ ฿)</small>{% endif %}
+  </div>
 
   <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2mm;">
     
@@ -232,8 +234,13 @@ div.total-section {
         <td class="L">{{ item.product.name }}</td>
         <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
         <td style="text-align:center;">{{ item.product.unit }}</td>
+        {% if currency == 'THB' %}
+        <td class="R">{{ "{:,.2f}".format(item.unit_price / rate) }}</td>
+        <td class="R">{{ "{:,.2f}".format(item.subtotal / rate) }}</td>
+        {% else %}
         <td class="R">{{ "{:,.0f}".format(item.unit_price) }}</td>
         <td class="R">{{ "{:,.0f}".format(item.subtotal) }}</td>
+        {% endif %}
       </tr>
       {% endfor %}
       {% for i in range(ns.count + 1, receipt_rows + 1) %}
@@ -252,7 +259,13 @@ div.total-section {
 
     <div style="text-align: center; transform: translateY(-2px);">ເປັນເງິນ</div>
 
-    <div style="text-align: right;">{{ "{:,.0f}".format(sale.total) }}</div>
+    <div style="text-align: right;">
+      {% if currency == 'THB' %}
+        ฿{{ "{:,.2f}".format(sale.total / rate) }}
+      {% else %}
+        {{ "{:,.0f}".format(sale.total) }} ₭
+      {% endif %}
+    </div>
 
   </div>
 

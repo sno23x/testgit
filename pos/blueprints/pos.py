@@ -319,6 +319,9 @@ def receipt(sale_id):
         receipt_rows = int(Setting.get("receipt_rows", "15"))
     except Exception:
         receipt_rows = 15
+    currency = request.args.get("currency", "LAK").upper()
+    if currency not in ("LAK", "THB"):
+        currency = "LAK"
     return render_template("pos/receipt.html", sale=sale,
         shop_name=Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ"),
         shop_address=Setting.get("shop_address", ""),
@@ -327,7 +330,8 @@ def receipt(sale_id):
         receipt_footer=Setting.get("receipt_footer", ""),
         receipt_auto_print=Setting.get("receipt_auto_print", "1"),
         receipt_rows=receipt_rows,
-        rate=rate)
+        rate=rate,
+        currency=currency)
 
 
 # ──────────────── Void sale ────────────────

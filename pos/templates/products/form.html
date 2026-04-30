@@ -123,7 +123,8 @@
               <div class="input-group">
                 <input type="number" name="sell_price" id="sell_price" class="form-control" step="1" min="0"
                        value="{{ product.sell_price if product else 0 }}"
-                       placeholder="0"/>
+                       placeholder="0"
+                       oninput="document.getElementById('price_thb').value=''; document.getElementById('calcResult').textContent='';"/>
                 <span class="input-group-text">ກີບ</span>
               </div>
               <div class="form-text text-success" id="calcResult"></div>
