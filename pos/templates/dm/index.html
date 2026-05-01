@@ -3,28 +3,27 @@
 {% block page_title %}ແຊັດສ່ວນຕົວ (DM){% endblock %}
 
 {% block content %}
-<style>
-  #main-content > main { padding: 0 !important; overflow: hidden; height: calc(100vh - 56px); }
-</style>
-
+{# dm-layout is position:fixed so no padding override needed #}
 <div class="dm-layout">
 
-  <!-- ══════════ Left Panel ══════════ -->
+  <!-- ══════════════════ LEFT PANEL ══════════════════ -->
   <div class="dm-left" id="dmLeft">
 
     <!-- Header -->
     <div class="dm-left-header">
-      <i class="bi bi-chat-left-dots-fill" style="color:rgba(255,255,255,.8);font-size:1.1rem;"></i>
-      <span class="dm-left-title">ສົນທະນາ</span>
+      <i class="bi bi-chat-left-dots-fill" style="color:rgba(255,255,255,.75);font-size:1.1rem;"></i>
+      <span class="dm-left-title">ຫ້ອງສົນທະນາ</span>
       <button class="dm-new-btn" data-bs-toggle="modal" data-bs-target="#newDmModal">
-        <i class="bi bi-plus-lg"></i>ໃໝ່
+        <i class="bi bi-pencil-square"></i> ໃໝ່
       </button>
     </div>
 
     <!-- Search -->
-    <div class="dm-search-wrap">
-      <i class="bi bi-search dm-search-icon"></i>
-      <input type="text" class="dm-search-input" id="roomSearch" placeholder="ຄົ້ນຫາຫ້ອງ...">
+    <div class="dm-search-bar">
+      <label>
+        <i class="bi bi-search"></i>
+        <input type="text" id="roomSearch" placeholder="ຄົ້ນຫາ ຫຼື ເລີ່ມຫ້ອງໃໝ່">
+      </label>
     </div>
 
     <!-- Room list -->
@@ -33,20 +32,21 @@
         {% for rd in room_data %}
         {% set room = rd.room %}
         {% set last = rd.last_msg %}
-        <div class="dm-room-item" data-room-id="{{ room.id }}"
-             onclick="openRoom({{ room.id }}, {{ rd.display_name|tojson }}, {{ 'true' if room.is_group else 'false' }})">
+        <div class="dm-room-item{% if rd.unread %} dm-has-unread{% endif %}"
+             data-room-id="{{ room.id }}"
+             onclick="openRoom({{ room.id }}, {{ rd.display_name|tojson }}, {{ 'true' if room.is_group else 'false' }}, {{ room.members|length }})">
           <div class="dm-room-avatar {{ 'group' if room.is_group }}">
-            {% if room.is_group %}<i class="bi bi-people-fill" style="font-size:.9rem;"></i>
+            {% if room.is_group %}<i class="bi bi-people-fill" style="font-size:.95rem;"></i>
             {% else %}{{ rd.display_name[0]|upper }}{% endif %}
           </div>
           <div class="dm-room-info">
             <div class="dm-room-name">{{ rd.display_name }}</div>
             <div class="dm-room-last">
               {% if last %}
-                {% if last.deleted %}🚫 ລຶບແລ້ວ
-                {% elif last.file_path %}📎 {{ last.file_name or 'ໄຟລ໌' }}
-                {% else %}{{ last.message[:42] }}{% endif %}
-              {% else %}<em style="opacity:.6;">ຍັງບໍ່ມີຂໍ້ຄວາມ</em>{% endif %}
+                {% if last.deleted %}<i class="bi bi-slash-circle me-1" style="font-size:.7rem;"></i>ລຶບແລ້ວ
+                {% elif last.file_path %}<i class="bi bi-paperclip me-1" style="font-size:.75rem;"></i>{{ last.file_name or 'ໄຟລ໌' }}
+                {% else %}{{ last.message[:50] }}{% endif %}
+              {% else %}ເລີ່ມສົນທະນາ...{% endif %}
             </div>
           </div>
           <div class="dm-room-meta">
@@ -56,88 +56,88 @@
             </span>
             {% endif %}
             {% if rd.unread > 0 %}
-            <span class="dm-unread-badge">{{ rd.unread }}</span>
+            <span class="dm-unread-badge">{{ rd.unread if rd.unread < 100 else '99+' }}</span>
             {% endif %}
           </div>
         </div>
         {% endfor %}
       {% else %}
-        <div class="text-center py-5 px-3" style="color:#94a3b8;">
-          <div style="font-size:2.5rem;margin-bottom:8px;">💬</div>
-          <div style="font-size:.85rem;font-weight:600;margin-bottom:4px;">ຍັງບໍ່ມີຫ້ອງສົນທະນາ</div>
-          <div style="font-size:.78rem;">ກົດ "ໃໝ່" ເພື່ອເລີ່ມສົນທະນາ</div>
+        <div class="text-center py-5 px-3" style="color:#8696a0;">
+          <div style="font-size:3rem;margin-bottom:10px;opacity:.5;">💬</div>
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:4px;">ຍັງບໍ່ມີຫ້ອງສົນທະນາ</div>
+          <div style="font-size:.8rem;">ກົດ "ໃໝ່" ເພື່ອເລີ່ມ</div>
         </div>
       {% endif %}
     </div>
 
   </div><!-- /dm-left -->
 
-  <!-- ══════════ Right Panel ══════════ -->
+  <!-- ══════════════════ RIGHT PANEL ══════════════════ -->
   <div class="dm-right" id="dmRight">
 
-    <!-- Empty state -->
+    <!-- Empty state (no room selected) -->
     <div class="dm-empty-state" id="dmEmptyState">
       <div class="dm-empty-icon"><i class="bi bi-chat-left-dots"></i></div>
-      <div style="font-weight:700;font-size:.95rem;color:#475569;">ເລືອກຫ້ອງສົນທະນາ</div>
-      <div style="font-size:.8rem;color:#94a3b8;text-align:center;max-width:200px;">
-        ເລືອກຫ້ອງຈາກດ້ານຊ້າຍ ຫຼື ກົດ "ໃໝ່" ເພື່ອເລີ່ມ
+      <div style="font-weight:700;font-size:1rem;color:#54656f;">ຍິນດີຕ້ອນຮັບ</div>
+      <div style="font-size:.83rem;color:#8696a0;text-align:center;max-width:220px;line-height:1.5;">
+        ເລືອກຫ້ອງຈາກດ້ານຊ້າຍ ຫຼື ກົດ <strong>"ໃໝ່"</strong> ເພື່ອເລີ່ມການສົນທະນາ
       </div>
     </div>
 
-    <!-- Thread (shown when room selected) -->
+    <!-- Thread (hidden until room selected) -->
     <div id="dmThread" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
 
       <!-- Thread header -->
       <div class="dm-right-header">
-        <button class="btn btn-sm btn-outline-secondary d-md-none dm-mobile-back" style="display:none;" onclick="closeMobileRoom()">
+        <button class="btn btn-sm btn-outline-secondary d-md-none dm-mobile-back"
+                style="display:none;border:none;background:none;color:#8696a0;font-size:1.1rem;padding:4px 8px;"
+                onclick="closeMobileRoom()">
           <i class="bi bi-arrow-left"></i>
         </button>
-        <div id="threadAvatar" class="dm-room-avatar" style="width:40px;height:40px;font-size:.95rem;flex-shrink:0;"></div>
-        <div>
+        <div id="threadAvatar" class="dm-room-avatar" style="width:38px;height:38px;font-size:.9rem;flex-shrink:0;"></div>
+        <div class="flex-grow-1 min-w-0">
           <div class="dm-right-name" id="threadName"></div>
           <div class="dm-right-sub" id="threadSub"></div>
         </div>
       </div>
 
       <!-- Load more -->
-      <div id="loadMoreWrap" style="display:none;text-align:center;padding:8px;background:transparent;">
-        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" style="font-size:.78rem;" onclick="loadMoreMessages()">
-          <i class="bi bi-arrow-up me-1"></i>ໂຫລດເກົ່າກວ່ານີ້
+      <div class="dm-load-more" id="loadMoreWrap" style="display:none;">
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size:.78rem;background:rgba(255,255,255,.8);"
+                onclick="loadMoreMessages()">
+          <i class="bi bi-arrow-up me-1"></i>ໂຫລດຂໍ້ຄວາມເກົ່າ
         </button>
       </div>
 
-      <!-- Messages area -->
+      <!-- Messages -->
       <div class="dm-messages" id="dmMessages"></div>
 
-      <!-- Input wrap -->
+      <!-- Upload preview -->
+      <div class="dm-upload-preview" id="uploadPreview" style="display:none;">
+        <div id="uploadPreviewContent" class="flex-grow-1 d-flex align-items-center gap-2"></div>
+        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearUpload()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Input -->
       <div class="dm-input-wrap">
-
-        <!-- Upload preview -->
-        <div class="dm-upload-preview" id="uploadPreview" style="display:none;">
-          <div id="uploadPreviewContent" class="flex-grow-1 d-flex align-items-center gap-2"></div>
-          <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearUpload()">
-            <i class="bi bi-x-lg me-1"></i>ລຶບ
-          </button>
-        </div>
-
-        <!-- Input bar -->
-        <div class="dm-input-bar">
-          <input type="file" id="dmFileInput" style="display:none;"
-                 accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.txt,.zip"
-                 onchange="handleFileSelect(event)">
-          <button class="dm-file-btn" onclick="document.getElementById('dmFileInput').click()" title="ແນບໄຟລ໌">
-            <i class="bi bi-paperclip"></i>
-          </button>
+        <input type="file" id="dmFileInput" style="display:none;"
+               accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.txt,.zip"
+               onchange="handleFileSelect(event)">
+        <button class="dm-file-btn" onclick="document.getElementById('dmFileInput').click()" title="ແນບໄຟລ໌">
+          <i class="bi bi-paperclip"></i>
+        </button>
+        <div class="dm-text-area-wrap dm-input-bar">
           <textarea id="dmInput" rows="1"
-                    placeholder="ພິມຂໍ້ຄວາມ... (Enter = ສົ່ງ, Shift+Enter = ຂຶ້ນແຖວ)"
+                    placeholder="ພິມຂໍ້ຄວາມ..."
                     onkeydown="handleInputKey(event)"
                     oninput="autoResize(this)"></textarea>
-          <button class="dm-send-btn" onclick="sendMessage()" title="ສົ່ງ">
-            <i class="bi bi-send-fill" style="margin-left:2px;"></i>
-          </button>
         </div>
-
-      </div><!-- /dm-input-wrap -->
+        <button class="dm-send-btn" id="dmSendBtn" onclick="sendMessage()" title="ສົ່ງ (Enter)">
+          <i class="bi bi-send-fill" style="margin-left:2px;"></i>
+        </button>
+      </div>
 
     </div><!-- /dmThread -->
 
@@ -145,93 +145,105 @@
 
 </div><!-- /dm-layout -->
 
-<!-- ══════════ New Chat Modal ══════════ -->
+<!-- ══════════ New Chat / Group Modal ══════════ -->
 <div class="modal fade" id="newDmModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px 12px 0 0;padding:18px 20px 16px;">
-        <h6 class="modal-title fw-bold text-white"><i class="bi bi-chat-plus me-2"></i>ສ້າງຫ້ອງສົນທະນາ</h6>
+  <div class="modal-dialog modal-dialog-centered" style="max-width:430px;">
+    <div class="modal-content border-0 shadow-lg overflow-hidden">
+
+      <!-- Modal header with gradient -->
+      <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:18px 20px 16px;display:flex;align-items:center;gap:10px;">
+        <i class="bi bi-chat-plus-fill text-white" style="font-size:1.1rem;"></i>
+        <h6 class="mb-0 fw-bold text-white flex-grow-1">ສ້າງຫ້ອງສົນທະນາ</h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body px-4 py-3">
 
-        <!-- Type toggle -->
-        <div class="d-flex gap-2 mb-3">
-          <button class="btn btn-sm flex-fill" id="btnTypePrivate"
-                  style="border:2px solid #6366f1;border-radius:20px;font-weight:600;background:#6366f1;color:#fff;"
+      <div class="modal-body p-0">
+
+        <!-- Type selector tabs -->
+        <div class="d-flex border-bottom">
+          <button class="flex-fill py-3 border-0 fw-600 fs-sm" id="tabPrivate"
+                  style="background:#fff;color:#6366f1;border-bottom:2px solid #6366f1 !important;font-size:.88rem;"
                   onclick="setRoomType('private')">
             <i class="bi bi-person-fill me-1"></i>1-on-1
           </button>
-          <button class="btn btn-sm flex-fill" id="btnTypeGroup"
-                  style="border:2px solid #e2e8f0;border-radius:20px;font-weight:600;color:#64748b;"
+          <button class="flex-fill py-3 border-0 fw-600" id="tabGroup"
+                  style="background:#fff;color:#64748b;border-bottom:2px solid transparent;font-size:.88rem;"
                   onclick="setRoomType('group')">
             <i class="bi bi-people-fill me-1"></i>ກຸ່ມ
           </button>
         </div>
 
-        <!-- Group name (hidden by default) -->
-        <div class="mb-3" id="groupNameWrap" style="display:none;">
-          <label class="form-label small fw-600 mb-1">ຊື່ກຸ່ມ <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="groupNameInput" placeholder="ໃສ່ຊື່ກຸ່ມ...">
-        </div>
+        <div class="p-3">
 
-        <!-- Member select -->
-        <div>
-          <label class="form-label small fw-600 mb-1">ເລືອກສະມາຊິກ</label>
-          <div class="position-relative mb-2">
-            <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.8rem;"></i>
-            <input type="text" class="form-control ps-4" id="empSearch" placeholder="ຄົ້ນຫາ..." oninput="filterEmployees()">
+          <!-- Group name -->
+          <div id="groupNameWrap" style="display:none;" class="mb-3">
+            <label class="form-label small fw-600 mb-1">ຊື່ກຸ່ມ <span class="text-danger">*</span></label>
+            <input type="text" class="form-control rounded-pill" id="groupNameInput"
+                   placeholder="ໃສ່ຊື່ກຸ່ມ..." style="padding:9px 16px;">
           </div>
-          <div style="max-height:210px;overflow-y:auto;border:1px solid var(--bs-border-color);border-radius:10px;" id="empList">
+
+          <!-- Search members -->
+          <div class="position-relative mb-2">
+            <i class="bi bi-search position-absolute" style="left:14px;top:50%;transform:translateY(-50%);color:#8696a0;font-size:.83rem;"></i>
+            <input type="text" class="form-control rounded-pill" id="empSearch"
+                   placeholder="ຄົ້ນຫາພະນັກງານ..." style="padding:9px 16px 9px 38px;"
+                   oninput="filterEmployees()">
+          </div>
+
+          <!-- Employee list -->
+          <div style="max-height:220px;overflow-y:auto;border:1px solid #f0f2f5;border-radius:10px;" id="empList">
             {% for emp in employees %}
-            <label class="emp-item d-flex align-items-center gap-3 px-3 py-2 cursor-pointer"
+            <label class="emp-item d-flex align-items-center gap-3 px-3 py-2"
                    data-name="{{ emp.name|lower }}"
-                   style="cursor:pointer;border-bottom:1px solid var(--bs-border-color);margin:0;transition:background .12s;"
-                   onmouseover="this.style.background='rgba(99,102,241,.07)'" onmouseout="this.style.background=''">
-              <input class="form-check-input m-0 flex-shrink-0" type="checkbox" name="member_ids"
-                     value="{{ emp.id }}" id="emp{{ emp.id }}">
-              <div class="dm-room-avatar" style="width:32px;height:32px;font-size:.78rem;flex-shrink:0;box-shadow:none;">{{ emp.name[0]|upper }}</div>
+                   style="cursor:pointer;border-bottom:1px solid #f0f2f5;margin:0;transition:background .12s;"
+                   onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+              <input class="form-check-input m-0 flex-shrink-0" type="checkbox"
+                     name="member_ids" value="{{ emp.id }}" id="emp{{ emp.id }}">
+              <div class="dm-room-avatar" style="width:36px;height:36px;font-size:.8rem;flex-shrink:0;">{{ emp.name[0]|upper }}</div>
               <div>
-                <div style="font-size:.87rem;font-weight:600;">{{ emp.name }}</div>
-                <div style="font-size:.72rem;color:#64748b;">{{ emp.role }}</div>
+                <div style="font-size:.88rem;font-weight:600;color:#111;">{{ emp.name }}</div>
+                <div style="font-size:.73rem;color:#8696a0;">{{ emp.role }}</div>
               </div>
             </label>
             {% endfor %}
           </div>
-        </div>
 
+        </div>
       </div>
-      <div class="modal-footer border-0 pt-0 px-4 pb-4">
-        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ຍົກເລີກ</button>
-        <button type="button" class="btn btn-primary rounded-pill px-4 fw-600" onclick="createRoom()">
+
+      <div class="modal-footer border-0 bg-white px-4 py-3 gap-2">
+        <button class="btn btn-light rounded-pill px-4 flex-fill" data-bs-dismiss="modal">ຍົກເລີກ</button>
+        <button class="btn btn-primary rounded-pill px-4 flex-fill fw-600" onclick="createRoom()">
           <i class="bi bi-check-lg me-1"></i>ສ້າງ
         </button>
       </div>
+
     </div>
   </div>
 </div>
 
 <!-- Image lightbox -->
-<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);cursor:zoom-out;align-items:center;justify-content:center;"
+<div id="imgLightbox"
+     style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);
+            cursor:zoom-out;align-items:center;justify-content:center;"
      onclick="this.style.display='none'">
-  <img id="imgLightboxSrc" style="max-width:92vw;max-height:90vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.6);">
+  <img id="imgLightboxSrc" style="max-width:92vw;max-height:90vh;border-radius:8px;">
 </div>
 
 <script>
 const ME = {{ current_user.id }};
 const IS_ADMIN = {{ 'true' if current_user.is_admin() else 'false' }};
 let currentRoomId = null;
+let currentIsGroup = false;
 let oldestMsgId = null;
 let pendingFile = null;
-let isGroup = false;
 
-// ── Socket.io ──
+// ── Socket ──
 const socket = window._globalSocket;
 
 socket.on('dm_message', function(data) {
   if (data.room_id == currentRoomId) {
-    appendMessage(data);
-    scrollToBottom();
+    appendMessage(data, true);
     markRead(currentRoomId);
   } else {
     updateRoomBadge(data.room_id, 1);
@@ -240,16 +252,14 @@ socket.on('dm_message', function(data) {
 });
 
 socket.on('dm_deleted', function(data) {
-  const el = document.querySelector(`.dm-msg-row[data-id="${data.id}"]`);
-  if (!el) return;
-  const bubble = el.querySelector('.dm-bubble');
+  const row = document.querySelector(`.dm-msg-row[data-id="${data.id}"]`);
+  if (!row) return;
+  const bubble = row.querySelector('.dm-bubble');
   if (bubble) {
-    const side = el.classList.contains('mine') ? 'mine' : 'theirs';
-    bubble.className = `dm-bubble ${side} deleted`;
-    bubble.innerHTML = '<i class="bi bi-slash-circle me-1"></i>ລຶບແລ້ວ';
+    bubble.className = `dm-bubble ${row.classList.contains('mine') ? 'mine' : 'theirs'} deleted`;
+    bubble.innerHTML = '<i class="bi bi-slash-circle me-1" style="font-size:.75rem;"></i>ລຶບແລ້ວ';
   }
-  const btn = el.querySelector('.dm-delete-btn');
-  if (btn) btn.remove();
+  row.querySelector('.dm-delete-btn')?.remove();
 });
 
 // ── Room list helpers ──
@@ -262,8 +272,7 @@ function updateRoomBadge(roomId, delta) {
     badge.className = 'dm-unread-badge';
     item.querySelector('.dm-room-meta').appendChild(badge);
   }
-  const cur = parseInt(badge.textContent) || 0;
-  badge.textContent = cur + delta;
+  badge.textContent = Math.min((parseInt(badge.textContent) || 0) + delta, 99);
 }
 
 function updateRoomLastMsg(data) {
@@ -271,35 +280,37 @@ function updateRoomLastMsg(data) {
   if (!item) return;
   const lastEl = item.querySelector('.dm-room-last');
   const timeEl = item.querySelector('.dm-room-time');
-  if (lastEl) lastEl.textContent = data.file_url ? '📎 ' + (data.file_name || 'ໄຟລ໌') : data.message.substring(0, 42);
+  if (lastEl) lastEl.innerHTML = data.file_url
+    ? '<i class="bi bi-paperclip me-1" style="font-size:.75rem;"></i>' + escHtml(data.file_name || 'ໄຟລ໌')
+    : escHtml(data.message.substring(0, 50));
   if (timeEl) timeEl.textContent = data.time;
   document.getElementById('roomList').prepend(item);
 }
 
 // ── Open room ──
-function openRoom(roomId, displayName, grp) {
+function openRoom(roomId, displayName, isGroup, memberCount) {
   currentRoomId = roomId;
-  isGroup = grp;
+  currentIsGroup = isGroup;
   oldestMsgId = null;
-  pendingFile = null;
   clearUpload();
 
-  // Highlight
+  // Highlight active
   document.querySelectorAll('.dm-room-item').forEach(el => el.classList.remove('active'));
   const item = document.querySelector(`.dm-room-item[data-room-id="${roomId}"]`);
   if (item) {
     item.classList.add('active');
-    const badge = item.querySelector('.dm-unread-badge');
-    if (badge) badge.remove();
+    item.querySelector('.dm-unread-badge')?.remove();
   }
 
-  // Header
+  // Update header
   document.getElementById('threadName').textContent = displayName;
-  document.getElementById('threadSub').textContent = grp ? 'ຫ້ອງກຸ່ມ' : 'ສ່ວນຕົວ';
-  const avatar = document.getElementById('threadAvatar');
-  avatar.className = `dm-room-avatar${grp ? ' group' : ''}`;
-  avatar.style.cssText = 'width:40px;height:40px;font-size:.95rem;flex-shrink:0;';
-  avatar.innerHTML = grp ? '<i class="bi bi-people-fill" style="font-size:.9rem;"></i>' : displayName[0].toUpperCase();
+  document.getElementById('threadSub').textContent = isGroup
+    ? memberCount + ' ສະມາຊິກ'
+    : 'ສ່ວນຕົວ';
+  const av = document.getElementById('threadAvatar');
+  av.className = `dm-room-avatar${isGroup ? ' group' : ''}`;
+  av.style.cssText = 'width:38px;height:38px;font-size:.9rem;flex-shrink:0;';
+  av.innerHTML = isGroup ? '<i class="bi bi-people-fill" style="font-size:.85rem;"></i>' : displayName[0].toUpperCase();
 
   // Show thread
   document.getElementById('dmEmptyState').style.display = 'none';
@@ -315,9 +326,7 @@ function openRoom(roomId, displayName, grp) {
 
   localStorage.removeItem('dmUnread');
   if (typeof updateDmBadge === 'function') updateDmBadge(0);
-
-  // Focus input
-  setTimeout(() => document.getElementById('dmInput').focus(), 100);
+  setTimeout(() => document.getElementById('dmInput').focus(), 150);
 }
 
 function closeMobileRoom() {
@@ -329,123 +338,121 @@ function closeMobileRoom() {
 
 // ── Load messages ──
 function loadMessages(roomId, beforeId) {
-  const url = `/dm/room/${roomId}/messages${beforeId ? '?before=' + beforeId : ''}`;
-  fetch(url).then(r => r.json()).then(data => {
-    if (!data.ok) return;
-    const msgs = data.messages;
-    const container = document.getElementById('dmMessages');
+  fetch(`/dm/room/${roomId}/messages${beforeId ? '?before=' + beforeId : ''}`)
+    .then(r => r.json()).then(data => {
+      if (!data.ok) return;
+      const container = document.getElementById('dmMessages');
 
-    if (msgs.length === 0 && !beforeId) {
-      container.innerHTML = `
-        <div class="text-center py-5" style="color:#94a3b8;">
-          <div style="font-size:1.8rem;margin-bottom:6px;">👋</div>
-          <div style="font-size:.85rem;">ເລີ່ມສົນທະນາໄດ້ເລີຍ!</div>
-        </div>`;
-      document.getElementById('loadMoreWrap').style.display = 'none';
-      return;
-    }
+      if (!data.messages.length && !beforeId) {
+        container.innerHTML = `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;opacity:.6;">
+            <i class="bi bi-hand-wave" style="font-size:2rem;"></i>
+            <span style="font-size:.85rem;color:#667781;">ເລີ່ມສົນທະນາໄດ້ເລີຍ! 👋</span>
+          </div>`;
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        return;
+      }
 
-    if (beforeId) {
-      const oldScroll = container.scrollHeight;
-      const frag = buildFragment(msgs);
-      container.prepend(frag);
-      container.scrollTop = container.scrollHeight - oldScroll;
-    } else {
-      container.innerHTML = '';
-      container.appendChild(buildFragment(msgs));
-      scrollToBottom();
-    }
-
-    if (msgs.length > 0) oldestMsgId = msgs[0].id;
-    document.getElementById('loadMoreWrap').style.display = data.has_more ? '' : 'none';
-  });
+      if (beforeId) {
+        const prev = container.scrollHeight;
+        container.prepend(buildFrag(data.messages));
+        container.scrollTop = container.scrollHeight - prev;
+      } else {
+        container.innerHTML = '';
+        container.appendChild(buildFrag(data.messages));
+        scrollBottom();
+      }
+      if (data.messages.length) oldestMsgId = data.messages[0].id;
+      document.getElementById('loadMoreWrap').style.display = data.has_more ? '' : 'none';
+    });
 }
 
 function loadMoreMessages() {
   if (currentRoomId && oldestMsgId) loadMessages(currentRoomId, oldestMsgId);
 }
 
-function buildFragment(msgs) {
+function buildFrag(msgs) {
   const frag = document.createDocumentFragment();
-  let lastDate = '';
-  msgs.forEach(msg => {
+  let lastDate = '', lastSender = null;
+  msgs.forEach((msg, i) => {
     if (msg.date !== lastDate) {
       const sep = document.createElement('div');
       sep.className = 'dm-date-sep';
       sep.innerHTML = `<span>${msg.date}</span>`;
       frag.appendChild(sep);
       lastDate = msg.date;
+      lastSender = null;
     }
-    frag.appendChild(buildMsgRow(msg));
+    const isGroupStart = msg.user_id !== lastSender;
+    frag.appendChild(buildRow(msg, isGroupStart));
+    lastSender = msg.user_id;
   });
   return frag;
 }
 
-function buildMsgRow(msg) {
+function buildRow(msg, isGroupStart) {
   const isMine = msg.user_id == ME;
   const row = document.createElement('div');
-  row.className = `dm-msg-row${isMine ? ' mine' : ''}`;
+  row.className = `dm-msg-row${isMine ? ' mine' : ''}${isGroupStart ? ' group-start' : ''}`;
   row.dataset.id = msg.id;
 
-  let bubbleHtml = '';
+  // Bubble content
+  let inner = '';
   if (msg.deleted) {
-    bubbleHtml = '<i class="bi bi-slash-circle me-1"></i>ລຶບແລ້ວ';
+    inner = '<i class="bi bi-slash-circle me-1" style="font-size:.72rem;"></i>ລຶບແລ້ວ';
   } else if (msg.is_image) {
-    bubbleHtml = `<img src="${msg.file_url}" alt="${escHtml(msg.file_name)}" loading="lazy" onclick="openLightbox('${msg.file_url}')">`;
-    if (msg.message) bubbleHtml += `<div style="margin-top:5px;">${escHtml(msg.message).replace(/\n/g,'<br>')}</div>`;
+    inner = `<img src="${msg.file_url}" alt="${escHtml(msg.file_name)}" loading="lazy" onclick="openLightbox('${msg.file_url}')">`;
+    if (msg.message) inner += `<div style="margin-top:4px;">${escHtml(msg.message).replace(/\n/g,'<br>')}</div>`;
   } else if (msg.file_url) {
-    bubbleHtml = `<a href="${msg.file_url}" target="_blank" class="d-flex align-items-center gap-2 text-decoration-none" style="color:inherit;">
-      <i class="bi bi-file-earmark-arrow-down" style="font-size:1.3rem;"></i>
-      <span style="font-size:.82rem;word-break:break-all;">${escHtml(msg.file_name || 'ໄຟລ໌')}</span>
-    </a>`;
-    if (msg.message) bubbleHtml += `<div style="margin-top:5px;">${escHtml(msg.message).replace(/\n/g,'<br>')}</div>`;
+    inner = `<a href="${msg.file_url}" target="_blank"
+        style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;
+               background:rgba(0,0,0,.04);border-radius:6px;padding:8px 10px;">
+        <i class="bi bi-file-earmark-arrow-down" style="font-size:1.4rem;flex-shrink:0;"></i>
+        <span style="font-size:.82rem;word-break:break-all;">${escHtml(msg.file_name || 'ໄຟລ໌')}</span>
+      </a>`;
+    if (msg.message) inner += `<div style="margin-top:4px;">${escHtml(msg.message).replace(/\n/g,'<br>')}</div>`;
   } else {
-    bubbleHtml = escHtml(msg.message).replace(/\n/g, '<br>');
+    inner = escHtml(msg.message).replace(/\n/g, '<br>');
   }
 
-  const canDelete = !msg.deleted && (isMine || IS_ADMIN);
-  const deleteBtn = canDelete
-    ? `<button class="dm-delete-btn" onclick="deleteMessage(${msg.id})" title="ລຶບ"><i class="bi bi-trash3"></i></button>`
+  const footer = `<div class="dm-bubble-footer"><span class="dm-msg-time">${msg.time}</span></div>`;
+  const bubbleCls = `dm-bubble ${isMine?'mine':'theirs'}${msg.deleted?' deleted':''}`;
+  const canDel = !msg.deleted && (isMine || IS_ADMIN);
+  const delBtn = canDel ? `<button class="dm-delete-btn" onclick="deleteMessage(${msg.id})" title="ລຶບ"><i class="bi bi-trash3"></i></button>` : '';
+  const sender = !isMine && currentIsGroup && isGroupStart ? `<div class="dm-msg-sender">${escHtml(msg.name)}</div>` : '';
+
+  // Avatar: show on group-start for "theirs", invisible spacer otherwise for alignment
+  const avatarVisible = !isMine && isGroupStart;
+  const avatarInvisible = !isMine && !isGroupStart;
+  const avatarHtml = !isMine
+    ? `<div class="dm-msg-avatar${avatarInvisible?' invisible':''}">${msg.name[0].toUpperCase()}</div>`
     : '';
-  const bubbleCls = `dm-bubble ${isMine ? 'mine' : 'theirs'}${msg.deleted ? ' deleted' : ''}`;
-  const senderLabel = !isMine && isGroup ? `<div class="dm-msg-sender">${escHtml(msg.name)}</div>` : '';
 
   if (isMine) {
-    row.innerHTML = `
-      ${deleteBtn}
-      <div class="dm-msg-col">
-        <div class="${bubbleCls}">${bubbleHtml}</div>
-        <div class="dm-msg-time">${msg.time}</div>
-      </div>`;
+    row.innerHTML = `${delBtn}<div class="dm-msg-col">${sender}<div class="${bubbleCls}">${inner}${footer}</div></div>`;
   } else {
-    row.innerHTML = `
-      <div class="dm-msg-avatar">${escHtml(msg.name[0]).toUpperCase()}</div>
-      <div class="dm-msg-col">
-        ${senderLabel}
-        <div class="${bubbleCls}">${bubbleHtml}</div>
-        <div class="dm-msg-time">${msg.time}</div>
-      </div>
-      ${deleteBtn}`;
+    row.innerHTML = `${avatarHtml}<div class="dm-msg-col">${sender}<div class="${bubbleCls}">${inner}${footer}</div></div>${delBtn}`;
   }
   return row;
 }
 
-function appendMessage(msg) {
+function appendMessage(msg, scroll) {
   const container = document.getElementById('dmMessages');
-  const placeholder = container.querySelector('.text-center');
-  if (placeholder) placeholder.remove();
+  container.querySelector('.text-center, div[style*="flex:1"]')?.remove();
 
-  const lastDateEl = container.querySelector('.dm-date-sep:last-of-type span');
-  if (!lastDateEl || lastDateEl.textContent !== msg.date) {
+  // Date separator
+  const lastSep = container.querySelector('.dm-date-sep:last-of-type span');
+  if (!lastSep || lastSep.textContent !== msg.date) {
     const sep = document.createElement('div');
     sep.className = 'dm-date-sep';
     sep.innerHTML = `<span>${msg.date}</span>`;
     container.appendChild(sep);
   }
-  container.appendChild(buildMsgRow(msg));
+  container.appendChild(buildRow(msg, true));
+  if (scroll) scrollBottom();
 }
 
-function scrollToBottom() {
+function scrollBottom() {
   const el = document.getElementById('dmMessages');
   el.scrollTop = el.scrollHeight;
 }
@@ -459,60 +466,39 @@ function sendMessage() {
 
   const fd = new FormData();
   fd.append('message', text);
-  if (pendingFile) {
-    fd.append('file_path', pendingFile.file_path);
-    fd.append('file_name', pendingFile.file_name);
-  }
+  if (pendingFile) { fd.append('file_path', pendingFile.file_path); fd.append('file_name', pendingFile.file_name); }
 
-  input.value = '';
-  input.style.height = 'auto';
+  input.value = ''; input.style.height = 'auto';
   clearUpload();
 
-  fetch(`/dm/room/${currentRoomId}/send`, { method: 'POST', body: fd })
+  fetch(`/dm/room/${currentRoomId}/send`, { method:'POST', body:fd })
     .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        appendMessage(data.message);
-        scrollToBottom();
-        updateRoomLastMsg(data.message);
-      }
-    });
+    .then(d => { if (d.ok) { appendMessage(d.message, true); updateRoomLastMsg(d.message); } });
 }
 
 function handleInputKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
-
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-// ── File upload ──
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const fd = new FormData();
-  fd.append('file', file);
-  fetch('/dm/upload', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (!data.ok) { alert(data.error); return; }
-      pendingFile = data;
-      const content = document.getElementById('uploadPreviewContent');
-      if (data.is_image) {
-        content.innerHTML = `<img src="${data.file_url}" style="height:44px;border-radius:8px;"> <span class="small fw-500">${escHtml(data.file_name)}</span>`;
-      } else {
-        content.innerHTML = `<i class="bi bi-file-earmark fs-5"></i><span class="small fw-500">${escHtml(data.file_name)}</span>`;
-      }
-      document.getElementById('uploadPreview').style.display = 'flex';
-    });
-  event.target.value = '';
+// ── File ──
+function handleFileSelect(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const fd = new FormData(); fd.append('file', file);
+  fetch('/dm/upload', { method:'POST', body:fd }).then(r=>r.json()).then(data => {
+    if (!data.ok) { alert(data.error); return; }
+    pendingFile = data;
+    const content = document.getElementById('uploadPreviewContent');
+    content.innerHTML = data.is_image
+      ? `<img src="${data.file_url}" style="height:44px;border-radius:8px;"> <span class="fw-500 small">${escHtml(data.file_name)}</span>`
+      : `<i class="bi bi-file-earmark fs-5"></i> <span class="fw-500 small">${escHtml(data.file_name)}</span>`;
+    document.getElementById('uploadPreview').style.display = 'flex';
+  });
+  e.target.value = '';
 }
-
 function clearUpload() {
   pendingFile = null;
   document.getElementById('uploadPreview').style.display = 'none';
@@ -522,29 +508,25 @@ function clearUpload() {
 // ── Delete ──
 function deleteMessage(msgId) {
   if (!confirm('ລຶບຂໍ້ຄວາມນີ້?')) return;
-  fetch(`/dm/message/${msgId}/delete`, { method: 'POST' })
-    .then(r => r.json())
-    .then(d => { if (!d.ok) alert('ລຶບບໍ່ໄດ້'); });
+  fetch(`/dm/message/${msgId}/delete`, {method:'POST'}).then(r=>r.json()).then(d=>{ if(!d.ok) alert('ລຶບບໍ່ໄດ້'); });
 }
 
 // ── Mark read ──
-function markRead(roomId) {
-  fetch(`/dm/room/${roomId}/read`, { method: 'POST' });
-}
+function markRead(rid) { fetch(`/dm/room/${rid}/read`, {method:'POST'}); }
 
 // ── New room modal ──
 let _roomType = 'private';
 function setRoomType(type) {
   _roomType = type;
-  const btnPrivate = document.getElementById('btnTypePrivate');
-  const btnGroup = document.getElementById('btnTypeGroup');
+  const tPriv = document.getElementById('tabPrivate');
+  const tGrp  = document.getElementById('tabGroup');
   if (type === 'group') {
-    btnGroup.style.cssText = 'border:2px solid #6366f1;border-radius:20px;font-weight:600;background:#6366f1;color:#fff;';
-    btnPrivate.style.cssText = 'border:2px solid #e2e8f0;border-radius:20px;font-weight:600;color:#64748b;';
+    tGrp.style.cssText  = 'background:#fff;color:#6366f1;border-bottom:2px solid #6366f1 !important;font-size:.88rem;flex:1;padding:12px 0;border:none;font-weight:600;';
+    tPriv.style.cssText = 'background:#fff;color:#64748b;border-bottom:2px solid transparent;font-size:.88rem;flex:1;padding:12px 0;border:none;font-weight:600;';
     document.getElementById('groupNameWrap').style.display = '';
   } else {
-    btnPrivate.style.cssText = 'border:2px solid #6366f1;border-radius:20px;font-weight:600;background:#6366f1;color:#fff;';
-    btnGroup.style.cssText = 'border:2px solid #e2e8f0;border-radius:20px;font-weight:600;color:#64748b;';
+    tPriv.style.cssText = 'background:#fff;color:#6366f1;border-bottom:2px solid #6366f1 !important;font-size:.88rem;flex:1;padding:12px 0;border:none;font-weight:600;';
+    tGrp.style.cssText  = 'background:#fff;color:#64748b;border-bottom:2px solid transparent;font-size:.88rem;flex:1;padding:12px 0;border:none;font-weight:600;';
     document.getElementById('groupNameWrap').style.display = 'none';
   }
 }
@@ -558,53 +540,46 @@ function filterEmployees() {
 
 function createRoom() {
   const isGrp = _roomType === 'group';
-  const ids = [...document.querySelectorAll('#empList input[type=checkbox]:checked')].map(c => c.value);
-  const groupName = document.getElementById('groupNameInput').value.trim();
-
-  if (ids.length === 0) { alert('ກະລຸນາເລືອກສະມາຊິກຢ່າງໜ້ອຍ 1 ຄົນ'); return; }
-  if (isGrp && !groupName) { alert('ກະລຸນາໃສ່ຊື່ກຸ່ມ'); return; }
-
+  const ids = [...document.querySelectorAll('#empList input[type=checkbox]:checked')].map(c=>c.value);
+  const gname = document.getElementById('groupNameInput').value.trim();
+  if (!ids.length) { alert('ກະລຸນາເລືອກສະມາຊິກ'); return; }
+  if (isGrp && !gname) { alert('ກະລຸນາໃສ່ຊື່ກຸ່ມ'); return; }
   const fd = new FormData();
   fd.append('is_group', isGrp ? '1' : '0');
   ids.forEach(id => fd.append('member_ids', id));
-  if (groupName) fd.append('group_name', groupName);
-
-  fetch('/dm/create', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (!data.ok) { alert(data.error); return; }
-      bootstrap.Modal.getInstance(document.getElementById('newDmModal')).hide();
-      location.href = '/dm/';
-    });
+  if (gname) fd.append('group_name', gname);
+  fetch('/dm/create', {method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+    if (!d.ok) { alert(d.error); return; }
+    bootstrap.Modal.getInstance(document.getElementById('newDmModal')).hide();
+    location.href = '/dm/';
+  });
 }
 
 // ── Room search ──
 document.getElementById('roomSearch').addEventListener('input', function() {
   const q = this.value.toLowerCase();
-  document.querySelectorAll('.dm-room-item').forEach(el => {
-    el.style.display = el.querySelector('.dm-room-name').textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
+  document.querySelectorAll('.dm-room-item').forEach(el =>
+    el.style.display = el.querySelector('.dm-room-name').textContent.toLowerCase().includes(q) ? '' : 'none'
+  );
 });
 
 // ── Lightbox ──
 function openLightbox(src) {
-  const lb = document.getElementById('imgLightbox');
   document.getElementById('imgLightboxSrc').src = src;
-  lb.style.display = 'flex';
+  document.getElementById('imgLightbox').style.display = 'flex';
 }
 
-// ── Helpers ──
+// ── Util ──
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── Poll unread every 30s ──
-setInterval(function() {
+setInterval(() => {
   if (document.hidden) return;
-  fetch('/dm/unread').then(r => r.json()).then(d => {
-    if (typeof updateDmBadge === 'function') updateDmBadge(d.count);
-    if (d.count > 0) localStorage.setItem('dmUnread', String(d.count));
-    else localStorage.removeItem('dmUnread');
+  fetch('/dm/unread').then(r=>r.json()).then(d=>{
+    if (typeof updateDmBadge==='function') updateDmBadge(d.count);
+    d.count > 0 ? localStorage.setItem('dmUnread',String(d.count)) : localStorage.removeItem('dmUnread');
   });
 }, 30000);
 </script>
