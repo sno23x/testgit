@@ -40,7 +40,7 @@
       <!-- Dashboard -->
       <li class="nav-item">
         <a href="{{ url_for('pos.dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'pos.dashboard' }}">
-          <i class="bi bi-speedometer2"></i>ໜ້າຫຼັກ
+          <span class="nav-icon ni-purple"><i class="bi bi-speedometer2"></i></span>ໜ້າຫຼັກ
         </a>
       </li>
 
@@ -49,58 +49,66 @@
 
       <li class="nav-item">
         <a href="{{ url_for('pos.pos_page') }}" class="nav-link {{ 'active' if request.endpoint == 'pos.pos_page' }}">
-          <i class="bi bi-cart-check"></i>ໜ້າຂາຍ (POS)
+          <span class="nav-icon ni-blue"><i class="bi bi-cart-check"></i></span>ໜ້າຂາຍ (POS)
         </a>
       </li>
       {% if current_user.can_manage_products() %}
       <li class="nav-item">
         <a href="{{ url_for('products.list_products') }}" class="nav-link {{ 'active' if 'products' in request.endpoint }}">
-          <i class="bi bi-box-seam"></i>ສິນຄ້າ / Stock
+          <span class="nav-icon ni-teal"><i class="bi bi-box-seam"></i></span>ສິນຄ້າ / Stock
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('stock_in.list_stock_ins') }}" class="nav-link {{ 'active' if 'stock_in' in request.endpoint }}">
-          <i class="bi bi-box-arrow-in-down"></i>ຮັບສິນຄ້າເຂົ້າ
+          <span class="nav-icon ni-teal"><i class="bi bi-box-arrow-in-down"></i></span>ຮັບສິນຄ້າເຂົ້າ
         </a>
       </li>
       {% endif %}
       <li class="nav-item">
         <a href="{{ url_for('customers.list_customers') }}" class="nav-link {{ 'active' if 'customers' in request.endpoint }}">
-          <i class="bi bi-people"></i>ລູກຄ້າ
+          <span class="nav-icon ni-green"><i class="bi bi-people"></i></span>ລູກຄ້າ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('debts.list_debts') }}" class="nav-link {{ 'active' if 'debts' in request.endpoint }}">
-          <i class="bi bi-credit-card"></i>ໜີ້ສິນ
+          <span class="nav-icon ni-amber"><i class="bi bi-credit-card"></i></span>ໜີ້ສິນ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('quotations.list_quotations') }}" class="nav-link {{ 'active' if 'quotations' in request.endpoint }}">
-          <i class="bi bi-file-earmark-text"></i>ໃບສະເໜີລາຄາ
+          <span class="nav-icon ni-blue"><i class="bi bi-file-earmark-text"></i></span>ໃບສະເໜີລາຄາ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('calculator.index') }}" class="nav-link {{ 'active' if 'calculator' in request.endpoint }}">
-          <i class="bi bi-calculator"></i>ຄຳນວນວັດສະດຸ
+          <span class="nav-icon ni-purple"><i class="bi bi-calculator"></i></span>ຄຳນວນວັດສະດຸ
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url_for('chat.index') }}" class="nav-link {{ 'active' if 'chat' in request.endpoint }} d-flex align-items-center justify-content-between">
-          <span><i class="bi bi-chat-dots me-2"></i>ແຊັດທີມ</span>
+        <a href="{{ url_for('chat.index') }}" class="nav-link {{ 'active' if 'chat' in request.endpoint }}">
+          <span class="nav-icon ni-green"><i class="bi bi-chat-dots"></i></span>
+          <span class="flex-grow-1">ແຊັດທີມ</span>
           <span id="chatBadge" class="badge bg-danger rounded-pill" style="display:none;min-width:20px;"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('dm.index') }}" class="nav-link {{ 'active' if 'dm' in request.endpoint }}">
+          <span class="nav-icon ni-pink"><i class="bi bi-chat-left-dots"></i></span>
+          <span class="flex-grow-1">ແຊັດສ່ວນຕົວ</span>
+          <span id="dmBadge" class="badge bg-danger rounded-pill" style="display:none;min-width:20px;"></span>
         </a>
       </li>
       {% if current_user.is_accountant() %}
       <li class="nav-item">
         <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link {{ 'active' if 'expenses' in request.endpoint }}">
-          <i class="bi bi-cash-stack"></i>ລາຍຮັບ/ລາຍຈ່າຍ
+          <span class="nav-icon ni-amber"><i class="bi bi-cash-stack"></i></span>ລາຍຮັບ/ລາຍຈ່າຍ
         </a>
       </li>
       {% endif %}
       {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('employees.list_employees') }}" class="nav-link {{ 'active' if 'employees' in request.endpoint }}">
-          <i class="bi bi-person-badge"></i>ພະນັກງານ
+          <span class="nav-icon ni-purple"><i class="bi bi-person-badge"></i></span>ພະນັກງານ
         </a>
       </li>
       {% endif %}
@@ -111,29 +119,29 @@
 
       <li class="nav-item">
         <a href="{{ url_for('payroll.index') }}" class="nav-link {{ 'active' if 'payroll' in request.endpoint }}">
-          <i class="bi bi-wallet2"></i>ເງິນເດືອນ
+          <span class="nav-icon ni-amber"><i class="bi bi-wallet2"></i></span>ເງິນເດືອນ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('salary_advance.list_advances') }}" class="nav-link {{ 'active' if 'salary_advance' in request.endpoint }}">
-          <i class="bi bi-cash-coin"></i>ເບີກເງິນລ່ວງໜ້າ
+          <span class="nav-icon ni-amber"><i class="bi bi-cash-coin"></i></span>ເບີກເງິນລ່ວງໜ້າ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('reports.index') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.index' }}">
-          <i class="bi bi-bar-chart-line"></i>ລາຍງານຍອດຂາຍ
+          <span class="nav-icon ni-blue"><i class="bi bi-bar-chart-line"></i></span>ລາຍງານຍອດຂາຍ
         </a>
       </li>
       <li class="nav-item">
         <a href="{{ url_for('reports.margin_report') }}" class="nav-link {{ 'active' if request.endpoint == 'reports.margin_report' }}">
-          <i class="bi bi-graph-up-arrow"></i>ລາຍງານກຳໄລ
+          <span class="nav-icon ni-green"><i class="bi bi-graph-up-arrow"></i></span>ລາຍງານກຳໄລ
         </a>
       </li>
       {% endif %}
       {% if current_user.is_admin() %}
       <li class="nav-item">
         <a href="{{ url_for('settings.index') }}" class="nav-link {{ 'active' if 'settings' in request.endpoint }}">
-          <i class="bi bi-gear"></i>ຕັ້ງຄ່າລະບົບ
+          <span class="nav-icon ni-slate"><i class="bi bi-gear"></i></span>ຕັ້ງຄ່າລະບົບ
         </a>
       </li>
       {% endif %}
@@ -497,6 +505,30 @@ window._globalSocket.on('chat_receive', function() {
   const n = parseInt(localStorage.getItem('chatUnread') || '0') + 1;
   localStorage.setItem('chatUnread', String(n));
   updateChatBadge(n);
+});
+
+// DM unread badge
+function updateDmBadge(count) {
+  const badge = document.getElementById('dmBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'inline-flex';
+    badge.style.alignItems = 'center';
+    badge.style.justifyContent = 'center';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+(function() {
+  const n = parseInt(localStorage.getItem('dmUnread') || '0');
+  if (n > 0) updateDmBadge(n);
+})();
+window._globalSocket.on('dm_message', function(data) {
+  if (window.location.pathname.startsWith('/dm')) return;
+  const n = parseInt(localStorage.getItem('dmUnread') || '0') + 1;
+  localStorage.setItem('dmUnread', String(n));
+  updateDmBadge(n);
 });
 </script>
 {% block scripts %}{% endblock %}

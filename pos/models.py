@@ -298,3 +298,36 @@ class ChatMessage(db.Model):
     file_name = db.Column(db.String(300), default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     employee = db.relationship("Employee", backref="chat_messages")
+
+
+class DMRoom(db.Model):
+    __tablename__ = "dm_rooms"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), default="")
+    is_group = db.Column(db.Boolean, default=False)
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    members = db.relationship("DMRoomMember", backref="room", lazy=True, cascade="all, delete-orphan")
+    messages = db.relationship("DMMessage", backref="room", lazy=True, cascade="all, delete-orphan")
+
+
+class DMRoomMember(db.Model):
+    __tablename__ = "dm_room_members"
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("dm_rooms.id"), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    last_read_at = db.Column(db.DateTime, nullable=True)
+    employee = db.relationship("Employee")
+
+
+class DMMessage(db.Model):
+    __tablename__ = "dm_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("dm_rooms.id"), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    message = db.Column(db.Text, default="")
+    file_path = db.Column(db.String(300), default="")
+    file_name = db.Column(db.String(300), default="")
+    deleted = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    employee = db.relationship("Employee")

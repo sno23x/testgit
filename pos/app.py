@@ -2,7 +2,7 @@ import os
 import sqlalchemy as sa
 from flask import Flask, redirect, url_for, request as flask_request
 from flask_login import LoginManager, current_user
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from config import Config
 from models import db, Employee
 from datetime import datetime, timezone, timedelta
@@ -66,6 +66,20 @@ def handle_chat_join():
     emit("users_online", _unique_online())
 
 
+@socketio.on("dm_join")
+def handle_dm_join(data):
+    room_id = data.get("room_id")
+    if room_id:
+        join_room(f"dm_{room_id}")
+
+
+@socketio.on("dm_leave")
+def handle_dm_leave(data):
+    room_id = data.get("room_id")
+    if room_id:
+        leave_room(f"dm_{room_id}")
+
+
 @socketio.on("chat_clear_notify")
 def handle_chat_clear_notify():
     if not current_user.is_authenticated or not current_user.is_admin():
@@ -125,6 +139,7 @@ from blueprints.stock_in import stock_in_bp
 from blueprints.quotations import quotations_bp
 from blueprints.calculator import calculator_bp
 from blueprints.chat import chat_bp
+from blueprints.dm import dm_bp
 
 login_manager = LoginManager()
 
@@ -160,6 +175,7 @@ def create_app():
     app.register_blueprint(quotations_bp, url_prefix="/quotations")
     app.register_blueprint(calculator_bp, url_prefix="/calculator")
     app.register_blueprint(chat_bp, url_prefix="/chat")
+    app.register_blueprint(dm_bp, url_prefix="/dm")
 
     # Run DB migrations on every startup (safe with gunicorn too)
     run_migrations(app)
@@ -178,6 +194,7 @@ def run_migrations(app):
         os.makedirs(os.path.join("static", "img"), exist_ok=True)
         os.makedirs(os.path.join("static", "uploads", "products"), exist_ok=True)
         os.makedirs(os.path.join("static", "uploads", "chat"), exist_ok=True)
+        os.makedirs(os.path.join("static", "uploads", "dm"), exist_ok=True)
         db.create_all()
         migrations = [
             "ALTER TABLE products ADD COLUMN price_thb FLOAT",
@@ -239,6 +256,29 @@ def run_migrations(app):
             )""",
             "ALTER TABLE chat_messages ADD COLUMN file_path VARCHAR(300) DEFAULT ''",
             "ALTER TABLE chat_messages ADD COLUMN file_name VARCHAR(300) DEFAULT ''",
+            """CREATE TABLE IF NOT EXISTS dm_rooms (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(200) DEFAULT '',
+                is_group INTEGER DEFAULT 0,
+                created_by INTEGER REFERENCES employees(id),
+                created_at DATETIME
+            )""",
+            """CREATE TABLE IF NOT EXISTS dm_room_members (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                room_id INTEGER NOT NULL REFERENCES dm_rooms(id),
+                employee_id INTEGER NOT NULL REFERENCES employees(id),
+                last_read_at DATETIME
+            )""",
+            """CREATE TABLE IF NOT EXISTS dm_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                room_id INTEGER NOT NULL REFERENCES dm_rooms(id),
+                employee_id INTEGER NOT NULL REFERENCES employees(id),
+                message TEXT DEFAULT '',
+                file_path VARCHAR(300) DEFAULT '',
+                file_name VARCHAR(300) DEFAULT '',
+                deleted INTEGER DEFAULT 0,
+                created_at DATETIME
+            )""",
             # Sync sales.paid_amount with DebtPayment records (idempotent)
             """UPDATE sales
                SET paid_amount = COALESCE(
