@@ -234,6 +234,9 @@
   <img id="imgLightboxSrc" style="max-width:92vw;max-height:90vh;border-radius:8px;">
 </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
 const ME = {{ current_user.id }};
 const IS_ADMIN = {{ 'true' if current_user.is_admin() else 'false' }};
@@ -588,3 +591,4 @@ setInterval(() => {
 }, 30000);
 </script>
 {% endblock %}
+
