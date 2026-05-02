@@ -94,6 +94,8 @@ class Employee(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=True)
     base_salary = db.Column(db.Float, default=0)
     ot_rate = db.Column(db.Float, default=0)   # ຄ່າ OT ຕໍ່ຊົ່ວໂມງ
+    pay_type = db.Column(db.String(10), default='monthly')  # 'monthly' or 'daily'
+    daily_rate = db.Column(db.Float, default=0)  # ຄ່າແຮງລາຍວັນ
 
     def set_password(self, pw):
         self.password_hash = generate_password_hash(pw)
@@ -178,6 +180,7 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     note = db.Column(db.Text, default="")
     date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    employee_id = db.Column(db.Integer, nullable=True)  # for daily-wage auto-expenses
 
 
 class Attendance(db.Model):

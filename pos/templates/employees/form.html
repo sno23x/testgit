@@ -44,7 +44,28 @@
           </div>
           <hr/>
           <p class="small fw-semibold text-muted mb-2"><i class="bi bi-wallet2 me-1"></i>ຂໍ້ມູນເງິນເດືອນ</p>
-          <div class="row g-3 mb-4">
+
+          <!-- Pay type toggle -->
+          {% set cur_pay_type = employee.pay_type if employee else 'monthly' %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ປະເພດການຈ່າຍ</label>
+            <div class="d-flex gap-2">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="pay_type" id="ptMonthly"
+                       value="monthly" onchange="togglePayType()"
+                       {{ 'checked' if cur_pay_type != 'daily' }}/>
+                <label class="form-check-label" for="ptMonthly">ລາຍເດືອນ</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="pay_type" id="ptDaily"
+                       value="daily" onchange="togglePayType()"
+                       {{ 'checked' if cur_pay_type == 'daily' }}/>
+                <label class="form-check-label" for="ptDaily">ລາຍວັນ</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4" id="monthlyFields" {{ 'style="display:none"' if cur_pay_type == 'daily' }}>
             <div class="col-6">
               <label class="form-label fw-semibold">ເງິນເດືອນພື້ນຖານ (ກີບ)</label>
               <input type="number" name="base_salary" class="form-control" min="0" step="1000"
@@ -54,6 +75,17 @@
               <label class="form-label fw-semibold">ອັດຕາ OT ຕໍ່ຊົ່ວໂມງ (ກີບ)</label>
               <input type="number" name="ot_rate" class="form-control" min="0" step="1000"
                      value="{{ employee.ot_rate if employee else 0 }}"/>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4" id="dailyFields" {{ 'style="display:none"' if cur_pay_type != 'daily' }}>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ຄ່າແຮງລາຍວັນ (ກີບ/ວັນ)</label>
+              <input type="number" name="daily_rate" class="form-control" min="0" step="1000"
+                     value="{{ employee.daily_rate if employee else 0 }}"/>
+              <div class="form-text text-warning">
+                <i class="bi bi-info-circle me-1"></i>ຈ່າຍທັນທີຕອນບັນທຶກການເຂົ້າວຽກ
+              </div>
             </div>
           </div>
           <div class="d-flex gap-2">
@@ -127,6 +159,12 @@ const ROLE_NOTES = {
     items: ['✅ Login ເຂົ້າລະບົບໄດ້', '❌ ບໍ່ມີສິດຕໍ່ section ພິເສດໃດ']
   },
 };
+
+function togglePayType() {
+  const isDaily = document.getElementById('ptDaily').checked;
+  document.getElementById('monthlyFields').style.display = isDaily ? 'none' : '';
+  document.getElementById('dailyFields').style.display = isDaily ? '' : 'none';
+}
 
 function showRoleNote(role) {
   const note = ROLE_NOTES[role];

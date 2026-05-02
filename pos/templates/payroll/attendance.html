@@ -35,7 +35,14 @@
           {% for emp in employees %}
           {% set a = records.get(emp.id) %}
           <tr>
-            <td class="fw-semibold">{{ emp.name }}</td>
+            <td class="fw-semibold">
+              {{ emp.name }}
+              {% if emp.pay_type == 'daily' %}
+              <span class="badge ms-1" style="background:#fef9c3;color:#854d0e;font-size:.7rem;">
+                ລາຍວັນ {{ "{:,.0f}".format(emp.daily_rate) }}₭
+              </span>
+              {% endif %}
+            </td>
             <td>
               <select name="status_{{ emp.id }}" class="form-select form-select-sm status-sel"
                       style="width:130px;" onchange="colorRow(this)">

@@ -280,6 +280,9 @@ def run_migrations(app):
                 created_at DATETIME
             )""",
             "ALTER TABLE payroll_records ADD COLUMN advance_deduction REAL DEFAULT 0",
+            "ALTER TABLE employees ADD COLUMN pay_type VARCHAR(10) DEFAULT 'monthly'",
+            "ALTER TABLE employees ADD COLUMN daily_rate REAL DEFAULT 0",
+            "ALTER TABLE expenses ADD COLUMN employee_id INTEGER",
             # Sync sales.paid_amount with DebtPayment records (idempotent)
             """UPDATE sales
                SET paid_amount = COALESCE(

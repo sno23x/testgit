@@ -2,7 +2,7 @@ import calendar
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from models import db, Employee, Attendance, PayrollRecord, SalaryAdvance
+from models import db, Employee, Attendance, PayrollRecord, SalaryAdvance, Expense
 
 payroll_bp = Blueprint("payroll", __name__)
 
@@ -31,6 +31,22 @@ def attendance():
             else:
                 db.session.add(Attendance(employee_id=emp.id, date=sel,
                                           status=status, ot_hours=ot_h, note=note))
+
+            # Auto-expense for daily-wage employees
+            if emp.pay_type == 'daily' and emp.daily_rate and emp.daily_rate > 0:
+                # Remove existing auto-expense for this employee+date (re-save safe)
+                Expense.query.filter_by(
+                    employee_id=emp.id, date=sel, category="ຄ່າແຮງງານລາຍວັນ"
+                ).delete()
+                if status == 'present':
+                    db.session.add(Expense(
+                        category="ຄ່າແຮງງານລາຍວັນ",
+                        amount=emp.daily_rate,
+                        note=f"ຈ່າຍເງິນລາຍວັນໃຫ້ {emp.name}",
+                        date=sel,
+                        employee_id=emp.id,
+                    ))
+
         db.session.commit()
         flash("ບັນທຶກການເຂົ້າວຽກສໍາເລັດ", "success")
         return redirect(url_for("payroll.attendance", date=sel_date))
