@@ -48,6 +48,11 @@
               <input type="number" name="other_deductions" class="form-control"
                      value="{{ rec.other_deductions }}" min="0" step="1000" oninput="preview()"/>
             </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">ເບີກລ່ວງໜ້າ (ກີບ)</label>
+              <input type="number" name="advance_deduction" class="form-control"
+                     value="{{ rec.advance_deduction }}" min="0" step="1000" oninput="preview()"/>
+            </div>
             <div class="col-12">
               <label class="form-label fw-semibold">ໝາຍເຫດ</label>
               <input type="text" name="note" class="form-control" value="{{ rec.note }}"/>
@@ -91,8 +96,9 @@ function preview() {
   const otR     = getVal('ot_rate');
   const bonus   = getVal('bonus');
   const deduct  = getVal('other_deductions');
+  const adv     = getVal('advance_deduction');
   const daily   = base / days;
-  const net     = Math.max(0, base - daily * absent + otH * otR + bonus - deduct);
+  const net     = Math.max(0, base - daily * absent + otH * otR + bonus - deduct - adv);
   document.getElementById('netPreview').textContent = net.toLocaleString() + ' ກີບ';
 }
 </script>

@@ -1,7 +1,8 @@
+import calendar
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from models import db, Employee, Attendance, PayrollRecord
+from models import db, Employee, Attendance, PayrollRecord, SalaryAdvance
 
 payroll_bp = Blueprint("payroll", __name__)
 
@@ -77,13 +78,27 @@ def generate():
         absent_days = sum(1 for a in att_list if a.status in ("absent",))
         ot_hours    = sum(a.ot_hours for a in att_list)
 
+        # Total days in this calendar month (for daily-rate formula)
+        days_in_month = calendar.monthrange(year, month)[1]
+
+        # Sum all unrepaid advances for this employee taken up to end of this month
+        last_day = date(year, month, days_in_month)
+        advance_total = db.session.query(
+            db.func.coalesce(db.func.sum(SalaryAdvance.amount), 0)
+        ).filter(
+            SalaryAdvance.employee_id == emp.id,
+            SalaryAdvance.repaid == False,
+            SalaryAdvance.advance_date <= last_day,
+        ).scalar() or 0
+
         rec = PayrollRecord(
             employee_id=emp.id, year=year, month=month,
             base_salary=emp.base_salary,
-            working_days=26,
+            working_days=days_in_month,
             absent_days=absent_days,
             ot_hours=ot_hours,
             ot_rate=emp.ot_rate,
+            advance_deduction=advance_total,
         )
         rec.calc_net()
         db.session.add(rec)
@@ -106,6 +121,7 @@ def edit(rid):
         rec.ot_rate           = float(request.form.get("ot_rate", rec.ot_rate) or 0)
         rec.bonus             = float(request.form.get("bonus", rec.bonus) or 0)
         rec.other_deductions  = float(request.form.get("other_deductions", rec.other_deductions) or 0)
+        rec.advance_deduction = float(request.form.get("advance_deduction", rec.advance_deduction) or 0)
         rec.note              = request.form.get("note", "")
         rec.calc_net()
         db.session.commit()
@@ -122,6 +138,20 @@ def mark_paid(rid):
     rec = PayrollRecord.query.get_or_404(rid)
     rec.paid    = True
     rec.paid_at = datetime.now(timezone.utc)
+
+    # Mark salary advances that were deducted as repaid
+    if rec.advance_deduction and rec.advance_deduction > 0:
+        last_day = date(rec.year, rec.month, calendar.monthrange(rec.year, rec.month)[1])
+        advances = SalaryAdvance.query.filter(
+            SalaryAdvance.employee_id == rec.employee_id,
+            SalaryAdvance.repaid == False,
+            SalaryAdvance.advance_date <= last_day,
+        ).all()
+        now = datetime.now(timezone.utc)
+        for adv in advances:
+            adv.repaid    = True
+            adv.repaid_at = now
+
     db.session.commit()
     flash("ບັນທຶກການຈ່າຍເງິນເດືອນສໍາເລັດ", "success")
     return redirect(url_for("payroll.index", year=rec.year, month=rec.month))

@@ -270,6 +270,7 @@ class PayrollRecord(db.Model):
     ot_rate = db.Column(db.Float, default=0)
     bonus = db.Column(db.Float, default=0)
     other_deductions = db.Column(db.Float, default=0)
+    advance_deduction = db.Column(db.Float, default=0)
     net_salary = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     paid = db.Column(db.Boolean, default=False)
@@ -284,8 +285,9 @@ class PayrollRecord(db.Model):
         ot_r    = float(self.ot_rate or 0)
         bonus   = float(self.bonus or 0)
         deduct  = float(self.other_deductions or 0)
+        adv     = float(self.advance_deduction or 0)
         daily_rate = base / days
-        self.net_salary = max(0, base - daily_rate * absent + ot_h * ot_r + bonus - deduct)
+        self.net_salary = max(0, base - daily_rate * absent + ot_h * ot_r + bonus - deduct - adv)
         return self.net_salary
 
 
