@@ -484,11 +484,10 @@ a { transition: color 0.15s ease; }
   }
   .sidebar.show { left: 0; }
   #main-content { width: 100%; }
-  /* Allow sidebar nav to scroll when items exceed viewport height */
   #sidebarNav {
     overflow-y: auto;
     min-height: 0;
-    flex-shrink: 1;
+    flex: 1 1 0;
   }
 }
 
@@ -837,13 +836,21 @@ a { transition: color 0.15s ease; }
  * On mobile: full screen below topbar.
  */
 .dm-layout {
-  flex: 1;
-  min-height: 0;
+  position: fixed;
+  top: 56px;
+  left: 240px;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   overflow: hidden;
   background: #f0f2f5;
 }
 [data-bs-theme="dark"] .dm-layout { background: #0b141a; }
+
+@media (max-width: 991.98px) {
+  .dm-layout { left: 0; bottom: 60px; }
+}
 
 /* ── Left panel ── */
 .dm-left {
