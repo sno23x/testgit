@@ -38,7 +38,9 @@
         {% set last = rd.last_msg %}
         <div class="dm-room-item{% if rd.unread %} dm-has-unread{% endif %}"
              data-room-id="{{ room.id }}"
-             onclick="openRoom({{ room.id }}, {{ rd.display_name|tojson }}, {{ 'true' if room.is_group else 'false' }}, {{ room.members|length }})">
+             data-display-name="{{ rd.display_name }}"
+             data-is-group="{{ 'true' if room.is_group else 'false' }}"
+             data-member-count="{{ room.members|length }}">
           <div class="dm-room-avatar {{ 'group' if room.is_group }}">
             {% if room.is_group %}<i class="bi bi-people-fill" style="font-size:.95rem;"></i>
             {% else %}{{ rd.display_name[0]|upper }}{% endif %}
@@ -561,6 +563,18 @@ function createRoom() {
     location.href = '/dm/';
   });
 }
+
+// ── Room click (use event delegation to avoid onclick + tojson quote issue) ──
+document.getElementById('roomList').addEventListener('click', function(e) {
+  const item = e.target.closest('.dm-room-item');
+  if (!item) return;
+  openRoom(
+    parseInt(item.dataset.roomId),
+    item.dataset.displayName,
+    item.dataset.isGroup === 'true',
+    parseInt(item.dataset.memberCount)
+  );
+});
 
 // ── Room search ──
 document.getElementById('roomSearch').addEventListener('input', function() {
