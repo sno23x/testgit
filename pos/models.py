@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date as date_type
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -57,6 +57,7 @@ class Product(db.Model):
     stock_qty = db.Column(db.Float, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
     active = db.Column(db.Boolean, default=True)
+    image = db.Column(db.String(200), default="")  # filename in uploads/products/
 
     def to_dict(self):
         return {
@@ -67,6 +68,7 @@ class Product(db.Model):
             "sell_price": self.sell_price,
             "price_thb": self.price_thb or 0,
             "stock_qty": self.stock_qty,
+            "image": self.image or "",
         }
 
 
@@ -77,8 +79,9 @@ class Customer(db.Model):
     name = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(50), default="")
     address = db.Column(db.Text, default="")
-    total_debt = db.Column(db.Float, default=0)        # ໜີ້ກີບ
-    total_debt_thb = db.Column(db.Float, default=0)    # ໜີ້ບາດ
+    map_url = db.Column(db.String(500), default="")
+    total_debt = db.Column(db.Float, default=0)
+    total_debt_thb = db.Column(db.Float, default=0)
     sales = db.relationship("Sale", backref="customer", lazy=True)
 
 
@@ -92,6 +95,8 @@ class Employee(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=True)
     base_salary = db.Column(db.Float, default=0)
     ot_rate = db.Column(db.Float, default=0)   # ຄ່າ OT ຕໍ່ຊົ່ວໂມງ
+    pay_type = db.Column(db.String(10), default='monthly')  # 'monthly' or 'daily'
+    daily_rate = db.Column(db.Float, default=0)  # ຄ່າແຮງລາຍວັນ
 
     def set_password(self, pw):
         self.password_hash = generate_password_hash(pw)
@@ -101,6 +106,15 @@ class Employee(db.Model, UserMixin):
 
     def is_admin(self):
         return self.role == "admin"
+
+    def is_accountant(self):
+        return self.role in ("admin", "accountant")
+
+    def can_sell(self):
+        return self.role in ("admin", "cashier")
+
+    def can_manage_products(self):
+        return self.role in ("admin", "cashier")
 
 
 class Sale(db.Model):
@@ -112,16 +126,20 @@ class Sale(db.Model):
     subtotal = db.Column(db.Float, default=0)
     discount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
-    payment_type = db.Column(db.String(10), default="cash")  # cash / debt
-    currency = db.Column(db.String(5), default="LAK")        # LAK / THB
+    payment_type = db.Column(db.String(10), default="cash")  # cash / debt / transfer
+    currency = db.Column(db.String(5), default="LAK")
     paid_amount = db.Column(db.Float, default=0)
     change_amount = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    voided = db.Column(db.Boolean, default=False)
+    voided_at = db.Column(db.DateTime, nullable=True)
+    voided_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
 
     items = db.relationship("SaleItem", backref="sale", lazy=True, cascade="all, delete-orphan")
     debt_payments = db.relationship("DebtPayment", backref="sale", lazy=True)
     employee = db.relationship("Employee", foreign_keys=[employee_id])
+    voided_by_emp = db.relationship("Employee", foreign_keys=[voided_by])
 
     @property
     def debt_remaining(self):
@@ -151,7 +169,7 @@ class DebtPayment(db.Model):
     sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    currency = db.Column(db.String(5), default="LAK")  # LAK / THB
+    currency = db.Column(db.String(5), default="LAK")
     note = db.Column(db.Text, default="")
     paid_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     customer = db.relationship("Customer")
@@ -164,6 +182,7 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     note = db.Column(db.Text, default="")
     date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    employee_id = db.Column(db.Integer, nullable=True)  # for daily-wage auto-expenses
 
 
 class Attendance(db.Model):
@@ -176,6 +195,71 @@ class Attendance(db.Model):
     ot_hours = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     employee = db.relationship("Employee")
+
+
+class SalaryAdvance(db.Model):
+    __tablename__ = "salary_advances"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    reason = db.Column(db.Text, default="")
+    advance_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    repaid = db.Column(db.Boolean, default=False)
+    repaid_at = db.Column(db.DateTime, nullable=True)
+    note = db.Column(db.Text, default="")
+    employee = db.relationship("Employee")
+
+
+class StockIn(db.Model):
+    """ປະຫວັດການຮັບສິນຄ້າເຂົ້າ stock"""
+    __tablename__ = "stock_ins"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    qty = db.Column(db.Float, nullable=False)
+    cost_price = db.Column(db.Float, default=0)
+    supplier = db.Column(db.String(200), default="")
+    note = db.Column(db.Text, default="")
+    date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    product = db.relationship("Product", backref="stock_ins")
+    creator = db.relationship("Employee", foreign_keys=[created_by])
+
+
+class Quotation(db.Model):
+    """ໃບສະເໜີລາຄາ"""
+    __tablename__ = "quotations"
+    id = db.Column(db.Integer, primary_key=True)
+    quote_no = db.Column(db.String(30), unique=True, nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
+    customer_name = db.Column(db.String(200), default="")
+    date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    valid_days = db.Column(db.Integer, default=30)
+    status = db.Column(db.String(20), default="draft")  # draft/sent/accepted/rejected/cancelled
+    subtotal = db.Column(db.Float, default=0)
+    discount = db.Column(db.Float, default=0)
+    total = db.Column(db.Float, default=0)
+    note = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=True)
+    items = db.relationship("QuotationItem", backref="quotation", lazy=True, cascade="all, delete-orphan")
+    customer = db.relationship("Customer")
+    creator = db.relationship("Employee", foreign_keys=[created_by])
+    sale = db.relationship("Sale", foreign_keys=[sale_id])
+
+
+class QuotationItem(db.Model):
+    __tablename__ = "quotation_items"
+    id = db.Column(db.Integer, primary_key=True)
+    quotation_id = db.Column(db.Integer, db.ForeignKey("quotations.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    description = db.Column(db.String(300), default="")
+    unit = db.Column(db.String(50), default="")
+    qty = db.Column(db.Float, default=1)
+    unit_price = db.Column(db.Float, default=0)
+    subtotal = db.Column(db.Float, default=0)
+    product = db.relationship("Product")
 
 
 class PayrollRecord(db.Model):
@@ -191,6 +275,7 @@ class PayrollRecord(db.Model):
     ot_rate = db.Column(db.Float, default=0)
     bonus = db.Column(db.Float, default=0)
     other_deductions = db.Column(db.Float, default=0)
+    advance_deduction = db.Column(db.Float, default=0)
     net_salary = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     paid = db.Column(db.Boolean, default=False)
@@ -198,9 +283,58 @@ class PayrollRecord(db.Model):
     employee = db.relationship("Employee")
 
     def calc_net(self):
-        daily = self.base_salary / max(self.working_days, 1)
-        deduct_absent = daily * self.absent_days
-        ot_amount = self.ot_hours * self.ot_rate
-        self.net_salary = max(0, self.base_salary - deduct_absent + ot_amount
-                              + self.bonus - self.other_deductions)
+        base    = float(self.base_salary or 0)
+        days    = max(int(self.working_days or 26), 1)
+        absent  = int(self.absent_days or 0)
+        ot_h    = float(self.ot_hours or 0)
+        ot_r    = float(self.ot_rate or 0)
+        bonus   = float(self.bonus or 0)
+        deduct  = float(self.other_deductions or 0)
+        adv     = float(self.advance_deduction or 0)
+        daily_rate = base / days
+        self.net_salary = max(0, base - daily_rate * absent + ot_h * ot_r + bonus - deduct - adv)
         return self.net_salary
+
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    message = db.Column(db.Text, default="")
+    file_path = db.Column(db.String(300), default="")
+    file_name = db.Column(db.String(300), default="")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    employee = db.relationship("Employee", backref="chat_messages")
+
+
+class DMRoom(db.Model):
+    __tablename__ = "dm_rooms"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), default="")
+    is_group = db.Column(db.Boolean, default=False)
+    created_by = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    members = db.relationship("DMRoomMember", backref="room", lazy=True, cascade="all, delete-orphan")
+    messages = db.relationship("DMMessage", backref="room", lazy=True, cascade="all, delete-orphan")
+
+
+class DMRoomMember(db.Model):
+    __tablename__ = "dm_room_members"
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("dm_rooms.id"), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    last_read_at = db.Column(db.DateTime, nullable=True)
+    employee = db.relationship("Employee")
+
+
+class DMMessage(db.Model):
+    __tablename__ = "dm_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("dm_rooms.id"), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    message = db.Column(db.Text, default="")
+    file_path = db.Column(db.String(300), default="")
+    file_name = db.Column(db.String(300), default="")
+    deleted = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    employee = db.relationship("Employee")
