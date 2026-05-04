@@ -15,6 +15,8 @@
         {% for s in unpaid %}
         {% set cur = s.currency if s.currency else 'LAK' %}
         {% set cur_label = 'ບາດ' if cur == 'THB' else 'ກີບ' %}
+        {% set display_total    = (s.total / rate)         if cur == 'THB' else s.total %}
+        {% set display_remaining = (s.debt_remaining / rate) if cur == 'THB' else s.debt_remaining %}
         <tr>
           <td><a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank">{{ s.sale_no }}</a></td>
           <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
@@ -26,8 +28,14 @@
               <span class="badge bg-secondary">₭ ກີບ</span>
             {% endif %}
           </td>
-          <td class="text-end">{{ "{:,.0f}".format(s.total) }}</td>
-          <td class="text-end text-danger fw-bold">{{ "{:,.0f}".format(s.debt_remaining) }}</td>
+          <td class="text-end">
+            {% if cur == 'THB' %}{{ "{:,.2f}".format(display_total) }}
+            {% else %}{{ "{:,.0f}".format(display_total) }}{% endif %}
+          </td>
+          <td class="text-end text-danger fw-bold">
+            {% if cur == 'THB' %}{{ "{:,.2f}".format(display_remaining) }}
+            {% else %}{{ "{:,.0f}".format(display_remaining) }}{% endif %}
+          </td>
           <td>
             <button class="btn btn-sm btn-success" data-bs-toggle="modal"
                     data-bs-target="#payModal{{ s.id }}">
@@ -54,6 +62,7 @@
       <tbody>
         {% for s in paid %}
         {% set cur = s.currency if s.currency else 'LAK' %}
+        {% set display_total = (s.total / rate) if cur == 'THB' else s.total %}
         <tr>
           <td><a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank">{{ s.sale_no }}</a></td>
           <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
@@ -65,7 +74,10 @@
               <span class="badge bg-secondary">₭ ກີບ</span>
             {% endif %}
           </td>
-          <td class="text-end">{{ "{:,.0f}".format(s.total) }}</td>
+          <td class="text-end">
+            {% if cur == 'THB' %}{{ "{:,.2f}".format(display_total) }}
+            {% else %}{{ "{:,.0f}".format(display_total) }}{% endif %}
+          </td>
         </tr>
         {% else %}
         <tr><td colspan="5" class="text-center text-muted py-3">ບໍ່ມີ</td></tr>
@@ -78,9 +90,9 @@
 <!-- Pay modals — outside table so mobile touch events work correctly -->
 {% for s in unpaid %}
 {% set cur = s.currency if s.currency else 'LAK' %}
-{% set cur_label = 'ບາດ' if cur == 'THB' else 'ກີບ' %}
+{% set cur_label  = 'ບາດ' if cur == 'THB' else 'ກີບ' %}
 {% set cur_symbol = '฿' if cur == 'THB' else '₭' %}
-{% set cur_step = '0.01' if cur == 'THB' else '1' %}
+{% set display_remaining = (s.debt_remaining / rate) if cur == 'THB' else s.debt_remaining %}
 <div class="modal fade" id="payModal{{ s.id }}" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
@@ -91,12 +103,16 @@
       <form method="POST" action="{{ url_for('debts.pay_debt', sale_id=s.id) }}">
         <div class="modal-body">
           <p class="small text-muted mb-2">
-            ຄ້າງ: <strong>{{ cur_symbol }} {{ "{:,.0f}".format(s.debt_remaining) }} {{ cur_label }}</strong>
+            ຄ້າງ: <strong>{{ cur_symbol }}
+            {% if cur == 'THB' %}{{ "{:,.2f}".format(display_remaining) }}
+            {% else %}{{ "{:,.0f}".format(display_remaining) }}{% endif %}
+            {{ cur_label }}</strong>
           </p>
           <div class="mb-2">
             <label class="form-label small">ຈໍານວນທີ່ຊໍາລະ ({{ cur_label }})</label>
             <input type="number" name="amount" class="form-control"
-                   value="{{ s.debt_remaining }}" min="0.01" step="{{ cur_step }}" required/>
+                   value="{{ "%.2f"|format(display_remaining) if cur == 'THB' else display_remaining|int }}"
+                   min="0.01" step="{{ '0.01' if cur == 'THB' else '1' }}" required/>
           </div>
           <div>
             <label class="form-label small">ໝາຍເຫດ</label>

@@ -167,10 +167,11 @@ def create_sale():
     if payment_type == "debt" and customer_id:
         cust = Customer.query.get(customer_id)
         if cust:
+            # total_kip ເກັບ LAK ສະເໝີ
+            cust.total_debt = (cust.total_debt or 0) + total_kip
             if currency == "THB":
-                cust.total_debt_thb = (cust.total_debt_thb or 0) + total_kip
-            else:
-                cust.total_debt = (cust.total_debt or 0) + total_kip
+                # ແຍກຕາມ THB ສຳລັບ display
+                cust.total_debt_thb = (cust.total_debt_thb or 0) + total_kip / rate
 
     db.session.commit()
     return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})
