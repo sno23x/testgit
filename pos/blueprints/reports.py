@@ -1,11 +1,61 @@
 from datetime import date
-from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 from models import db, Sale, SaleItem, Product, Customer, Category
 import io, openpyxl
 
 reports_bp = Blueprint("reports", __name__)
+
+
+def _aggregate_overdue_by_customer():
+    """ລວມໜີ້ຄ້າງຊຳລະທຸກໃບ ຈັດກຸ່ມຕາມລູກຄ້າ."""
+    debt_sales = Sale.query.filter_by(payment_type="debt").all()
+    groups = {}
+    walk_in = {"name": "ລູກຄ້າໜ້າຮ້ານ", "phone": "", "amount": 0, "bills": 0}
+    for s in debt_sales:
+        rem = s.debt_remaining
+        if rem <= 0:
+            continue
+        if s.customer:
+            key = s.customer.id
+            if key not in groups:
+                groups[key] = {"name": s.customer.name,
+                               "phone": s.customer.phone or "",
+                               "amount": 0, "bills": 0}
+            groups[key]["amount"] += rem
+            groups[key]["bills"] += 1
+        else:
+            walk_in["amount"] += rem
+            walk_in["bills"] += 1
+    result = sorted(groups.values(), key=lambda c: c["amount"], reverse=True)
+    if walk_in["amount"] > 0:
+        result.append(walk_in)
+    return result
+
+
+def _format_telegram_msg(sel_dt, summary):
+    divider = "━━━━━━━━━━━━━━━"
+    lines = [
+        f"📊 *ສະຫຼຸບຍອດ {sel_dt.strftime('%d/%m/%Y')}*",
+        divider,
+        f"🧾 ບິນທັງໝົດ:  *{summary['bill_count']} ບິນ*",
+        f"💰 ລາຍຮັບລວມ: *{summary['total_revenue']:,.0f} ₭*",
+        divider,
+        f"💵 ເງິນສົດ:  {summary['cash_total']:,.0f} ₭",
+        f"📲 ໂອນເງິນ:  {summary['transfer_total']:,.0f} ₭",
+        f"⚠️ ຄ້າງຊຳລະ:  {summary['debt_total_today']:,.0f} ₭  ({summary['debt_count_today']} ບິນ)",
+    ]
+    overdue = summary["overdue_customers"]
+    if overdue:
+        lines.append(divider)
+        lines.append(f"👥 *ລາຍຊື່ລູກຄ້າຄ້າງຊຳລະ* ({len(overdue)} ຄົນ)")
+        for c in overdue:
+            phone = f" ({c['phone']})" if c["phone"] else ""
+            lines.append(f"• {c['name']}{phone}:  {c['amount']:,.0f} ₭")
+        lines.append(f"ລວມຄ້າງທັງໝົດ: *{summary['overdue_total']:,.0f} ₭*")
+    lines.append(divider)
+    return "\n".join(lines)
 
 
 @reports_bp.route("/")
@@ -31,8 +81,17 @@ def index():
         sales = q.order_by(Sale.created_at.desc()).all()
         total = sum(s.total for s in sales if not s.voided)
         label = f"ລາຍວັນ – {sel_dt.strftime('%d/%m/%Y')}"
-        context = dict(view=view, sales=sales, total=total, label=label,
-                       sel_date=str(sel_dt), show_voided=show_voided)
+        overdue_customers = _aggregate_overdue_by_customer()
+        context = dict(
+            view=view, sales=sales, total=total, label=label,
+            sel_date=str(sel_dt), show_voided=show_voided,
+            cash_total=sum(s.total for s in sales if s.payment_type == "cash" and not s.voided),
+            transfer_total=sum(s.total for s in sales if s.payment_type == "transfer" and not s.voided),
+            debt_total=sum(s.total for s in sales if s.payment_type == "debt" and not s.voided),
+            bill_count=sum(1 for s in sales if not s.voided),
+            overdue_customers=overdue_customers,
+            overdue_total=sum(c["amount"] for c in overdue_customers),
+        )
 
     elif view == "monthly":
         sel_month = request.args.get("month", today.strftime("%Y-%m"))
@@ -144,6 +203,46 @@ def export_excel():
     buf.seek(0)
     return send_file(buf, as_attachment=True, download_name=filename,
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+@reports_bp.route("/daily-summary.json")
+def daily_summary_json():
+    """JSON endpoint ສຳລັບ n8n / Telegram webhook — ບໍ່ຕ້ອງ auth."""
+    sel_date = request.args.get("date", date.today().isoformat())
+    try:
+        sel_dt = date.fromisoformat(sel_date)
+    except Exception:
+        sel_dt = date.today()
+
+    sales = Sale.query.filter(
+        db.func.date(Sale.created_at) == sel_dt, Sale.voided == False
+    ).all()
+    cash_total     = sum(s.total for s in sales if s.payment_type == "cash")
+    transfer_total = sum(s.total for s in sales if s.payment_type == "transfer")
+    debt_sales     = [s for s in sales if s.payment_type == "debt"]
+    overdue_customers = _aggregate_overdue_by_customer()
+    summary = dict(
+        bill_count=len(sales),
+        total_revenue=sum(s.total for s in sales),
+        cash_total=cash_total,
+        transfer_total=transfer_total,
+        debt_total_today=sum(s.total for s in debt_sales),
+        debt_count_today=len(debt_sales),
+        overdue_customers=overdue_customers,
+        overdue_total=sum(c["amount"] for c in overdue_customers),
+    )
+    return jsonify({
+        "date": sel_dt.isoformat(),
+        "total_sales": summary["bill_count"],
+        "total_revenue": summary["total_revenue"],
+        "cash_total": summary["cash_total"],
+        "transfer_total": summary["transfer_total"],
+        "debt_total": summary["debt_total_today"],
+        "debt_count": summary["debt_count_today"],
+        "overdue_total": summary["overdue_total"],
+        "overdue_customers": summary["overdue_customers"],
+        "whatsapp_msg": _format_telegram_msg(sel_dt, summary),
+    })
 
 
 @reports_bp.route("/margin")
