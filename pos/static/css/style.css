@@ -19,7 +19,7 @@
   min-height: 52px;
 }
 
-#main-content { overflow-x: hidden; background: #f5f7fa; }
+#main-content { overflow-x: clip; background: #f5f7fa; }
 
 /* ===== Stat cards ===== */
 .stat-card { border-radius: 12px; }
