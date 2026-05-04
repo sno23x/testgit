@@ -115,6 +115,7 @@ class Sale(db.Model):
     payment_type = db.Column(db.String(10), default="cash")  # cash / debt
     currency = db.Column(db.String(5), default="LAK")        # LAK / THB
     paid_amount = db.Column(db.Float, default=0)
+    change_amount = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 

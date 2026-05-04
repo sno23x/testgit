@@ -57,8 +57,8 @@
   <!-- Right: Bill / Cart -->
   <div class="col-lg-5 d-flex flex-column">
     <div class="card shadow-sm border-0 flex-grow-1 d-flex flex-column">
-      <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between align-items-center py-2">
-        <span><i class="bi bi-receipt me-1"></i>ໃບບິນ</span>
+      <div class="card-header fw-semibold d-flex justify-content-between align-items-center py-2" style="background:#4c3f8a;">
+        <span class="text-white"><i class="bi bi-receipt me-1"></i>ໃບບິນ</span>
         <div class="d-flex gap-1 align-items-center">
           <!-- Currency toggle -->
           <div class="btn-group btn-group-sm" role="group">
@@ -122,18 +122,69 @@
 
         <!-- Payment buttons -->
         <div class="d-grid gap-2">
-          <div class="btn-group w-100">
-            <button class="btn btn-success btn-lg" onclick="submitSale('cash')">
-              <i class="bi bi-cash me-1"></i>ເງິນສົດ
-            </button>
-            <button class="btn btn-warning btn-lg text-dark" onclick="submitSale('debt')">
-              <i class="bi bi-credit-card me-1"></i>ຕິດໜີ້
-            </button>
-          </div>
+          <button class="btn btn-success btn-lg" onclick="openCashModal()">
+            <i class="bi bi-cash me-1"></i>ເງິນສົດ
+            <small class="d-block opacity-75" style="font-size:0.65rem;">Cash Payment</small>
+          </button>
+          <button class="btn btn-primary btn-lg" onclick="submitSale('transfer')">
+            <i class="bi bi-qr-code me-1"></i>ໂອນເງິນ
+            <small class="d-block opacity-75" style="font-size:0.65rem;">Bank Transfer / QR</small>
+          </button>
+          <button class="btn btn-lg text-white" style="background:#b8721a;border-color:#b8721a;" onclick="submitSale('debt')">
+            <i class="bi bi-truck me-1"></i>ຈັດສົ່ງ
+            <small class="d-block opacity-75" style="font-size:0.65rem;">ຕ້ອງຊໍາລະ</small>
+          </button>
           <button class="btn btn-outline-secondary btn-sm" onclick="toggleRate()">
             <i class="bi bi-currency-exchange me-1"></i>ອັດຕາແລກປ່ຽນ
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cash payment modal -->
+<div class="modal fade" id="cashModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="background:#1e1e2e;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title text-white"><i class="bi bi-cash-coin me-2 text-success"></i>ຊໍາລະເງິນສົດ</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <div class="d-flex justify-content-between align-items-center rounded p-3 mb-3" style="background:#2a2a3e;">
+          <span class="text-white-50">ຍອດທີ່ຕ້ອງຈ່າຍ</span>
+          <span class="fw-bold text-info fs-5" id="cashTotalDisplay">0 ກີບ</span>
+        </div>
+        <div class="mb-3">
+          <div class="small text-white-50 mb-2">ຈໍານວນທີ່ໃຊ້ທົ່ວໄປ</div>
+          <div class="d-flex gap-2 flex-wrap" id="quickAmountBtns"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small text-white-50">ລູກຄ້າຈ່າຍ (ກີບ)</label>
+          <input type="number" id="cashPaidInput"
+                 class="form-control form-control-lg text-center fw-bold border-secondary"
+                 style="background:#2a2a3e;color:#fff;" oninput="calcChange()" min="0" step="1000"/>
+        </div>
+        <div class="d-flex justify-content-between align-items-center rounded p-3 mb-3" style="background:#1a3a2a;">
+          <span class="text-white-50"><i class="bi bi-arrow-return-left me-1"></i>ເງິນທອນ</span>
+          <span class="fw-bold text-success fs-4" id="changeAmountDisplay">0 ກີບ</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center rounded p-2 small" style="background:#2a2a3e;">
+          <div class="text-white-50">
+            <i class="bi bi-coin me-1 text-warning"></i>ເງິນທອນວັນນີ້ລວມ
+            <span class="text-white ms-2" id="todayChangeDisplay">0 ກີບ</span>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="resetTodayChange()" title="ລ້າງ">
+            <i class="bi bi-pencil"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1 gap-2">
+        <button class="btn btn-secondary flex-fill py-2" data-bs-dismiss="modal">ຍົກເລີກ</button>
+        <button class="btn btn-success flex-fill py-2 fw-bold" onclick="confirmCash()">
+          <i class="bi bi-check-circle me-1"></i>ຢືນຢັນ
+        </button>
       </div>
     </div>
   </div>
@@ -167,6 +218,7 @@ const LAK_RATE = parseFloat("{{ rate }}") || 830;
 let cart = [];
 let rateVal = LAK_RATE;
 const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+const cashModal    = new bootstrap.Modal(document.getElementById('cashModal'));
 
 // ─── Barcode / search ───
 let searchTimer, barcodeBuffer = '', barcodeTimer;
@@ -445,12 +497,72 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// ─── Cash modal ───
+function openCashModal() {
+  if (!cart.length) { alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  document.getElementById('cashTotalDisplay').textContent = total.toLocaleString() + ' ກີບ';
+  document.getElementById('cashPaidInput').value = total;
+  // Quick-amount buttons
+  const uniq = [...new Set([total, roundUpTo(total,10000), roundUpTo(total,50000), roundUpTo(total,100000)])]
+    .filter(v => v >= total);
+  document.getElementById('quickAmountBtns').innerHTML = uniq.map(v =>
+    `<button class="btn btn-outline-light btn-sm" onclick="setCashAmt(${v})">${v.toLocaleString()}</button>`
+  ).join('');
+  calcChange();
+  refreshTodayChange();
+  cashModal.show();
+}
+
+function roundUpTo(amount, step) { return Math.ceil(amount / step) * step; }
+
+function setCashAmt(v) {
+  document.getElementById('cashPaidInput').value = v;
+  calcChange();
+}
+
+function calcChange() {
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  const paid  = parseFloat(document.getElementById('cashPaidInput').value) || 0;
+  const chg   = Math.max(0, paid - total);
+  document.getElementById('changeAmountDisplay').textContent = chg.toLocaleString() + ' ກີບ';
+}
+
+function refreshTodayChange() {
+  const today   = new Date().toDateString();
+  const stored  = JSON.parse(localStorage.getItem('posChangeToday') || '{"d":"","t":0}');
+  const total   = stored.d === today ? stored.t : 0;
+  document.getElementById('todayChangeDisplay').textContent = total.toLocaleString() + ' ກີບ';
+}
+
+function resetTodayChange() {
+  const today = new Date().toDateString();
+  localStorage.setItem('posChangeToday', JSON.stringify({d: today, t: 0}));
+  refreshTodayChange();
+}
+
+function addTodayChange(chg) {
+  const today  = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem('posChangeToday') || '{"d":"","t":0}');
+  const prev   = stored.d === today ? stored.t : 0;
+  localStorage.setItem('posChangeToday', JSON.stringify({d: today, t: prev + chg}));
+}
+
+function confirmCash() {
+  const total = cart.reduce((s, i) => s + i.unit_price * i.qty, 0);
+  const paid  = parseFloat(document.getElementById('cashPaidInput').value) || 0;
+  if (paid < total) { alert('ຈໍານວນທີ່ຮັບຍັງບໍ່ຄົບ'); return; }
+  addTodayChange(paid - total);
+  cashModal.hide();
+  submitSale('cash', paid);
+}
+
 // ─── Submit sale ───
-function submitSale(type) {
+function submitSale(type, paidAmount) {
   if (!cart.length) { alert('ກະລຸນາເລືອກສິນຄ້າກ່ອນ'); return; }
   const customerId = document.getElementById('customerId').value;
   if (type === 'debt' && !customerId) {
-    alert('ກະລຸນາເລືອກລູກຄ້າເມື່ອຕິດໜີ້');
+    alert('ກະລຸນາເລືອກລູກຄ້າເມື່ອຈັດສົ່ງ');
     document.getElementById('customerSearch').focus();
     return;
   }
@@ -466,6 +578,7 @@ function submitSale(type) {
     rate: rateVal,
     note: document.getElementById('noteInput').value,
   };
+  if (paidAmount !== undefined) payload.paid_amount = paidAmount;
   fetch('/pos/sale', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
