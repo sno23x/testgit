@@ -403,6 +403,7 @@ function submitSale(type) {
     customer_id: customerId || null,
     discount: 0,
     currency: currency,
+    rate: rateVal,
     note: document.getElementById('noteInput').value,
   };
   fetch('/pos/sale', {

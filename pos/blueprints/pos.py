@@ -260,7 +260,16 @@ def create_sale():
     if payment_type == "debt" and not customer_id:
         return jsonify({"error": "ຕ້ອງເລືອກລູກຄ້າສຳລັບການຈັດສົ່ງ (ຄ້າງຊຳລະ)"}), 400
 
-    rate = _get_rate()
+    rate_input = data.get("rate")
+    if rate_input:
+        try:
+            rate = float(rate_input)
+            if rate > 0:
+                Setting.set("thb_to_lak", str(rate))
+        except (ValueError, TypeError):
+            rate = _get_rate()
+    else:
+        rate = _get_rate()
 
     subtotal = 0
     sale_items = []
