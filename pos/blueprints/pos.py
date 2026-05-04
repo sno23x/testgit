@@ -70,10 +70,17 @@ def notify_n8n(sale):
     rate = _get_rate()
     is_thb = (sale.currency or "LAK") == "THB"
     msg, pay_label, status_label, is_debt, customer_name = _build_sale_message(sale)
+    cur_sym = "฿" if is_thb else "₭"
     items_summary = " | ".join(
         f"{si.product.name if si.product else '?'} ×{si.qty:g}"
         for si in sale.items
     )
+    items_text = "\n".join(
+        f"{si.product.name if si.product else '?'} ×{si.qty:g} = "
+        + (f"฿{si.subtotal/rate:,.2f}" if is_thb else f"{si.subtotal:,.0f}₭")
+        for si in sale.items
+    )
+    total_display = f"฿{sale.total/rate:,.2f}" if is_thb else f"{sale.total:,.0f}₭"
     actions = []
     if is_debt:
         actions = [
@@ -95,7 +102,10 @@ def notify_n8n(sale):
              "subtotal": si.subtotal / rate if is_thb else si.subtotal}
             for si in sale.items
         ],
+        "currency_symbol": cur_sym,
         "items_summary": items_summary,
+        "items_text": items_text,
+        "total_display": total_display,
         "subtotal": sale.subtotal / rate if is_thb else sale.subtotal,
         "discount": sale.discount / rate if is_thb else sale.discount,
         "total": sale.total / rate if is_thb else sale.total,
