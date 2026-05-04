@@ -167,7 +167,10 @@ def create_sale():
     if payment_type == "debt" and customer_id:
         cust = Customer.query.get(customer_id)
         if cust:
-            cust.total_debt += total_kip
+            if currency == "THB":
+                cust.total_debt_thb = (cust.total_debt_thb or 0) + total_kip
+            else:
+                cust.total_debt = (cust.total_debt or 0) + total_kip
 
     db.session.commit()
     return jsonify({"sale_id": sale.id, "sale_no": sale.sale_no})

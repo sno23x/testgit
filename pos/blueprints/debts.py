@@ -21,6 +21,7 @@ def pay_debt(sale_id):
     sale = Sale.query.get_or_404(sale_id)
     amount = float(request.form.get("amount", 0) or 0)
     note = request.form.get("note", "").strip()
+    currency = sale.currency or "LAK"
 
     if amount <= 0:
         flash("ກະລຸນາໃສ່ຈໍານວນເງິນທີ່ຊໍາລະ", "danger")
@@ -32,6 +33,7 @@ def pay_debt(sale_id):
         sale_id=sale.id,
         customer_id=sale.customer_id,
         amount=amount,
+        currency=currency,
         note=note,
         paid_at=datetime.now(timezone.utc),
     )
@@ -39,8 +41,13 @@ def pay_debt(sale_id):
 
     customer = Customer.query.get(sale.customer_id)
     if customer:
-        customer.total_debt = max(0, customer.total_debt - amount)
+        if currency == "THB":
+            customer.total_debt_thb = max(0, (customer.total_debt_thb or 0) - amount)
+        else:
+            customer.total_debt = max(0, (customer.total_debt or 0) - amount)
 
     db.session.commit()
-    flash(f"ບັນທຶກການຊໍາລະ {amount:,.0f} ກີບ ສໍາເລັດ", "success")
+
+    currency_label = "ບາດ" if currency == "THB" else "ກີບ"
+    flash(f"ບັນທຶກການຊໍາລະ {amount:,.0f} {currency_label} ສໍາເລັດ", "success")
     return redirect(url_for("debts.list_debts"))

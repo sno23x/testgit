@@ -9,14 +9,23 @@
   <div class="table-responsive">
     <table class="table table-hover mb-0">
       <thead class="table-light">
-        <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ລວມ</th><th class="text-end">ຄ້າງ</th><th></th></tr>
+        <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ສະກຸນ</th><th class="text-end">ລວມ</th><th class="text-end">ຄ້າງ</th><th></th></tr>
       </thead>
       <tbody>
         {% for s in unpaid %}
+        {% set cur = s.currency if s.currency else 'LAK' %}
+        {% set cur_label = 'ບາດ' if cur == 'THB' else 'ກີບ' %}
         <tr>
           <td><a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank">{{ s.sale_no }}</a></td>
           <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
           <td>{{ s.customer.name if s.customer else '-' }}</td>
+          <td class="text-end">
+            {% if cur == 'THB' %}
+              <span class="badge bg-warning text-dark">฿ ບາດ</span>
+            {% else %}
+              <span class="badge bg-secondary">₭ ກີບ</span>
+            {% endif %}
+          </td>
           <td class="text-end">{{ "{:,.0f}".format(s.total) }}</td>
           <td class="text-end text-danger fw-bold">{{ "{:,.0f}".format(s.debt_remaining) }}</td>
           <td>
@@ -27,7 +36,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-3">ບໍ່ມີໜີ້ຄ້າງ</td></tr>
+        <tr><td colspan="7" class="text-center text-muted py-3">ບໍ່ມີໜີ້ຄ້າງ</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -40,18 +49,26 @@
   <div class="table-responsive">
     <table class="table table-sm mb-0">
       <thead class="table-light">
-        <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ລວມ</th></tr>
+        <tr><th>ເລກບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ສະກຸນ</th><th class="text-end">ລວມ</th></tr>
       </thead>
       <tbody>
         {% for s in paid %}
+        {% set cur = s.currency if s.currency else 'LAK' %}
         <tr>
           <td><a href="{{ url_for('pos.receipt', sale_id=s.id) }}" target="_blank">{{ s.sale_no }}</a></td>
           <td>{{ s.created_at.strftime('%d/%m/%Y') }}</td>
           <td>{{ s.customer.name if s.customer else '-' }}</td>
+          <td class="text-end">
+            {% if cur == 'THB' %}
+              <span class="badge bg-warning text-dark">฿ ບາດ</span>
+            {% else %}
+              <span class="badge bg-secondary">₭ ກີບ</span>
+            {% endif %}
+          </td>
           <td class="text-end">{{ "{:,.0f}".format(s.total) }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="4" class="text-center text-muted py-3">ບໍ່ມີ</td></tr>
+        <tr><td colspan="5" class="text-center text-muted py-3">ບໍ່ມີ</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -60,6 +77,10 @@
 
 <!-- Pay modals — outside table so mobile touch events work correctly -->
 {% for s in unpaid %}
+{% set cur = s.currency if s.currency else 'LAK' %}
+{% set cur_label = 'ບາດ' if cur == 'THB' else 'ກີບ' %}
+{% set cur_symbol = '฿' if cur == 'THB' else '₭' %}
+{% set cur_step = '0.01' if cur == 'THB' else '1' %}
 <div class="modal fade" id="payModal{{ s.id }}" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
@@ -69,11 +90,13 @@
       </div>
       <form method="POST" action="{{ url_for('debts.pay_debt', sale_id=s.id) }}">
         <div class="modal-body">
-          <p class="small text-muted mb-2">ຄ້າງ: <strong>{{ "{:,.0f}".format(s.debt_remaining) }} ກີບ</strong></p>
+          <p class="small text-muted mb-2">
+            ຄ້າງ: <strong>{{ cur_symbol }} {{ "{:,.0f}".format(s.debt_remaining) }} {{ cur_label }}</strong>
+          </p>
           <div class="mb-2">
-            <label class="form-label small">ຈໍານວນທີ່ຊໍາລະ</label>
+            <label class="form-label small">ຈໍານວນທີ່ຊໍາລະ ({{ cur_label }})</label>
             <input type="number" name="amount" class="form-control"
-                   value="{{ s.debt_remaining }}" min="1" step="1" required/>
+                   value="{{ s.debt_remaining }}" min="0.01" step="{{ cur_step }}" required/>
           </div>
           <div>
             <label class="form-label small">ໝາຍເຫດ</label>

@@ -77,7 +77,8 @@ class Customer(db.Model):
     name = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(50), default="")
     address = db.Column(db.Text, default="")
-    total_debt = db.Column(db.Float, default=0)
+    total_debt = db.Column(db.Float, default=0)        # ໜີ້ກີບ
+    total_debt_thb = db.Column(db.Float, default=0)    # ໜີ້ບາດ
     sales = db.relationship("Sale", backref="customer", lazy=True)
 
 
@@ -149,6 +150,7 @@ class DebtPayment(db.Model):
     sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.String(5), default="LAK")  # LAK / THB
     note = db.Column(db.Text, default="")
     paid_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     customer = db.relationship("Customer")
