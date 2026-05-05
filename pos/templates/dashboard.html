@@ -87,8 +87,8 @@
         <div class="mt-3" style="position:relative;height:200px;">
           <canvas id="paymentChart"></canvas>
           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;white-space:nowrap;">
-            <div class="fw-bold" id="donutCentrePct" style="font-size:1.6rem;line-height:1.1;"></div>
-            <div class="text-muted" style="font-size:.72rem;">ລາຍການທັງໝົດ</div>
+            <div class="fw-bold" id="donutCentrePct" style="font-size:1.3rem;line-height:1.1;"></div>
+            <div class="text-muted" style="font-size:.68rem;">ລາຍຮັບ + ຄ້າງຊໍາລະ</div>
           </div>
         </div>
         <div class="mt-3 d-flex justify-content-center gap-3 flex-wrap">
@@ -102,7 +102,7 @@
           </div>
           <div class="d-flex align-items-center gap-1">
             <div style="width:10px;height:10px;border-radius:50%;background:#ef5b5b;flex-shrink:0;"></div>
-            <small class="text-muted">ຕ້ອງຊໍາລະ</small>
+            <small class="text-muted">ຄ້າງຊໍາລະ</small>
           </div>
         </div>
       </div>
@@ -308,19 +308,25 @@
   const debtAmt     = {{ debt_month | float }};
   const donutTotal  = cashAmt + transferAmt + debtAmt;
 
-  // Centre: show cash % (largest segment) like reference
-  const cashPct = donutTotal > 0 ? Math.round(cashAmt / donutTotal * 100) : 0;
-  document.getElementById('donutCentrePct').textContent = donutTotal > 0 ? cashPct + '%' : '-';
+  // Centre: total amount
+  function fmtK(v) {
+    if (v >= 1000000) return (v/1000000).toFixed(1).replace(/\.0$/,'') + 'M₭';
+    if (v >= 1000)    return (v/1000).toFixed(0) + 'K₭';
+    return v.toLocaleString() + '₭';
+  }
+  document.getElementById('donutCentrePct').textContent = donutTotal > 0 ? fmtK(donutTotal) : '-';
+
+  const COLORS = ['#4f8ef7', '#f5b942', '#ef5b5b'];
 
   new Chart(document.getElementById('paymentChart').getContext('2d'), {
     type: 'doughnut',
     data: {
-      labels: ['ເງິນສົດ', 'ໂອນເງິນ', 'ຕ້ອງຊໍາລະ'],
+      labels: ['ເງິນສົດ', 'ໂອນເງິນ', 'ຄ້າງຊໍາລະ'],
       datasets: [{
         data: donutTotal > 0 ? [cashAmt, transferAmt, debtAmt] : [1, 0, 0],
-        backgroundColor: ['#4f8ef7', '#f5b942', '#ef5b5b'],
+        backgroundColor: COLORS,
         borderWidth: 0,
-        borderRadius: 10,
+        borderRadius: 12,
         borderSkipped: false,
         hoverOffset: 8,
       }]
@@ -335,7 +341,30 @@
           callbacks: { label: c => '  ' + Number(c.parsed).toLocaleString() + ' ກີບ' }
         }
       }
-    }
+    },
+    plugins: [{
+      id: 'capOverlap',
+      afterDraw(chart) {
+        // Draw a filled circle at the start-angle of the first arc so its
+        // rounded head sits visually on top of the last arc's tail.
+        const meta = chart.getDatasetMeta(0);
+        if (!meta.data.length) return;
+        const arc = meta.data[0];
+        const ctx  = chart.ctx;
+        const cx   = (chart.chartArea.left + chart.chartArea.right)  / 2;
+        const cy   = (chart.chartArea.top  + chart.chartArea.bottom) / 2;
+        const r    = (arc.outerRadius + arc.innerRadius) / 2;
+        const half = (arc.outerRadius - arc.innerRadius) / 2;
+        const x = cx + r * Math.cos(arc.startAngle);
+        const y = cy + r * Math.sin(arc.startAngle);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, half, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS[0];
+        ctx.fill();
+        ctx.restore();
+      }
+    }]
   });
 })();
 </script>
