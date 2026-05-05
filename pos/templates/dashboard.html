@@ -328,6 +328,7 @@
         borderWidth: 0,
         borderRadius: 12,
         borderSkipped: false,
+        spacing: 4,
         hoverOffset: 8,
       }]
     },
@@ -342,29 +343,6 @@
         }
       }
     },
-    plugins: [{
-      id: 'capOverlap',
-      afterDraw(chart) {
-        // Draw a filled circle at the start-angle of the first arc so its
-        // rounded head sits visually on top of the last arc's tail.
-        const meta = chart.getDatasetMeta(0);
-        if (!meta.data.length) return;
-        const arc = meta.data[0];
-        const ctx  = chart.ctx;
-        const cx   = (chart.chartArea.left + chart.chartArea.right)  / 2;
-        const cy   = (chart.chartArea.top  + chart.chartArea.bottom) / 2;
-        const r    = (arc.outerRadius + arc.innerRadius) / 2;
-        const half = (arc.outerRadius - arc.innerRadius) / 2;
-        const x = cx + r * Math.cos(arc.startAngle);
-        const y = cy + r * Math.sin(arc.startAngle);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, half, 0, Math.PI * 2);
-        ctx.fillStyle = COLORS[0];
-        ctx.fill();
-        ctx.restore();
-      }
-    }]
   });
 })();
 </script>
