@@ -319,16 +319,16 @@
       datasets: [{
         data: donutTotal > 0 ? [cashAmt, transferAmt, debtAmt] : [1, 0, 0],
         backgroundColor: ['#4f8ef7', '#f5b942', '#ef5b5b'],
-        borderWidth: 4,
-        borderColor: 'var(--bs-card-bg, #fff)',
-        borderRadius: 6,
+        borderWidth: 0,
+        borderRadius: 10,
+        borderSkipped: false,
         hoverOffset: 8,
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '62%',
+      cutout: '72%',
       plugins: {
         legend: { display: false },
         tooltip: {
