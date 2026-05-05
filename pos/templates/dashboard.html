@@ -8,6 +8,7 @@
 <div class="row g-3 mb-4">
 
   <div class="col-6 col-xl-3">
+    <a href="{{ url_for('reports.index') }}" class="text-decoration-none">
     <div class="dash-card" style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
       <div class="dash-card-inner">
         <div class="dash-icon"><i class="bi bi-cash-coin"></i></div>
@@ -17,9 +18,11 @@
       <div class="dash-label">ລາຍຮັບວັນນີ້ (ກີບ)</div>
       <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 C30,35 70,5 100,20 C130,35 170,5 200,20 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
+    </a>
   </div>
 
   <div class="col-6 col-xl-3">
+    <a href="{{ url_for('reports.index') }}" class="text-decoration-none">
     <div class="dash-card" style="background: linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);">
       <div class="dash-card-inner">
         <div class="dash-icon"><i class="bi bi-receipt"></i></div>
@@ -29,9 +32,11 @@
       <div class="dash-label">ຈຳນວນບິນ</div>
       <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 C30,5 70,35 100,20 C130,5 170,35 200,20 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
+    </a>
   </div>
 
   <div class="col-6 col-xl-3">
+    <a href="{{ url_for('debts.list_debts') }}" class="text-decoration-none">
     <div class="dash-card" style="background: linear-gradient(135deg,#fa709a 0%,#fee140 100%);">
       <div class="dash-card-inner">
         <div class="dash-icon"><i class="bi bi-credit-card"></i></div>
@@ -41,9 +46,11 @@
       <div class="dash-label">ຄ້າງຊຳລະວັນນີ້ (ກີບ)</div>
       <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,15 C40,30 80,5 120,20 C155,30 180,10 200,15 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
+    </a>
   </div>
 
   <div class="col-6 col-xl-3">
+    <a href="{{ url_for('debts.list_debts') }}" class="text-decoration-none">
     <div class="dash-card" style="background: linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%);">
       <div class="dash-card-inner">
         <div class="dash-icon"><i class="bi bi-exclamation-triangle"></i></div>
@@ -53,6 +60,7 @@
       <div class="dash-label">ໜີ້ຄ້າງທັງໝົດ (ກີບ)</div>
       <svg class="dash-wave" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,25 C50,10 100,35 150,15 C170,8 185,20 200,25 L200,40 L0,40 Z" fill="white"/></svg>
     </div>
+    </a>
   </div>
 
 </div>
@@ -223,7 +231,7 @@
   box-shadow: 0 4px 15px rgba(0,0,0,.12);
   transition: transform .2s, box-shadow .2s;
 }
-.dash-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.18); }
+.dash-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.18); cursor: pointer; }
 .dash-card-inner { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }
 .dash-icon {
   background: rgba(255,255,255,.25);
