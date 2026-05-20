@@ -340,6 +340,7 @@ def receipt(sale_id):
     currency = request.args.get("currency", "LAK").upper()
     if currency not in ("LAK", "THB"):
         currency = "LAK"
+    is_copy = request.args.get("copy", "0") == "1"
     return render_template("pos/receipt.html", sale=sale,
         shop_name=Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ"),
         shop_address=Setting.get("shop_address", ""),
@@ -349,7 +350,8 @@ def receipt(sale_id):
         receipt_auto_print=Setting.get("receipt_auto_print", "1"),
         receipt_rows=receipt_rows,
         rate=rate,
-        currency=currency)
+        currency=currency,
+        is_copy=is_copy)
 
 
 # ──────────────── Void sale ────────────────

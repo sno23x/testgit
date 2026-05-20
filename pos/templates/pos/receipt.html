@@ -2,285 +2,477 @@
 <html lang="lo">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ໃບບິນ {{ sale.sale_no }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wdth,wght@100,300;100,400;100,600;100,700&display=swap" rel="stylesheet"/>
+  <!-- Swapped by JS before printing -->
+  <style id="dyn-page">@page { size: A5 portrait; margin: 0; }</style>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Noto Sans Lao', sans-serif;
       font-size: 11pt;
       color: #000;
-      background: #fff;
+      background: #f0f2f5;
     }
 
-    /* A5 page */
+    /* ── Screen toolbar ── */
+    .no-print {
+      position: sticky; top: 0; z-index: 100;
+      background: #1e293b;
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .fmt-label { color: #94a3b8; font-size: 9pt; }
+    .btn-fmt {
+      padding: 6px 18px; cursor: pointer;
+      border: 1.5px solid #475569; border-radius: 6px;
+      background: transparent; color: #94a3b8;
+      font-family: inherit; font-size: 9.5pt;
+      transition: all 0.15s;
+    }
+    .btn-fmt.active, .btn-fmt:hover {
+      background: #3b82f6; border-color: #3b82f6; color: #fff;
+    }
+    .btn-sep { width: 1px; height: 20px; background: #334155; flex-shrink: 0; }
+    .btn-close-w {
+      margin-left: auto;
+      padding: 6px 16px; cursor: pointer;
+      border: 1.5px solid #475569; border-radius: 6px;
+      background: transparent; color: #94a3b8;
+      font-family: inherit; font-size: 9.5pt;
+    }
+    .btn-close-w:hover { background: #374151; color: #fff; }
+
+    /* ── Page wrapper ── */
+    .page-wrap {
+      display: flex; justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Receipt page ── */
     .page {
+      position: relative; overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column;
       width: 148mm;
       min-height: 210mm;
-      margin: 0 auto;
-      padding: 8mm 10mm 8mm 10mm;
-      display: flex;
-      flex-direction: column;
+      padding: 8mm 10mm;
+    }
+    body.fmt-thermal .page {
+      width: 76mm;
+      min-height: auto;
+      padding: 3mm 4mm;
+      font-size: 9pt;
     }
 
-    /* ===== Header ===== */
+    /* ── Format visibility toggles ── */
+    .thermal-only { display: none; }
+    body.fmt-thermal .a5-only { display: none !important; }
+    body.fmt-thermal .thermal-only { display: block; }
+
+    /* ── Watermark ── */
+    .watermark {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-35deg);
+      font-size: 60pt; font-weight: 900;
+      color: rgba(0, 0, 0, 0.055);
+      white-space: nowrap;
+      pointer-events: none; user-select: none;
+      z-index: 9; letter-spacing: 8px;
+    }
+    body.fmt-thermal .watermark { font-size: 36pt; }
+
+    /* ── Header ── */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      display: flex; justify-content: space-between; align-items: flex-start;
       margin-bottom: 4mm;
     }
-    .shop-info { flex: 1; }
-    .shop-name { font-size: 11pt; font-weight: 700; line-height: 1.4; }
-    .shop-addr { font-size: 9pt; line-height: 1.5; color: #222; }
+    .shop-name { font-size: 12pt; font-weight: 700; line-height: 1.4; }
+    .shop-sub { font-size: 8.5pt; line-height: 1.5; color: #333; }
+    body.fmt-thermal .shop-name { font-size: 9.5pt; }
+    body.fmt-thermal .shop-sub { font-size: 7pt; }
+    body.fmt-thermal .header { margin-bottom: 2mm; }
 
-    .header-right { text-align: right; flex-shrink: 0; margin-left: 6mm; }
-    .header-right img.qr { width: 22mm; height: 22mm; object-fit: contain; }
-    .qr-placeholder {
-      width: 22mm; height: 22mm;
-      border: 1.5px solid #000;
+    .header-right { text-align: right; flex-shrink: 0; margin-left: 4mm; }
+    .qr-sm { width: 20mm; height: 20mm; object-fit: contain; display: block; margin-left: auto; }
+    .qr-placeholder-sm {
+      width: 20mm; height: 20mm;
+      border: 1px dashed #ccc;
       display: flex; align-items: center; justify-content: center;
-      font-size: 7pt; color: #888; text-align: center;
+      font-size: 6.5pt; color: #bbb; text-align: center;
     }
-    .header-right .date-line { font-size: 8.5pt; margin-top: 1mm; }
-    .header-right .cid-line { font-size: 8.5pt; margin-top: 1mm; }
+    body.fmt-thermal .qr-sm,
+    body.fmt-thermal .qr-placeholder-sm { width: 14mm; height: 14mm; }
+    .h-meta { font-size: 8pt; margin-top: 1mm; }
 
-    /* ===== Title ===== */
+    /* ── Bill title ── */
     .bill-title {
       text-align: center;
-      font-size: 13pt;
-      font-weight: 700;
+      font-size: 13pt; font-weight: 700;
       border-top: 1.5px solid #000;
       border-bottom: 1px solid #888;
-      padding: 2mm 0;
-      margin-bottom: 3mm;
+      padding: 2mm 0; margin-bottom: 3mm;
     }
+    body.fmt-thermal .bill-title { font-size: 10pt; padding: 1mm 0; margin-bottom: 2mm; }
 
-    /* ===== Customer info ===== */
+    .copy-badge {
+      text-align: center;
+      font-size: 8pt; font-weight: 700; letter-spacing: 4px;
+      color: #888; border: 1px dashed #bbb;
+      padding: 1mm 0; margin-bottom: 2mm;
+    }
+    body.fmt-thermal .copy-badge { font-size: 7pt; }
+
+    /* ── Customer info ── */
     .cust-row {
-      display: flex;
-      gap: 4mm;
-      margin-bottom: 1.5mm;
-      font-size: 10pt;
+      display: flex; gap: 3mm; flex-wrap: wrap;
+      margin-bottom: 1mm; font-size: 9.5pt;
     }
-    .cust-label { font-weight: 600; white-space: nowrap; }
-    .cust-row .divider { color: #aaa; }
+    body.fmt-thermal .cust-row { font-size: 7.5pt; gap: 2mm; }
+    .clbl { font-weight: 600; white-space: nowrap; }
+    .cdiv { color: #ccc; }
 
-    /* ===== Product table ===== */
+    /* ── A5 items table ── */
     table.items {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2mm;
-      font-size: 9.5pt;
+      width: 100%; border-collapse: collapse;
+      margin-top: 2mm; font-size: 9.5pt;
     }
     table.items thead tr {
-      border-top: 1.5px solid #000;
-      border-bottom: 1px solid #555;
+      border-top: 1.5px solid #000; border-bottom: 1px solid #555;
     }
     table.items thead th {
-      padding: 1.5mm 1mm;
-      font-weight: 700;
-      text-align: center;
+      padding: 1.5mm 1mm; font-weight: 700; text-align: center;
     }
-    table.items th.left, table.items td.left { text-align: left; }
-    table.items th.right, table.items td.right { text-align: right; }
+    table.items th.l, table.items td.l { text-align: left; }
+    table.items th.r, table.items td.r { text-align: right; }
+    table.items tbody tr { border-bottom: 0.4px solid #ddd; }
+    table.items tbody td { padding: 1.5mm 1mm; vertical-align: middle; }
+    table.items tbody tr.empty td { color: #ddd; }
+    table.items tbody tr:last-child { border-bottom: 1.5px solid #000; }
 
-    table.items tbody tr {
-      border-bottom: 0.4px solid #ddd;
+    /* ── Thermal items list ── */
+    .t-items {
+      border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;
+      padding: 1mm 0; margin: 2mm 0;
     }
-    table.items tbody td {
-      padding: 1.5mm 1mm;
-      vertical-align: middle;
+    .ti {
+      display: flex; align-items: flex-start;
+      padding: 1mm 0; border-bottom: 0.4px dashed #ccc;
     }
-    table.items tbody tr.empty td { color: #ccc; }
+    .ti:last-child { border-bottom: none; }
+    .ti-n { font-size: 7pt; width: 5mm; flex-shrink: 0; padding-top: 1mm; color: #777; }
+    .ti-b { flex: 1; }
+    .ti-name { font-size: 8.5pt; font-weight: 600; line-height: 1.3; }
+    .ti-d { font-size: 7.5pt; color: #555; margin-top: 0.5mm; }
+    .ti-s {
+      font-size: 8.5pt; font-weight: 700;
+      text-align: right; flex-shrink: 0;
+      padding-top: 0.5mm; min-width: 18mm;
+    }
 
-    /* last border */
-    table.items tbody tr:last-child {
-      border-bottom: 1.5px solid #000;
-    }
-
-    /* ===== Total ===== */
+    /* ── Total section ── */
     .total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 3mm 0 2mm 0;
-      font-size: 13pt;
-      font-weight: 700;
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 2.5mm 0 1mm;
+      font-size: 13pt; font-weight: 700;
     }
-    .total-row .label { font-size: 11pt; }
+    .total-row .lbl { font-size: 11pt; }
+    body.fmt-thermal .total-row { font-size: 10.5pt; }
+    body.fmt-thermal .total-row .lbl { font-size: 9pt; }
 
-    /* ===== Signatures ===== */
+    .sub-row {
+      display: flex; justify-content: space-between;
+      font-size: 8.5pt; color: #555; padding: 0.5mm 0;
+    }
+    body.fmt-thermal .sub-row { font-size: 7.5pt; }
+
+    .rate-note {
+      font-size: 8pt; color: #777;
+      text-align: right; margin-top: 1mm;
+    }
+    body.fmt-thermal .rate-note { font-size: 7pt; }
+
+    .change-box {
+      margin-top: 2mm;
+      border: 1px solid #d1fae5; border-radius: 2mm;
+      background: #f0fdf4; padding: 2mm 3mm;
+      font-size: 9.5pt;
+    }
+    body.fmt-thermal .change-box { font-size: 8pt; padding: 1.5mm 2mm; }
+    .cr { display: flex; justify-content: space-between; padding: 0.5mm 0; }
+    .cr.hl { font-weight: 700; font-size: 1.05em; }
+
+    .pay-info { font-size: 8.5pt; color: #555; margin-top: 2mm; }
+    body.fmt-thermal .pay-info { font-size: 7.5pt; margin-top: 1.5mm; }
+
+    /* ── QR transfer section ── */
+    .transfer-sec {
+      text-align: center;
+      border: 1px dashed #bbb; border-radius: 2mm;
+      padding: 2mm; margin: 3mm 0;
+    }
+    .transfer-sec .t-lbl {
+      font-size: 8pt; font-weight: 700; color: #555; margin-bottom: 2mm;
+    }
+    .qr-lg { width: 36mm; height: 36mm; object-fit: contain; }
+    .qr-placeholder-lg {
+      width: 36mm; height: 36mm;
+      border: 1.5px solid #ccc;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 8pt; color: #aaa; text-align: center;
+    }
+    body.fmt-thermal .qr-lg,
+    body.fmt-thermal .qr-placeholder-lg { width: 26mm; height: 26mm; }
+
+    /* ── Footer & signatures ── */
+    .r-footer {
+      text-align: center; font-size: 8.5pt; color: #666;
+      border-top: 0.5px solid #ddd; padding-top: 2mm; margin-top: 3mm;
+    }
+    body.fmt-thermal .r-footer { font-size: 7pt; margin-top: 2mm; }
+
     .sig-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: auto;
-      padding-top: 8mm;
+      display: flex; justify-content: space-between;
+      margin-top: auto; padding-top: 8mm;
     }
     .sig-box { text-align: center; flex: 1; }
-    .sig-line {
-      border-bottom: 1px solid #555;
-      height: 12mm;
-      margin: 0 5mm 1mm 5mm;
-    }
-    .sig-label { font-size: 9.5pt; font-weight: 600; }
+    .sig-line { border-bottom: 1px solid #555; height: 12mm; margin: 0 5mm 1mm 5mm; }
+    .sig-lbl { font-size: 9.5pt; font-weight: 600; }
 
-    /* ===== Print controls ===== */
-    .no-print {
-      text-align: center;
-      padding: 12px;
-      background: #f8f9fa;
-      border-top: 1px solid #dee2e6;
-    }
-    .no-print button {
-      padding: 8px 24px; margin: 4px; cursor: pointer;
-      border: none; border-radius: 4px; font-family: inherit; font-size: 10pt;
-    }
-    .btn-print { background: #0d6efd; color: #fff; }
-    .btn-close-w { background: #6c757d; color: #fff; }
-
-    /* ===== Print ===== */
-    @page {
-      size: A5 portrait;
-      margin: 0;
-    }
+    /* ── Print ── */
     @media print {
       body { background: #fff; }
       .no-print { display: none !important; }
-      .page { width: 148mm; margin: 0; }
+      .page-wrap { padding: 0; }
+      .page { box-shadow: none; margin: 0; overflow: visible; }
     }
   </style>
 </head>
 <body>
 
+{% set sym = '฿' if currency == 'THB' else '₭' %}
+{% set rate_f = rate | float %}
+
+<!-- Toolbar -->
+<div class="no-print">
+  <span class="fmt-label">ຮູບແບບ:</span>
+  <button id="btn-a5" class="btn-fmt active" onclick="doPrint('a5')">🖨 ພິມ A5</button>
+  <button id="btn-th" class="btn-fmt" onclick="doPrint('thermal')">🖨 ພິມ Thermal 80mm</button>
+  <div class="btn-sep"></div>
+  <button class="btn-close-w" onclick="window.close()">✕ ປິດ</button>
+</div>
+
+<div class="page-wrap">
 <div class="page">
+  {% if is_copy %}<div class="watermark">ສຳເນົາ</div>{% endif %}
+
   <!-- Header -->
   <div class="header">
-    <div class="shop-info">
+    <div>
       <div class="shop-name">{{ shop_name }}</div>
-      <div class="shop-addr">{{ shop_address }}</div>
-      <div class="shop-addr">ໂທ: {{ shop_phone }}</div>
+      {% if shop_address %}<div class="shop-sub">{{ shop_address }}</div>{% endif %}
+      {% if shop_phone %}<div class="shop-sub">ໂທ: {{ shop_phone }}</div>{% endif %}
     </div>
     <div class="header-right">
       {% if shop_qr %}
-        <img class="qr" src="{{ shop_qr }}" alt="QR"/>
+        <img class="qr-sm" src="{{ shop_qr }}" alt="QR"/>
       {% else %}
-        <div class="qr-placeholder">QR<br/>ຮ້ານ</div>
+        <div class="qr-placeholder-sm">QR<br/>ຮ້ານ</div>
       {% endif %}
-      <div class="date-line">
-        ວັນທີ {{ sale.created_at.strftime('%d/%m/%Y') }}
-      </div>
-      {% if sale.customer %}
-      <div class="cid-line">
-        <strong>ID ລູກຄ້າ:</strong> CID{{ '%03d' % sale.customer.id }}
-      </div>
-      {% endif %}
+      <div class="h-meta">{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+      <div class="h-meta" style="font-weight:700;">{{ sale.sale_no }}</div>
     </div>
   </div>
 
   <!-- Title -->
   <div class="bill-title">ໃບບິນສິນຄ້າ</div>
+  {% if is_copy %}<div class="copy-badge">— ສຳເນົາ —</div>{% endif %}
 
-  <!-- Customer info -->
+  <!-- Customer -->
   <div class="cust-row">
-    <span class="cust-label">ຊື່:</span>
-    <span>{{ sale.customer.name if sale.customer else '-' }}</span>
-    <span class="divider">|</span>
-    <span class="cust-label">ເບີໂທ:</span>
-    <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
+    <span class="clbl">ຊື່:</span>
+    <span>{{ sale.customer.name if sale.customer else '—' }}</span>
+    <span class="cdiv">|</span>
+    <span class="clbl">ເບີໂທ:</span>
+    <span>{{ sale.customer.phone if sale.customer else '—' }}</span>
   </div>
   <div class="cust-row">
-    <span class="cust-label">ທີ່ຢູ່:</span>
-    <span>{{ sale.customer.address if sale.customer and sale.customer.address else '-' }}</span>
+    <span class="clbl">ທີ່ຢູ່:</span>
+    <span>{{ sale.customer.address if sale.customer and sale.customer.address else '—' }}</span>
   </div>
 
-  <!-- Product table (always 15 rows) -->
-  <table class="items">
-    <thead>
-      <tr>
-        <th style="width:6mm;">ລ/ດ</th>
-        <th class="left" style="width:18mm;">ລະຫັດ</th>
-        <th class="left">ຊື່ສິນຄ້າ</th>
-        <th style="width:10mm;">ຈ/ນ</th>
-        <th style="width:12mm;">ໜ່ວຍ</th>
-        <th class="right" style="width:22mm;">ລາຄາ</th>
-        <th class="right" style="width:22mm;">ເປັນເງິນ</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% set ns = namespace(count=0) %}
+  <!-- A5: 7-column table with filler rows -->
+  <div class="a5-only">
+    <table class="items">
+      <thead>
+        <tr>
+          <th style="width:6mm;">ລ/ດ</th>
+          <th class="l" style="width:16mm;">ລະຫັດ</th>
+          <th class="l">ຊື່ສິນຄ້າ</th>
+          <th style="width:9mm;">ຈ/ນ</th>
+          <th style="width:11mm;">ໜ່ວຍ</th>
+          <th class="r" style="width:22mm;">ລາຄາ</th>
+          <th class="r" style="width:22mm;">ເປັນເງິນ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set ns = namespace(count=0) %}
+        {% for item in sale.items %}
+        {% set ns.count = ns.count + 1 %}
+        <tr>
+          <td style="text-align:center;">{{ ns.count }}</td>
+          <td class="l"><small>{{ item.product.code }}</small></td>
+          <td class="l">{{ item.product.name }}</td>
+          <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
+          <td style="text-align:center;">{{ item.product.unit }}</td>
+          <td class="r">
+            {% if currency == 'THB' %}{{ "{:,.2f}".format(item.unit_price / rate_f) }}{{ sym }}
+            {% else %}{{ "{:,.0f}".format(item.unit_price) }}{{ sym }}{% endif %}
+          </td>
+          <td class="r">
+            {% if currency == 'THB' %}{{ "{:,.2f}".format(item.subtotal / rate_f) }}{{ sym }}
+            {% else %}{{ "{:,.0f}".format(item.subtotal) }}{{ sym }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        {% for i in range(ns.count + 1, receipt_rows + 1) %}
+        <tr class="empty">
+          <td style="text-align:center;">{{ i }}</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Thermal: 2-line compact list -->
+  <div class="thermal-only">
+    <div class="t-items">
       {% for item in sale.items %}
-      {% set ns.count = ns.count + 1 %}
-      <tr>
-        <td style="text-align:center;">{{ ns.count }}</td>
-        <td class="left"><small>{{ item.product.code }}</small></td>
-        <td class="left">{{ item.product.name }}</td>
-        <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
-        <td style="text-align:center;">{{ item.product.unit }}</td>
-        <td class="right">{{ "{:,.0f}".format(item.unit_price) }}</td>
-        <td class="right">{{ "{:,.0f}".format(item.subtotal) }}</td>
-      </tr>
+      <div class="ti">
+        <span class="ti-n">{{ loop.index }}.</span>
+        <div class="ti-b">
+          <div class="ti-name">{{ item.product.name }}</div>
+          <div class="ti-d">
+            {{ "{:g}".format(item.qty) }}{{ item.product.unit }} ×
+            {% if currency == 'THB' %}{{ "{:,.2f}".format(item.unit_price / rate_f) }}{{ sym }}
+            {% else %}{{ "{:,.0f}".format(item.unit_price) }}{{ sym }}{% endif %}
+          </div>
+        </div>
+        <span class="ti-s">
+          {% if currency == 'THB' %}{{ "{:,.2f}".format(item.subtotal / rate_f) }}{{ sym }}
+          {% else %}{{ "{:,.0f}".format(item.subtotal) }}{{ sym }}{% endif %}
+        </span>
+      </div>
       {% endfor %}
-      {# Fill remaining rows up to receipt_rows #}
-      {% for i in range(ns.count + 1, receipt_rows + 1) %}
-      <tr class="empty">
-        <td style="text-align:center;">{{ i }}</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
 
   <!-- Total -->
   <div class="total-row">
-    <span class="label">ເປັນເງິນ</span>
-    <span>{{ "{:,.0f}".format(sale.total) }}</span>
+    <span class="lbl">ລວມເງິນ</span>
+    <span>
+      {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.total / rate_f) }}{{ sym }}
+      {% else %}{{ "{:,.0f}".format(sale.total) }}{{ sym }}{% endif %}
+    </span>
   </div>
 
-  {% if sale.discount > 0 %}
-  <div style="display:flex; justify-content:space-between; font-size:9.5pt; color:#555; margin-bottom:2mm;">
+  {% if sale.discount and sale.discount > 0 %}
+  <div class="sub-row">
     <span>ສ່ວນຫຼຸດ</span>
-    <span>-{{ "{:,.0f}".format(sale.discount) }}</span>
+    <span>–&nbsp;{% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
+    {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
+  </div>
+  {% endif %}
+
+  {% if currency == 'THB' %}
+  <div class="rate-note">ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭</div>
+  {% endif %}
+
+  {% if sale.payment_type == 'cash' and (sale.change_amount or 0) > 0 %}
+  <div class="change-box">
+    <div class="cr">
+      <span>ຮັບເງິນ</span>
+      <span>
+        {% set received = sale.total + (sale.change_amount or 0) %}
+        {% if currency == 'THB' %}{{ "{:,.2f}".format(received / rate_f) }}{{ sym }}
+        {% else %}{{ "{:,.0f}".format(received) }}{{ sym }}{% endif %}
+      </span>
+    </div>
+    <div class="cr hl">
+      <span>ທອນ</span>
+      <span>
+        {% if currency == 'THB' %}{{ "{:,.2f}".format((sale.change_amount or 0) / rate_f) }}{{ sym }}
+        {% else %}{{ "{:,.0f}".format(sale.change_amount or 0) }}{{ sym }}{% endif %}
+      </span>
+    </div>
   </div>
   {% endif %}
 
   <!-- Payment type -->
-  <div style="font-size:9pt; color:#555; margin-bottom:3mm;">
-    ປະເພດ: <strong>{{ 'ເງິນສົດ' if sale.payment_type == 'cash' else 'ຕິດໜີ້' }}</strong>
-    {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
+  <div class="pay-info">
+    ປະເພດ: <strong>
+      {% if sale.payment_type == 'cash' %}ເງິນສົດ
+      {% elif sale.payment_type == 'transfer' %}ໂອນເງິນ
+      {% else %}ຈັດສົ່ງ / ຕິດໜີ້{% endif %}
+    </strong>
+    {% if sale.note %}&nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
   </div>
 
-  {% if receipt_footer %}
-  <div style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
-    {{ receipt_footer }}
+  <!-- QR for transfer -->
+  {% if sale.payment_type == 'transfer' %}
+  <div class="transfer-sec">
+    <div class="t-lbl">ຊ່ອງທາງໂອນເງິນ</div>
+    {% if shop_qr %}
+      <img class="qr-lg" src="{{ shop_qr }}" alt="QR ໂອນ"/>
+    {% else %}
+      <div class="qr-placeholder-lg">QR<br/>ໂອນເງິນ</div>
+    {% endif %}
   </div>
   {% endif %}
 
-  <!-- Signatures -->
-  <div class="sig-row">
+  {% if receipt_footer %}
+  <div class="r-footer">{{ receipt_footer }}</div>
+  {% endif %}
+
+  <!-- Signatures (A5 only) -->
+  <div class="sig-row a5-only">
     <div class="sig-box">
       <div class="sig-line"></div>
-      <div class="sig-label">ລາຍເຊັນລູກຄ້າ</div>
+      <div class="sig-lbl">ລາຍເຊັນລູກຄ້າ</div>
     </div>
     <div class="sig-box">
       <div class="sig-line"></div>
-      <div class="sig-label">ຜູ້ຮັບເງິນ</div>
+      <div class="sig-lbl">ຜູ້ຮັບເງິນ</div>
     </div>
   </div>
-</div>
 
-<!-- Print controls -->
-<div class="no-print">
-  <button class="btn-print" onclick="window.print()">🖨 ພິມໃບບິນ (A5)</button>
-  <button class="btn-close-w" onclick="window.close()">ປິດ</button>
-</div>
+</div><!-- .page -->
+</div><!-- .page-wrap -->
 
 <script>
+  function setFormat(fmt) {
+    document.body.classList.toggle('fmt-thermal', fmt === 'thermal');
+    document.getElementById('btn-a5').classList.toggle('active', fmt === 'a5');
+    document.getElementById('btn-th').classList.toggle('active', fmt === 'thermal');
+    document.getElementById('dyn-page').textContent =
+      fmt === 'thermal'
+        ? '@page { size: 80mm auto; margin: 0; }'
+        : '@page { size: A5 portrait; margin: 0; }';
+  }
+  function doPrint(fmt) {
+    setFormat(fmt);
+    setTimeout(function() { window.print(); }, 80);
+  }
   {% if receipt_auto_print == '1' %}
-  window.addEventListener('load', () => { setTimeout(() => window.print(), 400); });
+  window.addEventListener('load', function() {
+    setTimeout(function() { doPrint('a5'); }, 400);
+  });
   {% endif %}
 </script>
 </body>
