@@ -85,6 +85,7 @@
       display: flex; justify-content: space-between; align-items: flex-start;
       margin-bottom: 4mm;
     }
+    body.fmt-thermal .header { margin-bottom: 1mm; }
     .shop-info { flex: 1; }
     .shop-name { font-size: 11pt; font-weight: 700; line-height: 1.4; }
     .shop-addr { font-size: 9pt; line-height: 1.5; color: #222; }
@@ -100,7 +101,7 @@
 
     .bill-title {
       text-align: center; font-size: 13pt; font-weight: 700;
-      padding: 2mm 0; margin-bottom: 3mm;
+      padding: 0 0 2mm 0; margin-bottom: 3mm;
     }
 
     .cust-row { display: flex; gap: 4mm; margin-bottom: 1.5mm; font-size: 10pt; }
@@ -117,10 +118,16 @@
     table.items tbody tr:last-child { border-bottom: 1.5px solid #000; }
 
     .total-row {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding: 3mm 0 2mm 0; font-size: 13pt; font-weight: 700;
+      position: relative;
+      text-align: center;
+      padding: 3mm 0 2mm 0;
+      font-size: 13pt; font-weight: 700;
     }
-    .total-row .label { font-size: 11pt; }
+    .total-row .label { font-size: 13pt; }
+    .total-row .amount {
+      position: absolute; right: 0; top: 3mm;
+      font-size: 13pt; font-weight: 700;
+    }
 
     /* sig-row must be a direct child of .page for margin-top: auto to work */
     .sig-row {
@@ -268,11 +275,11 @@
   <table class="items a5-only">
     <thead>
       <tr>
-        <th style="width:6mm;">ລ/ດ</th>
-        <th class="left" style="width:18mm;">ລະຫັດ</th>
+        <th style="width:9mm;">ລ/ດ</th>
+        <th class="left" style="width:16mm;">ລະຫັດ</th>
         <th class="left">ຊື່ສິນຄ້າ</th>
-        <th style="width:10mm;">ຈ/ນ</th>
-        <th style="width:12mm;">ໜ່ວຍ</th>
+        <th style="width:12mm;">ຈ/ນ</th>
+        <th style="width:14mm;">ໜ່ວຍ</th>
         <th class="right" style="width:22mm;">ລາຄາ</th>
         <th class="right" style="width:22mm;">ເປັນເງິນ</th>
       </tr>
@@ -385,7 +392,7 @@
   {# ══ A5: Total ══ #}
   <div class="total-row a5-only">
     <span class="label">ເປັນເງິນ</span>
-    <span>
+    <span class="amount">
       {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.total / rate_f) }}{{ sym }}
       {% else %}{{ "{:,.0f}".format(sale.total) }}{{ sym }}{% endif %}
     </span>
