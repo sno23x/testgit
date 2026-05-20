@@ -83,7 +83,7 @@
     /* ══════════ A5 styles (exact original) ══════════ */
     .header {
       display: flex; justify-content: space-between; align-items: flex-start;
-      margin-bottom: 4mm;
+      margin-bottom: 2mm;
     }
     body.fmt-thermal .header { margin-bottom: 1mm; }
     .shop-info { flex: 1; }
@@ -101,19 +101,19 @@
 
     .bill-title {
       text-align: center; font-size: 13pt; font-weight: 700;
-      padding: 0 0 2mm 0; margin-bottom: 3mm;
+      padding: 0 0 1mm 0; margin-bottom: 1.5mm;
     }
 
-    .cust-row { display: flex; gap: 4mm; margin-bottom: 1.5mm; font-size: 10pt; }
+    .cust-row { display: flex; gap: 3mm; margin-bottom: 1mm; font-size: 9pt; }
     .cust-label { font-weight: 600; white-space: nowrap; }
     .cust-row .divider { color: #ffffff; }
 
     table.items { width: 100%; border-collapse: collapse; margin-top: 2mm; font-size: 8.5pt; }
     table.items thead tr { border-bottom: 2px solid #000000; }
-    table.items thead th { padding: 1.5mm 1mm; font-weight: 700; text-align: center; }
+    table.items thead th { padding: 1mm 1mm; font-weight: 700; text-align: center; }
     table.items th.left, table.items td.left { text-align: left; }
     table.items th.right, table.items td.right { text-align: right; }
-    table.items tbody td { padding: 1.5mm 1mm; vertical-align: middle; }
+    table.items tbody td { padding: 1mm 1mm; vertical-align: middle; }
     table.items tbody tr.empty td { color: #ccc; }
     table.items tbody tr:last-child { border-bottom: 1.5px solid #000; }
 
@@ -251,7 +251,6 @@
   <div class="cust-row a5-only">
     <span class="cust-label">ຊື່:</span>
     <span>{{ sale.customer.name if sale.customer else 'ລູກຄ້າທົ່ວໄປ' }}</span>
-    <span class="divider">|</span>
     <span class="cust-label">ເບີໂທ:</span>
     <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
   </div>
@@ -277,7 +276,7 @@
       <tr>
         <th style="width:9mm;">ລ/ດ</th>
         <th style="width:16mm;">ລະຫັດ</th>
-        <th class="left">ຊື່ສິນຄ້າ</th>
+        <th class="left" style="padding-left:4mm;">ຊື່ສິນຄ້າ</th>
         <th style="width:12mm;">ຈ/ນ</th>
         <th style="width:14mm;">ໜ່ວຍ</th>
         <th style="width:22mm;">ລາຄາ</th>
@@ -291,7 +290,7 @@
       <tr>
         <td style="text-align:center;">{{ ns.count }}</td>
         <td style="text-align:center;"><small>{{ item.product.code }}</small></td>
-        <td class="left">{{ item.product.name }}</td>
+        <td class="left" style="padding-left:4mm;">{{ item.product.name }}</td>
         <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
         <td style="text-align:center;">{{ item.product.unit }}</td>
         <td style="text-align:center;">

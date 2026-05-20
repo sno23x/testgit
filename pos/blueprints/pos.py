@@ -334,9 +334,9 @@ def receipt(sale_id):
     sale = Sale.query.get_or_404(sale_id)
     rate = _get_rate()
     try:
-        receipt_rows = int(Setting.get("receipt_rows", "15"))
+        receipt_rows = int(Setting.get("receipt_rows", "14"))
     except Exception:
-        receipt_rows = 15
+        receipt_rows = 14
     currency = request.args.get("currency", "LAK").upper()
     if currency not in ("LAK", "THB"):
         currency = "LAK"
