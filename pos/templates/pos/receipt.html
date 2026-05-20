@@ -41,6 +41,18 @@
       font-family: inherit; font-size: 9.5pt;
     }
     .btn-close-w:hover { background: #374151; color: #fff; }
+    .btn-void {
+      padding: 6px 16px; cursor: pointer;
+      border: 1.5px solid #dc2626; border-radius: 6px;
+      background: #dc2626; color: #fff;
+      font-family: inherit; font-size: 9.5pt;
+    }
+    .btn-void:hover { background: #b91c1c; border-color: #b91c1c; }
+    .btn-voided-tag {
+      padding: 6px 16px; border-radius: 6px;
+      background: #dc2626; color: #fff;
+      font-size: 9.5pt;
+    }
 
     /* ── Page wrapper ── */
     .page-wrap { display: flex; justify-content: center; padding: 24px 16px 48px; }
@@ -79,6 +91,7 @@
       z-index: 9; letter-spacing: 8px;
     }
     body.fmt-thermal .watermark { font-size: 36pt; }
+    .watermark.void { color: rgba(220,38,38,0.22); }
 
     /* ══════════ A5 styles (exact original) ══════════ */
     .header {
@@ -210,12 +223,20 @@
   <button id="btn-a5" class="btn-fmt active" onclick="doPrint('a5')">🖨 ພິມ A5</button>
   <button id="btn-th"  class="btn-fmt"        onclick="doPrint('thermal')">🖨 ພິມ Thermal 80mm</button>
   <div class="btn-sep"></div>
+  {% if sale.voided %}
+  <span class="btn-voided-tag">✕ ຍົກເລີກແລ້ວ{% if sale.voided_at %} – {{ sale.voided_at.strftime('%d/%m/%Y %H:%M') }}{% endif %}</span>
+  {% else %}
+  <form method="POST" action="/pos/void/{{ sale.id }}" style="margin:0;"
+        onsubmit="return confirm('ຍົກເລີກບິນ {{ sale.sale_no }}?\nສິນຄ້າຈະກັບຄືນ stock ແລະ ບໍ່ໄລ່ເປັນລາຍຮັບ')">
+    <button type="submit" class="btn-void">🗑 ຍົກເລີກບິນ</button>
+  </form>
+  {% endif %}
   <button class="btn-close-w" onclick="window.close()">✕ ປິດ</button>
 </div>
 
 <div class="page-wrap">
 <div class="page">
-  {% if is_copy %}<div class="watermark">ສຳເນົາ</div>{% endif %}
+  {% if sale.voided %}<div class="watermark void">ຍົກເລີກ</div>{% elif is_copy %}<div class="watermark">ສຳເນົາ</div>{% endif %}
 
   {# ══ SHARED: Header ══ #}
   <div class="header">
