@@ -250,7 +250,7 @@
   {# ══ A5: Customer info ══ #}
   <div class="cust-row a5-only">
     <span class="cust-label">ຊື່:</span>
-    <span>{{ sale.customer.name if sale.customer else '-' }}</span>
+    <span>{{ sale.customer.name if sale.customer else 'ລູກຄ້າທົ່ວໄປ' }}</span>
     <span class="divider">|</span>
     <span class="cust-label">ເບີໂທ:</span>
     <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
@@ -264,7 +264,7 @@
   <div class="th-only">
     <div class="th-cust">
       <span class="th-clbl">ຊື່:</span>
-      <span>{{ sale.customer.name if sale.customer else '—' }}</span>
+      <span>{{ sale.customer.name if sale.customer else 'ລູກຄ້າທົ່ວໄປ' }}</span>
       <span class="th-cdiv">|</span>
       <span class="th-clbl">ໂທ:</span>
       <span>{{ sale.customer.phone if sale.customer else '—' }}</span>
