@@ -220,8 +220,8 @@
   <div class="header">
     <div class="shop-info">
       <div class="shop-name">{{ shop_name }}</div>
-      {% if shop_address %}<div class="shop-addr">{{ shop_address }}</div>{% endif %}
-      {% if shop_phone  %}<div class="shop-addr">ໂທ: {{ shop_phone }}</div>{% endif %}
+      <div class="shop-addr">{{ shop_address }}</div>
+      <div class="shop-addr">ໂທ: {{ shop_phone }}</div>
     </div>
     <div class="header-right a5-only">
       {% if shop_qr %}
@@ -426,7 +426,7 @@
   </div>
 
   {% if receipt_footer %}
-  <div class="a5-only" style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
+  <div class="a5-only" style="text-align:center; font-size:9pt; color:#555; margin-top:3mm;">
     {{ receipt_footer }}
   </div>
   {% endif %}
