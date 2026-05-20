@@ -97,24 +97,21 @@
       font-size: 7pt; color: #888; text-align: center;
     }
     .header-right .date-line { font-size: 8.5pt; margin-top: 1mm; }
-    .header-right .cid-line  { font-size: 8.5pt; margin-top: 1mm; }
 
     .bill-title {
       text-align: center; font-size: 13pt; font-weight: 700;
-      border-top: 1.5px solid #000; border-bottom: 1px solid #888;
       padding: 2mm 0; margin-bottom: 3mm;
     }
 
     .cust-row { display: flex; gap: 4mm; margin-bottom: 1.5mm; font-size: 10pt; }
     .cust-label { font-weight: 600; white-space: nowrap; }
-    .cust-row .divider { color: #aaa; }
+    .cust-row .divider { color: #ffffff; }
 
-    table.items { width: 100%; border-collapse: collapse; margin-top: 2mm; font-size: 9.5pt; }
-    table.items thead tr { border-top: 1.5px solid #000; border-bottom: 1px solid #555; }
+    table.items { width: 100%; border-collapse: collapse; margin-top: 2mm; font-size: 7.5pt; }
+    table.items thead tr { border-bottom: 2px solid #000000; }
     table.items thead th { padding: 1.5mm 1mm; font-weight: 700; text-align: center; }
     table.items th.left, table.items td.left { text-align: left; }
     table.items th.right, table.items td.right { text-align: right; }
-    table.items tbody tr { border-bottom: 0.4px solid #ddd; }
     table.items tbody td { padding: 1.5mm 1mm; vertical-align: middle; }
     table.items tbody tr.empty td { color: #ccc; }
     table.items tbody tr:last-child { border-bottom: 1.5px solid #000; }
@@ -143,15 +140,14 @@
     body.fmt-thermal .bill-title { font-size: 10pt; padding: 1mm 0; margin-bottom: 2mm; }
 
     .copy-badge {
-      text-align: center; font-size: 8pt; font-weight: 700;
+      text-align: center; font-size: 6pt; font-weight: 700;
       letter-spacing: 4px; color: #888;
-      border: 1px dashed #bbb; padding: 1mm 0; margin-bottom: 2mm;
     }
 
     /* Thermal customer */
     .th-cust { display: flex; gap: 2mm; flex-wrap: wrap; font-size: 7.5pt; margin-bottom: 0.5mm; }
     .th-clbl { font-weight: 600; white-space: nowrap; }
-    .th-cdiv { color: #ccc; }
+    .th-cdiv { color: #ffffff; }
 
     /* Thermal items */
     .t-items {
@@ -170,7 +166,6 @@
     .th-total { display: flex; justify-content: space-between; align-items: baseline; padding: 2mm 0 1mm; font-size: 10.5pt; font-weight: 700; }
     .th-total .lbl { font-size: 9pt; }
     .th-subrow { display: flex; justify-content: space-between; font-size: 7.5pt; color: #555; padding: 0.5mm 0; }
-    .th-rate { font-size: 7pt; color: #777; text-align: right; margin-top: 1mm; }
 
     .change-box { margin-top: 2mm; border: 1px solid #d1fae5; border-radius: 2mm; background: #f0fdf4; padding: 1.5mm 2mm; font-size: 8pt; }
     .cr { display: flex; justify-content: space-between; padding: 0.3mm 0; }
@@ -215,13 +210,12 @@
 <div class="page">
   {% if is_copy %}<div class="watermark">ສຳເນົາ</div>{% endif %}
 
-  {# ══ SHARED: Header ══
-     header-right (QR + date) is a5-only; thermal gets its own meta row below #}
+  {# ══ SHARED: Header ══ #}
   <div class="header">
     <div class="shop-info">
       <div class="shop-name">{{ shop_name }}</div>
-      <div class="shop-addr">{{ shop_address }}</div>
-      <div class="shop-addr">ໂທ: {{ shop_phone }}</div>
+      {% if shop_address %}<div class="shop-addr">{{ shop_address }}</div>{% endif %}
+      {% if shop_phone  %}<div class="shop-addr">ໂທ: {{ shop_phone }}</div>{% endif %}
     </div>
     <div class="header-right a5-only">
       {% if shop_qr %}
@@ -231,14 +225,14 @@
       {% endif %}
       <div class="date-line">ວັນທີ {{ sale.created_at.strftime('%d/%m/%Y') }}</div>
       {% if sale.customer %}
-      <div class="cid-line"><strong>ID ລູກຄ້າ:</strong> CID{{ '%03d' % sale.customer.id }}</div>
+      <div class="date-line">ID: CID{{ '%03d' % sale.customer.id }}</div>
       {% endif %}
     </div>
   </div>
 
-  {# Thermal: date + bill no row (replaces header-right) #}
+  {# Thermal: date + bill no (UTC+7 corrected time) #}
   <div class="th-only th-meta th-flex">
-    <span>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+    <span>{{ sale_time_str }}</span>
     <span style="font-weight:700;">{{ sale.sale_no }}</span>
   </div>
 
@@ -246,7 +240,7 @@
   <div class="bill-title">ໃບບິນສິນຄ້າ</div>
   {% if is_copy %}<div class="copy-badge">— ສຳເນົາ —</div>{% endif %}
 
-  {# ══ A5: Customer info (original) ══ #}
+  {# ══ A5: Customer info ══ #}
   <div class="cust-row a5-only">
     <span class="cust-label">ຊື່:</span>
     <span>{{ sale.customer.name if sale.customer else '-' }}</span>
@@ -270,7 +264,7 @@
     </div>
   </div>
 
-  {# ══ A5: 7-column items table (original) ══ #}
+  {# ══ A5: 7-column items table ══ #}
   <table class="items a5-only">
     <thead>
       <tr>
@@ -312,8 +306,7 @@
     </tbody>
   </table>
 
-  {# ══ Thermal: 2-line compact items + all thermal totals/QR ══
-     Wrapped in ONE th-only div so it doesn't interfere with A5 flex layout #}
+  {# ══ Thermal: 2-line items + totals/QR (one th-only block) ══ #}
   <div class="th-only">
     <div class="t-items">
       {% for item in sale.items %}
@@ -349,10 +342,6 @@
       <span>– {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
       {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
     </div>
-    {% endif %}
-
-    {% if currency == 'THB' %}
-    <div class="th-rate">ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭</div>
     {% endif %}
 
     {% if sale.payment_type == 'cash' and (sale.change_amount or 0) > 0 %}
@@ -393,7 +382,7 @@
     {% endif %}
   </div>{# /th-only #}
 
-  {# ══ A5: Total (original style, direct child of .page) ══ #}
+  {# ══ A5: Total ══ #}
   <div class="total-row a5-only">
     <span class="label">ເປັນເງິນ</span>
     <span>
@@ -407,12 +396,6 @@
     <span>ສ່ວນຫຼຸດ</span>
     <span>-{% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
     {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
-  </div>
-  {% endif %}
-
-  {% if currency == 'THB' %}
-  <div class="a5-only" style="font-size:8.5pt; color:#666; text-align:right; margin-bottom:2mm;">
-    ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭
   </div>
   {% endif %}
 

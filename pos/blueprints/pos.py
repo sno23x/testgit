@@ -341,6 +341,11 @@ def receipt(sale_id):
     if currency not in ("LAK", "THB"):
         currency = "LAK"
     is_copy = request.args.get("copy", "0") == "1"
+    # Convert stored UTC naive datetime → Lao time (UTC+7)
+    _dt = sale.created_at
+    if _dt.tzinfo is None:
+        _dt = _dt.replace(tzinfo=timezone.utc)
+    sale_time_str = _dt.astimezone(_TZ_LAO).strftime('%d/%m/%Y %H:%M')
     return render_template("pos/receipt.html", sale=sale,
         shop_name=Setting.get("shop_name", "ຮ້ານວັດສະດຸກໍ່ສ້າງ"),
         shop_address=Setting.get("shop_address", ""),
@@ -351,7 +356,8 @@ def receipt(sale_id):
         receipt_rows=receipt_rows,
         rate=rate,
         currency=currency,
-        is_copy=is_copy)
+        is_copy=is_copy,
+        sale_time_str=sale_time_str)
 
 
 # ──────────────── Void sale ────────────────
