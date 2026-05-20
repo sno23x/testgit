@@ -50,16 +50,23 @@
       position: relative; overflow: hidden;
       background: #fff;
       box-shadow: 0 2px 16px rgba(0,0,0,0.18);
-      display: flex; flex-direction: column;
+      /* A5 default */
       width: 148mm; min-height: 210mm;
       padding: 8mm 10mm 8mm 10mm;
+      display: flex; flex-direction: column;
     }
-    body.fmt-thermal .page { width: 76mm; min-height: auto; padding: 3mm 4mm; font-size: 9pt; }
+    body.fmt-thermal .page {
+      width: 76mm; min-height: auto;
+      padding: 3mm 4mm; font-size: 9pt;
+    }
 
-    /* ── Format toggles ── */
-    .thermal-only { display: none; }
-    body.fmt-thermal .a5-only  { display: none !important; }
-    body.fmt-thermal .thermal-only { display: block; }
+    /* ── Format toggles ──
+       a5-only  : shown in A5, hidden in thermal
+       th-only  : hidden in A5, shown in thermal  */
+    .th-only  { display: none; }
+    body.fmt-thermal .a5-only { display: none !important; }
+    body.fmt-thermal .th-only  { display: block; }
+    /* special: elements that need flex in thermal */
     body.fmt-thermal .th-flex  { display: flex !important; }
 
     /* ── Watermark ── */
@@ -73,8 +80,11 @@
     }
     body.fmt-thermal .watermark { font-size: 36pt; }
 
-    /* ══════════════ A5 (original layout) ══════════════ */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; }
+    /* ══════════ A5 styles (exact original) ══════════ */
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 4mm;
+    }
     .shop-info { flex: 1; }
     .shop-name { font-size: 11pt; font-weight: 700; line-height: 1.4; }
     .shop-addr { font-size: 9pt; line-height: 1.5; color: #222; }
@@ -115,15 +125,19 @@
     }
     .total-row .label { font-size: 11pt; }
 
-    .sig-row { display: flex; justify-content: space-between; margin-top: auto; padding-top: 8mm; }
+    /* sig-row must be a direct child of .page for margin-top: auto to work */
+    .sig-row {
+      display: flex; justify-content: space-between;
+      margin-top: auto; padding-top: 8mm;
+    }
     .sig-box { text-align: center; flex: 1; }
     .sig-line { border-bottom: 1px solid #555; height: 12mm; margin: 0 5mm 1mm 5mm; }
     .sig-label { font-size: 9.5pt; font-weight: 600; }
 
-    /* ══════════════ Thermal styles ══════════════ */
-    .thermal-meta {
+    /* ══════════ Thermal styles ══════════ */
+    .th-meta {
+      justify-content: space-between;
       font-size: 7.5pt; color: #444;
-      justify-content: space-between;   /* used via th-flex */
       margin-bottom: 2mm;
     }
     body.fmt-thermal .bill-title { font-size: 10pt; padding: 1mm 0; margin-bottom: 2mm; }
@@ -134,12 +148,16 @@
       border: 1px dashed #bbb; padding: 1mm 0; margin-bottom: 2mm;
     }
 
-    .cust-row-th { display: flex; gap: 2mm; flex-wrap: wrap; margin-bottom: 0.5mm; font-size: 7.5pt; }
-    .clbl { font-weight: 600; white-space: nowrap; }
-    .cdiv { color: #ccc; }
+    /* Thermal customer */
+    .th-cust { display: flex; gap: 2mm; flex-wrap: wrap; font-size: 7.5pt; margin-bottom: 0.5mm; }
+    .th-clbl { font-weight: 600; white-space: nowrap; }
+    .th-cdiv { color: #ccc; }
 
     /* Thermal items */
-    .t-items { border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 1mm 0; margin: 2mm 0; }
+    .t-items {
+      border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;
+      padding: 1mm 0; margin: 2mm 0;
+    }
     .ti { display: flex; align-items: flex-start; padding: 1mm 0; border-bottom: 0.4px dashed #ccc; }
     .ti:last-child { border-bottom: none; }
     .ti-n { font-size: 7pt; width: 5mm; flex-shrink: 0; padding-top: 1mm; color: #777; }
@@ -148,18 +166,17 @@
     .ti-d { font-size: 7.5pt; color: #555; margin-top: 0.5mm; }
     .ti-s { font-size: 8.5pt; font-weight: 700; text-align: right; flex-shrink: 0; padding-top: 0.5mm; min-width: 18mm; }
 
-    /* Thermal total */
+    /* Thermal total / rows */
     .th-total { display: flex; justify-content: space-between; align-items: baseline; padding: 2mm 0 1mm; font-size: 10.5pt; font-weight: 700; }
     .th-total .lbl { font-size: 9pt; }
-    .sub-row { display: flex; justify-content: space-between; font-size: 7.5pt; color: #555; padding: 0.5mm 0; }
-    .rate-note { font-size: 7pt; color: #777; text-align: right; margin-top: 1mm; }
+    .th-subrow { display: flex; justify-content: space-between; font-size: 7.5pt; color: #555; padding: 0.5mm 0; }
+    .th-rate { font-size: 7pt; color: #777; text-align: right; margin-top: 1mm; }
 
-    /* Change box */
     .change-box { margin-top: 2mm; border: 1px solid #d1fae5; border-radius: 2mm; background: #f0fdf4; padding: 1.5mm 2mm; font-size: 8pt; }
     .cr { display: flex; justify-content: space-between; padding: 0.3mm 0; }
     .cr.hl { font-weight: 700; }
 
-    .pay-info-th { font-size: 7.5pt; color: #555; margin-top: 1.5mm; }
+    .th-payinfo { font-size: 7.5pt; color: #555; margin-top: 1.5mm; }
 
     /* Transfer QR (no box) */
     .transfer-th { text-align: center; margin: 2mm 0; }
@@ -170,7 +187,6 @@
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 7.5pt; color: #aaa; text-align: center;
     }
-
     .th-footer { text-align: center; font-size: 7pt; color: #666; margin-top: 2mm; }
 
     /* ── Print ── */
@@ -199,14 +215,14 @@
 <div class="page">
   {% if is_copy %}<div class="watermark">ສຳເນົາ</div>{% endif %}
 
-  <!-- ── Header (shared shop info; QR corner = A5 only) ── -->
+  {# ══ SHARED: Header ══
+     header-right (QR + date) is a5-only; thermal gets its own meta row below #}
   <div class="header">
     <div class="shop-info">
       <div class="shop-name">{{ shop_name }}</div>
       {% if shop_address %}<div class="shop-addr">{{ shop_address }}</div>{% endif %}
       {% if shop_phone  %}<div class="shop-addr">ໂທ: {{ shop_phone }}</div>{% endif %}
     </div>
-    <!-- A5: QR + date in top-right (original) -->
     <div class="header-right a5-only">
       {% if shop_qr %}
         <img class="qr" src="{{ shop_qr }}" alt="QR"/>
@@ -220,136 +236,85 @@
     </div>
   </div>
 
-  <!-- Thermal: date + bill no (no QR) -->
-  <div class="thermal-only thermal-meta th-flex">
+  {# Thermal: date + bill no row (replaces header-right) #}
+  <div class="th-only th-meta th-flex">
     <span>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
     <span style="font-weight:700;">{{ sale.sale_no }}</span>
   </div>
 
-  <!-- Bill title -->
+  {# ══ SHARED: Title ══ #}
   <div class="bill-title">ໃບບິນສິນຄ້າ</div>
   {% if is_copy %}<div class="copy-badge">— ສຳເນົາ —</div>{% endif %}
 
-  <!-- ══════════ A5 section (original layout) ══════════ -->
-  <div class="a5-only">
-    <!-- Customer -->
-    <div class="cust-row">
-      <span class="cust-label">ຊື່:</span>
-      <span>{{ sale.customer.name if sale.customer else '-' }}</span>
-      <span class="divider">|</span>
-      <span class="cust-label">ເບີໂທ:</span>
-      <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
-    </div>
-    <div class="cust-row">
-      <span class="cust-label">ທີ່ຢູ່:</span>
-      <span>{{ sale.customer.address if sale.customer and sale.customer.address else '-' }}</span>
-    </div>
+  {# ══ A5: Customer info (original) ══ #}
+  <div class="cust-row a5-only">
+    <span class="cust-label">ຊື່:</span>
+    <span>{{ sale.customer.name if sale.customer else '-' }}</span>
+    <span class="divider">|</span>
+    <span class="cust-label">ເບີໂທ:</span>
+    <span>{{ sale.customer.phone if sale.customer else '-' }}</span>
+  </div>
+  <div class="cust-row a5-only">
+    <span class="cust-label">ທີ່ຢູ່:</span>
+    <span>{{ sale.customer.address if sale.customer and sale.customer.address else '-' }}</span>
+  </div>
 
-    <!-- Items table -->
-    <table class="items">
-      <thead>
-        <tr>
-          <th style="width:6mm;">ລ/ດ</th>
-          <th class="left" style="width:18mm;">ລະຫັດ</th>
-          <th class="left">ຊື່ສິນຄ້າ</th>
-          <th style="width:10mm;">ຈ/ນ</th>
-          <th style="width:12mm;">ໜ່ວຍ</th>
-          <th class="right" style="width:22mm;">ລາຄາ</th>
-          <th class="right" style="width:22mm;">ເປັນເງິນ</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% set ns = namespace(count=0) %}
-        {% for item in sale.items %}
-        {% set ns.count = ns.count + 1 %}
-        <tr>
-          <td style="text-align:center;">{{ ns.count }}</td>
-          <td class="left"><small>{{ item.product.code }}</small></td>
-          <td class="left">{{ item.product.name }}</td>
-          <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
-          <td style="text-align:center;">{{ item.product.unit }}</td>
-          <td class="right">
-            {% if currency == 'THB' %}{{ "{:,.2f}".format(item.unit_price / rate_f) }}{{ sym }}
-            {% else %}{{ "{:,.0f}".format(item.unit_price) }}{{ sym }}{% endif %}
-          </td>
-          <td class="right">
-            {% if currency == 'THB' %}{{ "{:,.2f}".format(item.subtotal / rate_f) }}{{ sym }}
-            {% else %}{{ "{:,.0f}".format(item.subtotal) }}{{ sym }}{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-        {% for i in range(ns.count + 1, receipt_rows + 1) %}
-        <tr class="empty">
-          <td style="text-align:center;">{{ i }}</td>
-          <td></td><td></td><td></td><td></td><td></td><td></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <!-- Total -->
-    <div class="total-row">
-      <span class="label">ເປັນເງິນ</span>
-      <span>
-        {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.total / rate_f) }}{{ sym }}
-        {% else %}{{ "{:,.0f}".format(sale.total) }}{{ sym }}{% endif %}
-      </span>
-    </div>
-
-    {% if sale.discount and sale.discount > 0 %}
-    <div style="display:flex; justify-content:space-between; font-size:9.5pt; color:#555; margin-bottom:2mm;">
-      <span>ສ່ວນຫຼຸດ</span>
-      <span>-{% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
-      {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
-    </div>
-    {% endif %}
-
-    {% if currency == 'THB' %}
-    <div style="font-size:8.5pt; color:#666; text-align:right; margin-bottom:2mm;">
-      ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭
-    </div>
-    {% endif %}
-
-    <div style="font-size:9pt; color:#555; margin-bottom:3mm;">
-      ປະເພດ: <strong>
-        {% if sale.payment_type == 'cash' %}ເງິນສົດ
-        {% elif sale.payment_type == 'transfer' %}ໂອນເງິນ
-        {% else %}ຕິດໜີ້{% endif %}
-      </strong>
-      {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
-    </div>
-
-    {% if receipt_footer %}
-    <div style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
-      {{ receipt_footer }}
-    </div>
-    {% endif %}
-
-    <!-- Signatures -->
-    <div class="sig-row">
-      <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-label">ລາຍເຊັນລູກຄ້າ</div>
-      </div>
-      <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-label">ຜູ້ຮັບເງິນ</div>
-      </div>
-    </div>
-  </div><!-- /a5-only -->
-
-  <!-- ══════════ Thermal section ══════════ -->
-  <div class="thermal-only">
-    <!-- Customer (compact) -->
-    <div class="cust-row-th">
-      <span class="clbl">ຊື່:</span>
+  {# Thermal: compact customer #}
+  <div class="th-only">
+    <div class="th-cust">
+      <span class="th-clbl">ຊື່:</span>
       <span>{{ sale.customer.name if sale.customer else '—' }}</span>
-      <span class="cdiv">|</span>
-      <span class="clbl">ໂທ:</span>
+      <span class="th-cdiv">|</span>
+      <span class="th-clbl">ໂທ:</span>
       <span>{{ sale.customer.phone if sale.customer else '—' }}</span>
     </div>
+  </div>
 
-    <!-- 2-line items -->
+  {# ══ A5: 7-column items table (original) ══ #}
+  <table class="items a5-only">
+    <thead>
+      <tr>
+        <th style="width:6mm;">ລ/ດ</th>
+        <th class="left" style="width:18mm;">ລະຫັດ</th>
+        <th class="left">ຊື່ສິນຄ້າ</th>
+        <th style="width:10mm;">ຈ/ນ</th>
+        <th style="width:12mm;">ໜ່ວຍ</th>
+        <th class="right" style="width:22mm;">ລາຄາ</th>
+        <th class="right" style="width:22mm;">ເປັນເງິນ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set ns = namespace(count=0) %}
+      {% for item in sale.items %}
+      {% set ns.count = ns.count + 1 %}
+      <tr>
+        <td style="text-align:center;">{{ ns.count }}</td>
+        <td class="left"><small>{{ item.product.code }}</small></td>
+        <td class="left">{{ item.product.name }}</td>
+        <td style="text-align:center;">{{ "{:g}".format(item.qty) }}</td>
+        <td style="text-align:center;">{{ item.product.unit }}</td>
+        <td class="right">
+          {% if currency == 'THB' %}{{ "{:,.2f}".format(item.unit_price / rate_f) }}{{ sym }}
+          {% else %}{{ "{:,.0f}".format(item.unit_price) }}{{ sym }}{% endif %}
+        </td>
+        <td class="right">
+          {% if currency == 'THB' %}{{ "{:,.2f}".format(item.subtotal / rate_f) }}{{ sym }}
+          {% else %}{{ "{:,.0f}".format(item.subtotal) }}{{ sym }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% for i in range(ns.count + 1, receipt_rows + 1) %}
+      <tr class="empty">
+        <td style="text-align:center;">{{ i }}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {# ══ Thermal: 2-line compact items + all thermal totals/QR ══
+     Wrapped in ONE th-only div so it doesn't interfere with A5 flex layout #}
+  <div class="th-only">
     <div class="t-items">
       {% for item in sale.items %}
       <div class="ti">
@@ -370,7 +335,6 @@
       {% endfor %}
     </div>
 
-    <!-- Total -->
     <div class="th-total">
       <span class="lbl">ລວມເງິນ</span>
       <span>
@@ -380,7 +344,7 @@
     </div>
 
     {% if sale.discount and sale.discount > 0 %}
-    <div class="sub-row">
+    <div class="th-subrow">
       <span>ສ່ວນຫຼຸດ</span>
       <span>– {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
       {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
@@ -388,10 +352,9 @@
     {% endif %}
 
     {% if currency == 'THB' %}
-    <div class="rate-note">ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭</div>
+    <div class="th-rate">ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭</div>
     {% endif %}
 
-    <!-- Change (cash only) -->
     {% if sale.payment_type == 'cash' and (sale.change_amount or 0) > 0 %}
     <div class="change-box">
       {% set recv = sale.total + (sale.change_amount or 0) %}
@@ -408,8 +371,7 @@
     </div>
     {% endif %}
 
-    <!-- Payment type -->
-    <div class="pay-info-th">
+    <div class="th-payinfo">
       ປະເພດ: <strong>
         {% if sale.payment_type == 'cash' %}ເງິນສົດ
         {% elif sale.payment_type == 'transfer' %}ໂອນເງິນ
@@ -418,22 +380,68 @@
       {% if sale.note %} | ໝາຍເຫດ: {{ sale.note }}{% endif %}
     </div>
 
-    <!-- QR for transfer (no border box) -->
     {% if sale.payment_type == 'transfer' %}
     <div class="transfer-th">
       <div class="t-lbl">ຊ່ອງທາງໂອນເງິນ</div>
-      {% if shop_qr %}
-        <img class="qr-lg" src="{{ shop_qr }}" alt="QR ໂອນ"/>
-      {% else %}
-        <div class="qr-placeholder-lg">QR<br/>ໂອນ</div>
-      {% endif %}
+      {% if shop_qr %}<img class="qr-lg" src="{{ shop_qr }}" alt="QR ໂອນ"/>
+      {% else %}<div class="qr-placeholder-lg">QR<br/>ໂອນ</div>{% endif %}
     </div>
     {% endif %}
 
     {% if receipt_footer %}
     <div class="th-footer">{{ receipt_footer }}</div>
     {% endif %}
-  </div><!-- /thermal-only -->
+  </div>{# /th-only #}
+
+  {# ══ A5: Total (original style, direct child of .page) ══ #}
+  <div class="total-row a5-only">
+    <span class="label">ເປັນເງິນ</span>
+    <span>
+      {% if currency == 'THB' %}{{ "{:,.2f}".format(sale.total / rate_f) }}{{ sym }}
+      {% else %}{{ "{:,.0f}".format(sale.total) }}{{ sym }}{% endif %}
+    </span>
+  </div>
+
+  {% if sale.discount and sale.discount > 0 %}
+  <div class="a5-only" style="display:flex; justify-content:space-between; font-size:9.5pt; color:#555; margin-bottom:2mm;">
+    <span>ສ່ວນຫຼຸດ</span>
+    <span>-{% if currency == 'THB' %}{{ "{:,.2f}".format(sale.discount / rate_f) }}{{ sym }}
+    {% else %}{{ "{:,.0f}".format(sale.discount) }}{{ sym }}{% endif %}</span>
+  </div>
+  {% endif %}
+
+  {% if currency == 'THB' %}
+  <div class="a5-only" style="font-size:8.5pt; color:#666; text-align:right; margin-bottom:2mm;">
+    ເລດ: 1{{ sym }} = {{ "{:,.0f}".format(rate_f) }}₭
+  </div>
+  {% endif %}
+
+  <div class="a5-only" style="font-size:9pt; color:#555; margin-bottom:3mm;">
+    ປະເພດ: <strong>
+      {% if sale.payment_type == 'cash' %}ເງິນສົດ
+      {% elif sale.payment_type == 'transfer' %}ໂອນເງິນ
+      {% else %}ຕິດໜີ້{% endif %}
+    </strong>
+    {% if sale.note %} &nbsp;|&nbsp; ໝາຍເຫດ: {{ sale.note }}{% endif %}
+  </div>
+
+  {% if receipt_footer %}
+  <div class="a5-only" style="text-align:center; font-size:9pt; color:#555; margin-top:3mm; border-top:0.5px solid #ddd; padding-top:2mm;">
+    {{ receipt_footer }}
+  </div>
+  {% endif %}
+
+  {# ══ A5: Signatures — direct child of .page so margin-top:auto works ══ #}
+  <div class="sig-row a5-only">
+    <div class="sig-box">
+      <div class="sig-line"></div>
+      <div class="sig-label">ລາຍເຊັນລູກຄ້າ</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-line"></div>
+      <div class="sig-label">ຜູ້ຮັບເງິນ</div>
+    </div>
+  </div>
 
 </div><!-- .page -->
 </div><!-- .page-wrap -->
